@@ -14,6 +14,34 @@ export interface CreatePostResponse {
   post: Post;
 }
 
+export interface LfgApplication {
+  id: number;
+  post_id: number;
+  user_id: number;
+  status: 'pending' | 'accepted' | 'rejected' | string;
+  answers: Record<string, any> | null;
+  created_at?: string;
+  updated_at?: string;
+  user: {
+    id: number;
+    name: string;
+    email: string;
+  } | null;
+}
+
+export interface LfgApplicationActionResponse {
+  application: LfgApplication;
+  post: {
+    id: number;
+    metadata: Record<string, any>;
+  };
+}
+
+export interface OwnedLfgPost extends Post {
+  applications: LfgApplication[];
+  lfg_applications_count: number;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -28,6 +56,23 @@ export class PostService {
     return this.http.post(`/api/posts/${postId}/lfg-applications`, {
       answers: answers ?? {},
     });
+  }
+
+  getLfgApplications(postId: number) {
+    return this.http.get<{ applications: LfgApplication[] }>(
+      `/api/posts/${postId}/lfg-applications`
+    );
+  }
+
+  getOwnedLfgPosts() {
+    return this.http.get<{ posts: OwnedLfgPost[] }>('/api/me/lfg-posts');
+  }
+
+  updateLfgApplication(applicationId: number, status: 'accepted' | 'rejected') {
+    return this.http.patch<LfgApplicationActionResponse>(
+      `/api/lfg-applications/${applicationId}`,
+      { status }
+    );
   }
 
   getComments(postId: number) {

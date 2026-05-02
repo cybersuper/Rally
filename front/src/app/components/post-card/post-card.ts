@@ -1,7 +1,9 @@
 import { DatePipe } from '@angular/common';
 import { Component, input, inject, signal } from '@angular/core';
 import { Post } from '../../types/post';
-import { PostService } from '../../services/post';
+import { LfgApplication, PostService } from '../../services/post';
+import { AuthService } from '../../auth';
+import { TimelineService } from '../../services/timeline';
 
 @Component({
   selector: 'app-post-card',
@@ -11,6 +13,8 @@ import { PostService } from '../../services/post';
 })
 export class PostCard {
   private readonly postService = inject(PostService);
+  private readonly authService = inject(AuthService);
+  private readonly timelineService = inject(TimelineService);
 
   post = input.required<Post>();
 
@@ -20,6 +24,88 @@ export class PostCard {
   isApplyModalOpen = signal(false);
   applyError = signal<string | null>(null);
   applyAnswers = signal<Record<string, any>>({});
+
+  isManageOpen = signal(false);
+  isLoadingApplications = signal(false);
+  manageError = signal<string | null>(null);
+  applications = signal<LfgApplication[]>([]);
+  updatingApplicationId = signal<number | null>(null);
+  metadataOverride = signal<Record<string, any> | null>(null);
+
+  canManageApplications(): boolean {
+    const userId = this.authService.user()?.id;
+    return this.post().type === 'lfg' && !!userId && this.post().user_id === userId;
+  }
+
+  openManage(): void {
+    if (!this.canManageApplications()) return;
+    this.isManageOpen.set(true);
+    this.loadApplications();
+  }
+
+  closeManage(): void {
+    if (this.updatingApplicationId() !== null) return;
+    this.isManageOpen.set(false);
+  }
+
+  loadApplications(): void {
+    if (this.isLoadingApplications()) return;
+
+    this.manageError.set(null);
+    this.isLoadingApplications.set(true);
+
+    this.postService.getLfgApplications(this.post().id).subscribe({
+      next: response => {
+        this.applications.set(response.applications);
+        this.isLoadingApplications.set(false);
+      },
+      error: err => {
+        this.isLoadingApplications.set(false);
+
+        if (err?.status === 403) {
+          this.manageError.set('Only the party leader can view applications.');
+          return;
+        }
+
+        this.manageError.set('Could not load applications.');
+      },
+    });
+  }
+
+  setApplicationStatus(application: LfgApplication, status: 'accepted' | 'rejected'): void {
+    if (this.updatingApplicationId() !== null) return;
+
+    this.manageError.set(null);
+    this.updatingApplicationId.set(application.id);
+
+    this.postService.updateLfgApplication(application.id, status).subscribe({
+      next: response => {
+        this.metadataOverride.set(response.post.metadata);
+        this.applications.update(list =>
+          list.map(item => (item.id === application.id ? response.application : item))
+        );
+
+        this.timelineService.fetchTimeline().subscribe({
+          next: () => {
+            this.updatingApplicationId.set(null);
+          },
+          error: () => {
+            this.updatingApplicationId.set(null);
+          },
+        });
+      },
+      error: err => {
+        this.updatingApplicationId.set(null);
+
+        if (err?.status === 422) {
+          this.manageError.set('No open seats remain.');
+          return;
+        }
+
+        this.manageError.set('Could not update application.');
+      },
+    });
+  }
 
   lfgApplicationFields(): Array<{ key: string; label: string; placeholder?: string; required?: boolean; type?: string }> {
     const raw = this.metadataValue<any[]>('application_fields', []);
@@ -59,7 +145,7 @@ export class PostCard {
   }
 
   metadataValue<T>(key: string, fallback: T): T {
-    return (this.post().metadata?.[key] ?? fallback) as T;
+    return ((this.metadataOverride() ?? this.post().metadata)?.[key] ?? fallback) as T;
   }
 
   typeLabel(): string {
@@ -99,8 +185,40 @@ export class PostCard {
     return Math.min(100, Math.max(0, (filled / total) * 100));
   }
 
+  lfgStatusLabel(): string {
+    return this.metadataValue<string>('status', 'open') === 'full' ? 'Full' : 'Open';
+  }
+
+  spotsRemaining(): number {
+    const explicit = this.metadataValue<number | null>('spots_remaining', null);
+
+    if (explicit !== null) {
+      return explicit;
+    }
+
+    return Math.max(
+      0,
+      this.metadataValue<number>('spots_total', 0) - this.metadataValue<number>('spots_filled', 0)
+    );
+  }
+
+  canApply(): boolean {
+    return !this.canManageApplications() && this.lfgStatusLabel() !== 'Full' && this.spotsRemaining() > 0;
+  }
+
+  isApplicationUpdating(application: LfgApplication): boolean {
+    return this.updatingApplicationId() === application.id;
+  }
+
+  applicationAnswerEntries(application: LfgApplication): Array<{ key: string; value: string }> {
+    return Object.entries(application.answers ?? {}).map(([key, value]) => ({
+      key,
+      value: typeof value === 'string' ? value : JSON.stringify(value),
+    }));
+  }
+
   openApplyModal(): void {
-    if (this.hasApplied()) return;
+    if (this.hasApplied() || !this.canApply()) return;
     this.applyError.set(null);
     this.applyAnswers.set({});
     this.isApplyModalOpen.set(true);
@@ -148,6 +266,8 @@ export class PostCard {
           this.isApplyModalOpen.set(false);
         } else if (error?.status === 403) {
           this.applyError.set('You must join this club before applying.');
+        } else if (error?.status === 422) {
+          this.applyError.set('This LFG post is no longer accepting applications.');
         } else {
           this.applyError.set('Could not send application.');
         }

@@ -34,12 +34,7 @@ class PostController extends Controller
         $metadata = $validated['metadata'] ?? [];
 
         if ($validated['type'] === 'lfg') {
-            $metadata = array_merge([
-                'spots_filled' => 0,
-                'spots_total' => 5,
-                'form_fields_count' => 0,
-                'status' => 'open',
-            ], $metadata);
+            $metadata = Post::normalizeLfgMetadata($metadata, 0);
         }
 
         if ($validated['type'] === 'question') {

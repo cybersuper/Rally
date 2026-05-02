@@ -58,8 +58,24 @@ class AuthController extends Controller
 
     public function me(Request $request): JsonResponse
     {
+        $user = $request->user()->load('clubs');
+
         return response()->json([
-            'user' => $request->user()->load('clubs'),
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'clubs' => $user->clubs->map(fn ($club) => [
+                    'id' => $club->id,
+                    'name' => $club->name,
+                    'slug' => $club->slug,
+                    'description' => $club->description,
+                    'accent_color' => $club->accent_color,
+                    'sticker_type' => $club->sticker_type,
+                    'cover_image_url' => $club->cover_image_url,
+                    'membership_role' => $club->pivot->role,
+                ]),
+            ],
         ]);
     }
 

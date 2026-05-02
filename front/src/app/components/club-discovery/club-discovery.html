@@ -79,11 +79,13 @@
                 type="button"
                 class="rounded-xl border border-white/10 px-3 py-2 text-xs font-black text-zinc-200 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-60"
                 [style.borderColor]="club.accent_color + '55'"
-                [disabled]="isUpdating(club.id)"
+                [disabled]="isUpdating(club.id) || isOwner(club)"
                 (click)="$event.preventDefault(); $event.stopPropagation(); toggleMembership(club)"
               >
                 @if (isUpdating(club.id)) {
                   ...
+                } @else if (isOwner(club)) {
+                  Owner
                 } @else if (club.is_member) {
                   Leave
                 } @else {

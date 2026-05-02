@@ -43,6 +43,24 @@
           <span class="grid h-6 w-6 place-items-center rounded-lg border border-white/10 text-xs">D</span>
           Discover
         </a>
+
+        <a
+          routerLink="/create-club"
+          routerLinkActive="bg-white/7 text-white"
+          class="flex items-center gap-3 rounded-2xl px-4 py-3 text-zinc-400 hover:bg-white/5 hover:text-white"
+        >
+          <span class="grid h-6 w-6 place-items-center rounded-lg border border-white/10 text-xs">+</span>
+          Create club
+        </a>
+
+        <a
+          routerLink="/dashboard/lfg"
+          routerLinkActive="bg-white/7 text-white"
+          class="flex items-center gap-3 rounded-2xl px-4 py-3 text-zinc-400 hover:bg-white/5 hover:text-white"
+        >
+          <span class="grid h-6 w-6 place-items-center rounded-lg border border-white/10 text-xs">L</span>
+          LFG queue
+        </a>
       </nav>
 
       @if (authService.isLoggedIn()) {

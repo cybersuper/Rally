@@ -5,12 +5,25 @@ export interface DiscoverClub {
   id: number;
   name: string;
   slug: string;
-  description: string;
+  description: string | null;
   accent_color: string;
   sticker_type: string | null;
   cover_image_url?: string | null;
   members_count: number;
   is_member: boolean;
+  membership_role: 'OWNER' | 'MODERATOR' | 'MEMBER' | string | null;
+}
+
+export interface CreateClubPayload {
+  name: string;
+  slug: string;
+  description: string | null;
+  accent_color: string;
+  cover_image_url?: string | null;
+}
+
+export interface CreateClubResponse {
+  club: DiscoverClub;
 }
 
 @Injectable({
@@ -23,6 +36,10 @@ export class ClubService {
     return this.http.get<{ clubs: DiscoverClub[] }>('/api/clubs');
   }
 
+  createClub(payload: CreateClubPayload) {
+    return this.http.post<CreateClubResponse>('/api/clubs', payload);
+  }
+
   getClub(slug: string) {
     return this.http.get<{ club: any }>(`/api/clubs/${slug}`);
   }
@@ -32,7 +49,7 @@ export class ClubService {
   }
 
   join(clubId: number) {
-    return this.http.post(`/api/clubs/${clubId}/join`, {});
+    return this.http.post<{ message: string; membership_role: string }>(`/api/clubs/${clubId}/join`, {});
   }
 
   leave(clubId: number) {

@@ -19,6 +19,28 @@ class Post extends Model
         'metadata' => 'array',
     ];
 
+    public static function normalizeLfgMetadata(array $metadata, ?int $filledOverride = null): array
+    {
+        $total = (int) ($metadata['spots_total'] ?? 5);
+        $total = max(1, min(99, $total));
+
+        $filled = $filledOverride ?? (int) ($metadata['spots_filled'] ?? 0);
+        $filled = max(0, min($total, $filled));
+
+        $fields = $metadata['application_fields'] ?? [];
+        $fieldCount = is_array($fields)
+            ? count(array_filter($fields))
+            : (int) ($metadata['form_fields_count'] ?? 0);
+
+        $metadata['spots_total'] = $total;
+        $metadata['spots_filled'] = $filled;
+        $metadata['spots_remaining'] = max(0, $total - $filled);
+        $metadata['form_fields_count'] = max(0, $fieldCount);
+        $metadata['status'] = $filled >= $total ? 'full' : 'open';
+
+        return $metadata;
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class);

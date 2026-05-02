@@ -47,12 +47,17 @@ export class ClubDiscoveryComponent implements OnInit {
     return !!this.updatingClubIds()[clubId];
   }
 
+  isOwner(club: DiscoverClub): boolean {
+    return club.membership_role === 'OWNER';
+  }
+
   private setUpdating(clubId: number, value: boolean): void {
     this.updatingClubIds.update(current => ({ ...current, [clubId]: value }));
   }
 
   toggleMembership(club: DiscoverClub): void {
     if (!this.authService.isLoggedIn()) return;
+    if (this.isOwner(club)) return;
     if (this.isUpdating(club.id)) return;
 
     this.setUpdating(club.id, true);
@@ -65,7 +70,13 @@ export class ClubDiscoveryComponent implements OnInit {
       next: () => {
         this.clubs.update(list =>
           list.map(item =>
-            item.id === club.id ? { ...item, is_member: !club.is_member } : item
+            item.id === club.id
+              ? {
+                  ...item,
+                  is_member: !club.is_member,
+                  membership_role: club.is_member ? null : 'MEMBER',
+                }
+              : item
           )
         );
 

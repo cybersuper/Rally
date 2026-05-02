@@ -72,32 +72,83 @@ class DatabaseSeeder extends Seeder
             'cover_image_url' => 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1400&q=60',
         ]);
 
-        Post::create([
+        $jay->clubs()->attach([
+            $dnd->id => ['role' => Club::ROLE_MEMBER],
+            $sketch->id => ['role' => Club::ROLE_MEMBER],
+            $motion->id => ['role' => Club::ROLE_MEMBER],
+            $indie->id => ['role' => Club::ROLE_OWNER],
+        ]);
+
+        $theo->clubs()->attach([
+            $dnd->id => ['role' => Club::ROLE_OWNER],
+        ]);
+
+        $mina->clubs()->attach([
+            $sketch->id => ['role' => Club::ROLE_OWNER],
+            $indie->id => ['role' => Club::ROLE_MODERATOR],
+        ]);
+
+        $noor->clubs()->attach([
+            $motion->id => ['role' => Club::ROLE_OWNER],
+        ]);
+
+        $lfg = Post::create([
             'user_id' => $theo->id,
             'club_id' => $dnd->id,
             'title' => 'Moonlit Heist',
             'content' => 'Running a one shot tonight. Level 4 characters, social heavy mystery, new players welcome.',
             'type' => 'lfg',
-            'metadata' => [
+            'metadata' => Post::normalizeLfgMetadata([
                 'starts_at' => '21:00',
-                'spots_filled' => 2,
                 'spots_total' => 5,
-                'form_fields_count' => 2,
-                'status' => 'open',
+                'application_fields' => [
+                    [
+                        'key' => 'character',
+                        'label' => 'Character',
+                        'required' => true,
+                    ],
+                    [
+                        'key' => 'experience',
+                        'label' => 'Experience',
+                        'type' => 'textarea',
+                    ],
+                ],
+            ], 2),
+        ]);
+
+        $lfg->lfgApplications()->create([
+            'user_id' => $jay->id,
+            'status' => 'pending',
+            'answers' => [
+                'character' => 'Half-elf rogue',
+                'experience' => 'Beginner-friendly, played two one-shots',
             ],
         ]);
 
-        Post::create([
+        $question = Post::create([
             'user_id' => $mina->id,
             'club_id' => $sketch->id,
             'title' => 'Dark mode artwork compression',
             'content' => 'How do you stop dark-mode artwork from looking muddy once it is compressed for the feed?',
             'type' => 'question',
             'metadata' => [
-                'answers_count' => 9,
-                'helpful_count' => 34,
+                'answers_count' => 2,
+                'helpful_count' => 12,
                 'best_answer_pinned' => true,
             ],
+        ]);
+
+        $question->comments()->create([
+            'user_id' => $jay->id,
+            'content' => 'Try lifting the midtones before export and avoid pure black shadows. Dark UIs compress gradients hard.',
+            'helpful_count' => 12,
+            'is_best_answer' => true,
+        ]);
+
+        $question->comments()->create([
+            'user_id' => $theo->id,
+            'content' => 'I usually add a subtle noise layer before compression so flat dark areas do not band as much.',
+            'helpful_count' => 7,
         ]);
 
         Post::create([
@@ -123,57 +174,5 @@ class DatabaseSeeder extends Seeder
                 'tag' => 'standard',
             ],
         ]);
-        $jay->clubs()->attach([$dnd->id, $sketch->id, $motion->id, $indie->id]);
-$theo->clubs()->attach([$dnd->id]);
-$mina->clubs()->attach([$sketch->id, $indie->id]);
-$noor->clubs()->attach([$motion->id]);
-$question = Post::create([
-    'user_id' => $mina->id,
-    'club_id' => $sketch->id,
-    'title' => 'Dark mode artwork compression',
-    'content' => 'How do you stop dark-mode artwork from looking muddy once it is compressed for the feed?',
-    'type' => 'question',
-    'metadata' => [
-        'answers_count' => 2,
-        'helpful_count' => 12,
-        'best_answer_pinned' => true,
-    ],
-]);
-
-$question->comments()->create([
-    'user_id' => $jay->id,
-    'content' => 'Try lifting the midtones before export and avoid pure black shadows. Dark UIs compress gradients hard.',
-    'helpful_count' => 12,
-    'is_best_answer' => true,
-]);
-
-$question->comments()->create([
-    'user_id' => $theo->id,
-    'content' => 'I usually add a subtle noise layer before compression so flat dark areas do not band as much.',
-    'helpful_count' => 7,
-]);
-$lfg = Post::create([
-    'user_id' => $theo->id,
-    'club_id' => $dnd->id,
-    'title' => 'Moonlit Heist',
-    'content' => 'Running a one shot tonight. Level 4 characters, social heavy mystery, new players welcome.',
-    'type' => 'lfg',
-    'metadata' => [
-        'starts_at' => '21:00',
-        'spots_filled' => 2,
-        'spots_total' => 5,
-        'form_fields_count' => 2,
-        'status' => 'open',
-    ],
-]);
-
-$lfg->lfgApplications()->create([
-    'user_id' => $jay->id,
-    'status' => 'pending',
-    'answers' => [
-        'character' => 'Half-elf rogue',
-        'experience' => 'Beginner-friendly, played two one-shots',
-    ],
-]);
     }
 }

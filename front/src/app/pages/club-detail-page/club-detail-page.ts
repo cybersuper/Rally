@@ -16,7 +16,9 @@ interface ClubDetail {
   accent_color: string;
   sticker_type: string | null;
   cover_image_url?: string | null;
+  members_count?: number;
   is_member: boolean;
+  membership_role: 'OWNER' | 'MODERATOR' | 'MEMBER' | string | null;
 }
 
 @Component({
@@ -35,6 +37,7 @@ export class ClubDetailPageComponent implements OnInit {
   posts = signal<Post[]>([]);
   isLoading = signal(true);
   error = signal<string | null>(null);
+  isTimelinePrivate = signal(false);
   isUpdatingMembership = signal(false);
 
   ngOnInit(): void {
@@ -52,6 +55,7 @@ export class ClubDetailPageComponent implements OnInit {
 
     this.isLoading.set(true);
     this.error.set(null);
+    this.isTimelinePrivate.set(false);
 
     this.http.get<{ club: ClubDetail }>(`/api/clubs/${slug}`).subscribe({
       next: response => {
@@ -64,7 +68,14 @@ export class ClubDetailPageComponent implements OnInit {
               this.posts.set(timeline.data);
               this.isLoading.set(false);
             },
-            error: () => {
+            error: err => {
+              if (err?.status === 403) {
+                this.posts.set([]);
+                this.isTimelinePrivate.set(true);
+                this.isLoading.set(false);
+                return;
+              }
+
               this.error.set('Could not load club timeline.');
               this.isLoading.set(false);
             },
@@ -80,6 +91,7 @@ export class ClubDetailPageComponent implements OnInit {
   toggleMembership(): void {
     const club = this.club();
     if (!club || this.isUpdatingMembership()) return;
+    if (this.isOwner()) return;
 
     this.isUpdatingMembership.set(true);
 
@@ -90,22 +102,41 @@ export class ClubDetailPageComponent implements OnInit {
     request$.subscribe({
       next: () => {
         this.club.update(current =>
-          current ? { ...current, is_member: !current.is_member } : current
+          current
+            ? {
+                ...current,
+                is_member: !current.is_member,
+                membership_role: current.is_member ? null : 'MEMBER',
+              }
+            : current
         );
 
         this.authService.me().subscribe({
           next: () => {
             this.timelineService.fetchTimeline().subscribe({
-              next: () => this.isUpdatingMembership.set(false),
-              error: () => this.isUpdatingMembership.set(false),
+              next: () => {
+                this.isUpdatingMembership.set(false);
+                this.load();
+              },
+              error: () => {
+                this.isUpdatingMembership.set(false);
+                this.load();
+              },
             });
           },
-          error: () => this.isUpdatingMembership.set(false),
+          error: () => {
+            this.isUpdatingMembership.set(false);
+            this.load();
+          },
         });
       },
       error: () => {
         this.isUpdatingMembership.set(false);
       },
     });
+  }
+
+  isOwner(): boolean {
+    return this.club()?.membership_role === 'OWNER';
   }
 }

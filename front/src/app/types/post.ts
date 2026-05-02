@@ -12,6 +12,7 @@ export interface Club {
   slug: string;
   accent_color: string;
   sticker_type: string | null;
+  membership_role?: 'OWNER' | 'MODERATOR' | 'MEMBER' | string | null;
 }
 
 export interface Post {

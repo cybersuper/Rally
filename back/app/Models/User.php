@@ -38,7 +38,7 @@ class User extends Authenticatable
     
     public function clubs()
     {
-        return $this->belongsToMany(\App\Models\Club::class)->withTimestamps();
+        return $this->belongsToMany(\App\Models\Club::class)->withPivot('role')->withTimestamps();
     }
     
     public function comments()

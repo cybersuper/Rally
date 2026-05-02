@@ -6,6 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class Club extends Model
 {
+    public const ROLE_OWNER = 'OWNER';
+    public const ROLE_MODERATOR = 'MODERATOR';
+    public const ROLE_MEMBER = 'MEMBER';
+
     protected $fillable = [
         'name',
         'slug',
@@ -22,6 +26,6 @@ class Club extends Model
 
     public function users()
     {
-        return $this->belongsToMany(User::class)->withTimestamps();
+        return $this->belongsToMany(User::class)->withPivot('role')->withTimestamps();
     }
 }

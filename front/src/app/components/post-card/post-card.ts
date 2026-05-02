@@ -17,6 +17,37 @@ export class PostCard {
   isApplying = signal(false);
   hasApplied = signal(false);
 
+  isApplyModalOpen = signal(false);
+  applyError = signal<string | null>(null);
+  applyAnswers = signal<Record<string, any>>({});
+
+  lfgApplicationFields(): Array<{ key: string; label: string; placeholder?: string; required?: boolean; type?: string }> {
+    const raw = this.metadataValue<any[]>('application_fields', []);
+
+    if (Array.isArray(raw) && raw.length) {
+      return raw
+        .filter(Boolean)
+        .map(field => ({
+          key: String(field.key ?? ''),
+          label: String(field.label ?? field.key ?? 'Field'),
+          placeholder: field.placeholder ? String(field.placeholder) : undefined,
+          required: !!field.required,
+          type: field.type ? String(field.type) : 'text',
+        }))
+        .filter(field => field.key.trim().length > 0);
+    }
+
+    return [
+      {
+        key: 'message',
+        label: 'Message',
+        placeholder: "Say hi and share what you're looking for",
+        required: true,
+        type: 'textarea',
+      },
+    ];
+  }
+
   initials(name: string): string {
     return name
       .split(' ')
@@ -68,19 +99,57 @@ export class PostCard {
     return Math.min(100, Math.max(0, (filled / total) * 100));
   }
 
-  applyToLfg(): void {
+  openApplyModal(): void {
+    if (this.hasApplied()) return;
+    this.applyError.set(null);
+    this.applyAnswers.set({});
+    this.isApplyModalOpen.set(true);
+  }
+
+  closeApplyModal(): void {
+    if (this.isApplying()) return;
+    this.isApplyModalOpen.set(false);
+  }
+
+  setAnswer(key: string, value: any): void {
+    this.applyAnswers.update(current => ({ ...current, [key]: value }));
+  }
+
+  submitApplication(): void {
     if (this.isApplying() || this.hasApplied()) return;
+
+    this.applyError.set(null);
+
+    const fields = this.lfgApplicationFields();
+    const answers = this.applyAnswers();
+
+    for (const field of fields) {
+      if (!field.required) continue;
+
+      const value = answers[field.key];
+
+      if (value === null || value === undefined || String(value).trim().length === 0) {
+        this.applyError.set('Please complete the required fields.');
+        return;
+      }
+    }
 
     this.isApplying.set(true);
 
-    this.postService.applyToLfg(this.post().id).subscribe({
+    this.postService.applyToLfg(this.post().id, answers).subscribe({
       next: () => {
         this.hasApplied.set(true);
         this.isApplying.set(false);
+        this.isApplyModalOpen.set(false);
       },
       error: error => {
         if (error?.status === 409) {
           this.hasApplied.set(true);
+          this.isApplyModalOpen.set(false);
+        } else if (error?.status === 403) {
+          this.applyError.set('You must join this club before applying.');
+        } else {
+          this.applyError.set('Could not send application.');
         }
 
         this.isApplying.set(false);

@@ -8,9 +8,11 @@ class Club extends Model
 {
     protected $fillable = [
         'name',
+        'slug',
         'description',
         'accent_color',
         'sticker_type',
+        'cover_image_url',
     ];
 
     public function posts()

@@ -7,6 +7,11 @@ interface LoginResponse {
   token: string;
 }
 
+interface RegisterResponse {
+  user: any;
+  token: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -24,6 +29,22 @@ export class AuthService {
         this.user.set(response.user);
       })
     );
+  }
+
+  register(name: string, email: string, password: string) {
+    return this.http
+      .post<RegisterResponse>('/api/register', { name, email, password })
+      .pipe(
+        tap(response => {
+          localStorage.setItem('rally_token', response.token);
+          this.token.set(response.token);
+          this.user.set(response.user);
+        })
+      );
+  }
+
+  isLoggedIn(): boolean {
+    return !!this.token();
   }
 
   me() {

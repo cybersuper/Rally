@@ -1,10 +1,16 @@
 <main class="rally-scrollbar min-h-screen bg-[var(--rally-bg)] text-white">
   <div
-    class="mx-auto grid min-h-screen w-full max-w-[1500px] grid-cols-1 gap-4 px-3 py-3 sm:px-4 lg:grid-cols-[240px_minmax(0,720px)_280px] xl:grid-cols-[260px_minmax(0,760px)_300px]"
+    class="mx-auto grid min-h-screen w-full max-w-[1500px] grid-cols-1 gap-4 px-3 py-3 sm:px-4"
+    [class.lg:grid-cols-[240px_minmax(0,720px)_280px]]="authService.isLoggedIn()"
+    [class.xl:grid-cols-[260px_minmax(0,760px)_300px]]="authService.isLoggedIn()"
+    [class.lg:grid-cols-[minmax(0,720px)]]="!authService.isLoggedIn()"
+    [class.xl:grid-cols-[minmax(0,760px)]]="!authService.isLoggedIn()"
+    [class.max-w-[980px]]="!authService.isLoggedIn()"
   >
     <!-- Left Sidebar -->
     <aside
-      class="hidden h-[calc(100vh-1.5rem)] rounded-3xl border border-white/10 bg-[#121216]/90 p-4 shadow-2xl lg:sticky lg:top-3 lg:block"
+      class="hidden h-[calc(100vh-1.5rem)] flex-col overflow-hidden rounded-3xl border border-white/10 bg-[#121216]/90 p-4 shadow-2xl lg:sticky lg:top-3"
+      [class.lg:block]="authService.isLoggedIn()"
     >
       <div class="mb-7 flex items-center gap-3">
         <div
@@ -20,128 +26,68 @@
       </div>
 
       <nav class="space-y-2 text-sm font-semibold">
-        <a class="flex items-center gap-3 rounded-2xl bg-white/7 px-4 py-3 text-white">
+        <a
+          routerLink="/timeline"
+          routerLinkActive="bg-white/7 text-white"
+          class="flex items-center gap-3 rounded-2xl px-4 py-3 text-zinc-400 hover:bg-white/5 hover:text-white"
+        >
           <span class="grid h-6 w-6 place-items-center rounded-lg border border-white/10 text-xs">T</span>
           Timeline
         </a>
 
-        <a class="flex items-center gap-3 rounded-2xl px-4 py-3 text-zinc-400 hover:bg-white/5 hover:text-white">
-          <span class="grid h-6 w-6 place-items-center rounded-lg border border-white/10 text-xs">P</span>
-          Profile
-        </a>
-
-        <a class="flex items-center gap-3 rounded-2xl px-4 py-3 text-zinc-400 hover:bg-white/5 hover:text-white">
-          <span class="grid h-6 w-6 place-items-center rounded-lg border border-white/10 text-xs">C</span>
-          Clubs
-        </a>
-
-        <a class="flex items-center gap-3 rounded-2xl px-4 py-3 text-zinc-400 hover:bg-white/5 hover:text-white">
+        <a
+          routerLink="/discover"
+          routerLinkActive="bg-white/7 text-white"
+          class="flex items-center gap-3 rounded-2xl px-4 py-3 text-zinc-400 hover:bg-white/5 hover:text-white"
+        >
           <span class="grid h-6 w-6 place-items-center rounded-lg border border-white/10 text-xs">D</span>
           Discover
         </a>
-
-        <a class="flex items-center gap-3 rounded-2xl px-4 py-3 text-zinc-400 hover:bg-white/5 hover:text-white">
-          <span class="grid h-6 w-6 place-items-center rounded-lg border border-white/10 text-xs">S</span>
-          Settings
-        </a>
       </nav>
 
-      <div class="mt-8 border-t border-white/10 pt-5">
-        <p class="mb-3 text-xs font-black uppercase tracking-wider text-zinc-600">Joined</p>
+      @if (authService.isLoggedIn()) {
+        <div class="mt-8 border-t border-white/10 pt-5">
+          <p class="mb-3 text-xs font-black uppercase tracking-wider text-zinc-600">Joined</p>
 
-        <div class="space-y-3 text-sm font-semibold text-zinc-300">
-          <div class="flex items-center gap-2">
-            <span class="h-2.5 w-2.5 rounded-full bg-yellow-400"></span>
-            DnD Table
-          </div>
-          <div class="flex items-center gap-2">
-            <span class="h-2.5 w-2.5 rounded-full bg-pink-400"></span>
-            Sketchbook Club
-          </div>
-          <div class="flex items-center gap-2">
-            <span class="h-2.5 w-2.5 rounded-full bg-emerald-400"></span>
-            Daily Motion
-          </div>
-          <div class="flex items-center gap-2">
-            <span class="h-2.5 w-2.5 rounded-full bg-blue-400"></span>
-            Indie Queue
-          </div>
-        </div>
-      </div>
-    </aside>
-
-    <!-- Feed -->
-    <section class="min-w-0 space-y-4">
-      <header
-        class="rounded-3xl border border-white/10 bg-[#121216]/90 p-4 shadow-2xl sm:p-5"
-      >
-        <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p class="text-xs font-black uppercase tracking-[0.2em] text-zinc-500">
-              Central Feed
-            </p>
-
-            <h1 class="mt-1 text-3xl font-black tracking-tight sm:text-4xl">
-              Today in your clubs
-            </h1>
-          </div>
-
-          <div class="flex rounded-2xl border border-white/10 bg-black/20 p-1 text-xs font-bold text-zinc-400">
-            <button class="rounded-xl bg-white/10 px-3 py-2 text-white">All</button>
-            <button class="rounded-xl px-3 py-2 hover:text-white">Questions</button>
-            <button class="rounded-xl px-3 py-2 hover:text-white">Logs</button>
-            <button class="rounded-xl px-3 py-2 hover:text-white">LFG</button>
-          </div>
-        </div>
-
-        <div class="mt-5 flex items-center gap-3">
-          <div class="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-cyan-300 font-black text-black">
-            J
-          </div>
-
-          <button
-            class="min-w-0 flex-1 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-left text-sm text-zinc-500 hover:border-white/20 hover:bg-white/[0.05]"
-            type="button"
-            (click)="openComposer()"
-          >
-            Share a log, question, or group call...
-          </button>
-
-          <button
-          type="button"
-          class="hidden rounded-2xl border border-white/10 px-4 py-3 text-sm font-black text-zinc-300 hover:bg-white/5 sm:block"
-          (click)="openComposer()"
-        >
-          +
-        </button>
-        </div>
-      </header>
-
-      <app-composer
-        [open]="isComposerOpen()"
-        (close)="closeComposer()"
-      />
-
-      @if (isLoading()) {
-        <div class="rounded-3xl border border-white/10 bg-[#18181d] p-6 text-zinc-400">
-          Loading timeline...
-        </div>
-      } @else if (error()) {
-        <div class="rounded-3xl border border-red-400/30 bg-red-500/10 p-6 text-red-200">
-          {{ error() }}
-        </div>
-      } @else {
-        <div class="space-y-5 pb-8">
-          @for (post of posts(); track post.id) {
-            <app-post-card [post]="post" />
+          @if (user()?.clubs?.length) {
+            <div class="space-y-2 text-sm font-semibold text-zinc-300">
+              @for (club of user()?.clubs; track club.id) {
+                <a
+                  class="flex items-center gap-2 rounded-xl px-2 py-2 hover:bg-white/5"
+                  [routerLink]="['/clubs', club.slug]"
+                >
+                  <span class="h-2.5 w-2.5 rounded-full" [style.background]="club.accent_color"></span>
+                  <span class="truncate">{{ club.name }}</span>
+                </a>
+              }
+            </div>
+          } @else {
+            <div class="text-sm font-semibold text-zinc-500">
+              Join clubs to personalize your feed.
+            </div>
           }
         </div>
+
+        <div class="mt-6 border-t border-white/10 pt-5">
+          <button
+            type="button"
+            class="w-full rounded-2xl border border-white/10 px-4 py-3 text-sm font-black text-zinc-300 hover:bg-white/5"
+            (click)="logout()"
+          >
+            Logout
+          </button>
+        </div>
       }
+    </aside>
+
+    <section class="min-w-0">
+      <router-outlet />
     </section>
 
     <!-- Right Sidebar -->
     <aside
-      class="hidden h-[calc(100vh-1.5rem)] rounded-3xl border border-white/10 bg-[#121216]/90 p-4 shadow-2xl lg:sticky lg:top-3 lg:block"
+      class="hidden h-[calc(100vh-1.5rem)] flex-col overflow-hidden rounded-3xl border border-white/10 bg-[#121216]/90 p-4 shadow-2xl lg:sticky lg:top-3"
+      [class.lg:block]="authService.isLoggedIn()"
     >
       <div class="mb-6 flex items-center justify-between">
         <h2 class="text-sm font-black uppercase tracking-wide text-zinc-400">
@@ -185,23 +131,12 @@
       </div>
 
       <h2 class="mb-4 mt-9 text-sm font-black uppercase tracking-wide text-zinc-400">
-        Trending Hobbies
+        Suggested Clubs
       </h2>
 
-      <div class="space-y-3">
-        <div class="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-          <p class="font-black">#one-shot</p>
-          <p class="text-xs text-zinc-500">1.8k posts</p>
-        </div>
-
-        <div class="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-          <p class="font-black">#daily-log</p>
-          <p class="text-xs text-zinc-500">946 posts</p>
-        </div>
-
-        <div class="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-          <p class="font-black">#pixel-polish</p>
-          <p class="text-xs text-zinc-500">612 posts</p>
+      <div class="flex flex-1 overflow-y-auto">
+        <div class="min-h-0 flex-1 overflow-y-auto pr-1">
+          <app-club-discovery />
         </div>
       </div>
     </aside>

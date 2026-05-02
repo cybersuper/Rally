@@ -72,7 +72,7 @@ class PostController extends Controller
         return response()->json([
             'post' => $post->load([
                 'user:id,name,email',
-                'club:id,name,accent_color,sticker_type',
+                'club:id,name,slug,accent_color,sticker_type',
             ]),
         ], 201);
     }

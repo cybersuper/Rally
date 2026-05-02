@@ -1,6 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { PaginatedPosts, Post } from '../types/post';
 
 @Injectable({
@@ -13,6 +14,14 @@ export class TimelineService {
 
   getTimeline(): Observable<PaginatedPosts> {
     return this.http.get<PaginatedPosts>('/api/timeline');
+  }
+
+  fetchTimeline(): Observable<PaginatedPosts> {
+    return this.getTimeline().pipe(
+      tap(response => {
+        this.setPosts(response.data);
+      })
+    );
   }
 
   setPosts(posts: Post[]): void {

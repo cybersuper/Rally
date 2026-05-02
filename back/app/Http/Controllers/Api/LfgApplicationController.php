@@ -14,6 +14,13 @@ class LfgApplicationController extends Controller
     {
         abort_unless($post->type === 'lfg', 404, 'This post is not an LFG post.');
 
+        $isMember = $request->user()
+            ->clubs()
+            ->where('clubs.id', $post->club_id)
+            ->exists();
+
+        abort_unless($isMember, 403, 'You must join this club before applying.');
+
         $validated = $request->validate([
             'answers' => ['nullable', 'array'],
         ]);

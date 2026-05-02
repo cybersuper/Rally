@@ -11,6 +11,28 @@ use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
+    public function register(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:120'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'password' => ['required', 'string', 'min:8'],
+        ]);
+
+        $user = User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+        ]);
+
+        $token = $user->createToken('rally-client')->plainTextToken;
+
+        return response()->json([
+            'user' => $user,
+            'token' => $token,
+        ], 201);
+    }
+
     public function login(Request $request): JsonResponse
     {
         $validated = $request->validate([

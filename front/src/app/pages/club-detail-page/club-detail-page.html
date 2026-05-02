@@ -1,0 +1,73 @@
+<section class="min-w-0 space-y-4">
+  @if (isLoading()) {
+    <div class="rounded-3xl border border-white/10 bg-[#121216]/90 p-6 text-zinc-400 shadow-2xl">
+      Loading club...
+    </div>
+  } @else if (error()) {
+    <div class="rounded-3xl border border-red-400/30 bg-red-500/10 p-6 text-red-200">
+      {{ error() }}
+    </div>
+  } @else {
+    <header
+      class="overflow-hidden rounded-3xl border border-white/10 bg-[#121216]/90 shadow-2xl"
+      [style.--club-accent]="club()?.accent_color"
+    >
+      <div class="relative h-32">
+        @if (club()?.cover_image_url) {
+          <img
+            class="h-full w-full object-cover opacity-85"
+            [src]="club()?.cover_image_url"
+            [alt]="club()?.name + ' cover'"
+          />
+        } @else {
+          <div
+            class="h-full w-full"
+            [style.background]="'radial-gradient(circle at 20% 15%, ' + (club()?.accent_color ?? '#fff') + '55, transparent 60%), linear-gradient(135deg, ' + (club()?.accent_color ?? '#fff') + '22, transparent)'"
+          ></div>
+        }
+
+        <div class="absolute inset-0 bg-gradient-to-b from-black/10 via-[#121216]/40 to-[#121216]"></div>
+
+        <div class="absolute left-0 top-0 h-1 w-full" [style.background]="club()?.accent_color"></div>
+      </div>
+
+      <div class="p-5">
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div class="min-w-0">
+          <p class="text-xs font-black uppercase tracking-[0.2em] text-zinc-500">
+            Club
+          </p>
+          <h1 class="mt-1 truncate text-3xl font-black tracking-tight sm:text-4xl">
+            {{ club()?.name }}
+          </h1>
+          <p class="mt-2 max-w-[64ch] text-sm font-semibold text-zinc-500">
+            {{ club()?.description }}
+          </p>
+        </div>
+
+        <button
+          type="button"
+          class="rounded-2xl border border-white/10 px-5 py-3 text-sm font-black text-zinc-200 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-60"
+          [style.borderColor]="club()?.accent_color + '55'"
+          [disabled]="isUpdatingMembership()"
+          (click)="toggleMembership()"
+        >
+          @if (isUpdatingMembership()) {
+            ...
+          } @else if (club()?.is_member) {
+            Leave
+          } @else {
+            Join
+          }
+        </button>
+      </div>
+      </div>
+    </header>
+
+    <div class="space-y-5 pb-8">
+      @for (post of posts(); track post.id) {
+        <app-post-card [post]="post" />
+      }
+    </div>
+  }
+</section>

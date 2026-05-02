@@ -38,30 +38,38 @@ class DatabaseSeeder extends Seeder
 
         $dnd = Club::create([
             'name' => 'DnD Table',
+            'slug' => 'dnd-table',
             'description' => 'One-shots, campaigns, dice chaos, and table talk.',
             'accent_color' => '#facc15',
             'sticker_type' => 'd20',
+            'cover_image_url' => 'https://images.unsplash.com/photo-1560972550-aba3456b5564?auto=format&fit=crop&w=1400&q=60',
         ]);
 
         $sketch = Club::create([
             'name' => 'Sketchbook Club',
+            'slug' => 'sketchbook-club',
             'description' => 'Daily drawing, art feedback, and sketch swaps.',
             'accent_color' => '#f472b6',
             'sticker_type' => 'question',
+            'cover_image_url' => 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=1400&q=60',
         ]);
 
         $motion = Club::create([
             'name' => 'Daily Motion',
+            'slug' => 'daily-motion',
             'description' => 'Fitness logs, mobility, running, and consistency.',
             'accent_color' => '#34d399',
             'sticker_type' => 'fire',
+            'cover_image_url' => 'https://images.unsplash.com/photo-1517832207067-4db24a2ae47c?auto=format&fit=crop&w=1400&q=60',
         ]);
 
         $indie = Club::create([
             'name' => 'Indie Queue',
+            'slug' => 'indie-queue',
             'description' => 'Tiny game builds, devlogs, and pixel polish.',
             'accent_color' => '#60a5fa',
             'sticker_type' => 'sparkle',
+            'cover_image_url' => 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1400&q=60',
         ]);
 
         Post::create([

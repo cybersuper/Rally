@@ -1,0 +1,150 @@
+<main class="rally-scrollbar min-h-screen bg-[var(--rally-bg)] text-white">
+  <div class="mx-auto grid min-h-screen w-full max-w-[1200px] grid-cols-1 gap-8 px-4 py-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+    <section class="space-y-6">
+      <div class="inline-flex items-center gap-3 rounded-3xl border border-white/10 bg-[#121216]/80 px-5 py-4 shadow-2xl">
+        <div class="grid h-12 w-12 place-items-center rounded-2xl bg-cyan-300 text-lg font-black text-black shadow-lg shadow-cyan-300/20">
+          R
+        </div>
+        <div>
+          <p class="text-xl font-black leading-tight">Rally</p>
+          <p class="text-sm font-semibold text-zinc-500">Today in your clubs</p>
+        </div>
+      </div>
+
+      <h1 class="text-4xl font-black tracking-tight sm:text-5xl">
+        A fast feed for
+        <span class="text-cyan-200">hobby clubs</span>
+      </h1>
+
+      <p class="max-w-[58ch] text-sm font-semibold leading-7 text-zinc-400">
+        Join communities, post logs, ask questions, and find groups. Rally mixes everything into one timeline so it feels alive.
+      </p>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div class="rounded-3xl border border-white/10 bg-white/[0.03] p-4">
+          <p class="text-xs font-black uppercase tracking-wider text-zinc-500">Clubs</p>
+          <p class="mt-2 text-sm font-black">DnD, sketching, fitness, indie games…</p>
+        </div>
+        <div class="rounded-3xl border border-white/10 bg-white/[0.03] p-4">
+          <p class="text-xs font-black uppercase tracking-wider text-zinc-500">Types</p>
+          <p class="mt-2 text-sm font-black">Questions, logs, LFG, updates</p>
+        </div>
+      </div>
+
+      <a
+        routerLink="/discover"
+        class="inline-flex items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-3 text-sm font-black text-zinc-200 hover:bg-white/[0.06]"
+      >
+        Browse clubs as a guest
+      </a>
+    </section>
+
+    <section class="relative">
+      <div
+        class="pointer-events-none absolute -inset-6 -z-10 rounded-[40px] opacity-70 blur-2xl"
+        style="background: radial-gradient(circle at 50% 35%, rgba(255,64,64,0.22), transparent 60%);"
+      ></div>
+
+      <div class="rounded-3xl border border-white/10 bg-[#121216]/90 p-6 shadow-2xl">
+      <div class="mb-5 flex items-center justify-between gap-3">
+        <div>
+          <p class="text-xs font-black uppercase tracking-[0.2em] text-zinc-500">Account</p>
+          <h2 class="mt-1 text-2xl font-black tracking-tight">
+            @if (mode() === 'signin') { Sign in } @else { Create account }
+          </h2>
+        </div>
+
+        <div class="flex rounded-2xl border border-white/10 bg-black/20 p-1 text-xs font-bold text-zinc-400">
+          <button
+            type="button"
+            class="rounded-xl px-3 py-2"
+            [class.bg-white/10]="mode() === 'signin'"
+            [class.text-white]="mode() === 'signin'"
+            (click)="setMode('signin')"
+          >
+            Sign in
+          </button>
+          <button
+            type="button"
+            class="rounded-xl px-3 py-2"
+            [class.bg-white/10]="mode() === 'signup'"
+            [class.text-white]="mode() === 'signup'"
+            (click)="setMode('signup')"
+          >
+            Sign up
+          </button>
+        </div>
+      </div>
+
+      <form class="space-y-4" (ngSubmit)="submit()">
+        @if (mode() === 'signup') {
+          <label class="block">
+            <span class="mb-1.5 block text-xs font-black uppercase tracking-wide text-zinc-500">Name</span>
+            <input
+              class="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-white/20"
+              type="text"
+              name="name"
+              [ngModel]="name()"
+              (ngModelChange)="name.set($event)"
+              placeholder="Jay Carter"
+              autocomplete="name"
+            />
+          </label>
+        }
+
+        <label class="block">
+          <span class="mb-1.5 block text-xs font-black uppercase tracking-wide text-zinc-500">Email</span>
+          <input
+            class="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-white/20"
+            type="email"
+            name="email"
+            [ngModel]="email()"
+            (ngModelChange)="email.set($event)"
+            placeholder="you@example.com"
+            autocomplete="email"
+            required
+          />
+        </label>
+
+        <label class="block">
+          <span class="mb-1.5 block text-xs font-black uppercase tracking-wide text-zinc-500">Password</span>
+          <input
+            class="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-white/20"
+            type="password"
+            name="password"
+            [ngModel]="password()"
+            (ngModelChange)="password.set($event)"
+            placeholder="••••••••"
+            autocomplete="current-password"
+            required
+          />
+        </label>
+
+        @if (error()) {
+          <div class="rounded-2xl border border-red-400/30 bg-red-500/10 p-4 text-sm font-semibold text-red-200">
+            {{ error() }}
+          </div>
+        }
+
+        <button
+          type="submit"
+          class="w-full rounded-2xl bg-white px-5 py-3 text-sm font-black text-black shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
+          [disabled]="isSubmitting()"
+        >
+          @if (isSubmitting()) {
+            Working...
+          } @else if (mode() === 'signin') {
+            Sign in
+          } @else {
+            Create account
+          }
+        </button>
+
+        <p class="text-center text-xs font-semibold text-zinc-500">
+          By continuing, you’re building tiny streaks with your clubs.
+        </p>
+      </form>
+      </div>
+    </section>
+  </div>
+</main>

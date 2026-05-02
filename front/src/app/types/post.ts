@@ -9,6 +9,7 @@ export interface RallyUser {
 export interface Club {
   id: number;
   name: string;
+  slug: string;
   accent_color: string;
   sticker_type: string | null;
 }

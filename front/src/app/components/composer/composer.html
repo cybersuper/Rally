@@ -1,0 +1,170 @@
+@if (open) {
+  <div class="fixed inset-0 z-50">
+    <button
+      type="button"
+      class="absolute inset-0 bg-black/70"
+      (click)="onBackdropClick()"
+      aria-label="Close composer"
+    ></button>
+
+    <div class="absolute inset-0 grid place-items-center px-4 py-6">
+      <section
+        class="w-full max-w-xl rounded-3xl border border-white/10 bg-[#121216]/95 p-5 shadow-2xl backdrop-blur sm:p-6"
+      >
+        <header class="mb-5 flex items-start justify-between gap-4">
+          <div>
+            <p class="text-xs font-black uppercase tracking-[0.2em] text-zinc-500">
+              Create
+            </p>
+            <h2 class="mt-1 text-2xl font-black tracking-tight">New post</h2>
+          </div>
+
+          <button
+            type="button"
+            class="rounded-2xl border border-white/10 px-4 py-2 text-sm font-black text-zinc-300 hover:bg-white/5 disabled:opacity-60"
+            (click)="requestClose()"
+            [disabled]="isSubmitting()"
+          >
+            Close
+          </button>
+        </header>
+
+        @if (!clubs().length) {
+          <div class="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm text-zinc-300">
+            You haven’t joined any clubs yet.
+          </div>
+        } @else {
+          <form class="space-y-4" (ngSubmit)="submit()">
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <label class="block">
+                <span class="mb-1.5 block text-xs font-black uppercase tracking-wide text-zinc-500">Club</span>
+                <select
+                  class="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-white/20"
+                  [(ngModel)]="form().club_id"
+                  (ngModelChange)="form.update(s => ({ ...s, club_id: $event }))"
+                  name="club_id"
+                  required
+                >
+                  @for (club of clubs(); track club.id) {
+                    <option [ngValue]="club.id">{{ club.name }}</option>
+                  }
+                </select>
+              </label>
+
+              <label class="block">
+                <span class="mb-1.5 block text-xs font-black uppercase tracking-wide text-zinc-500">Type</span>
+                <select
+                  class="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-white/20"
+                  name="type"
+                  [ngModel]="form().type"
+                  (ngModelChange)="form.update(s => ({ ...s, type: $event }))"
+                  required
+                >
+                  <option value="standard">Standard</option>
+                  <option value="question">Question</option>
+                  <option value="log">Log</option>
+                  <option value="lfg">LFG</option>
+                </select>
+              </label>
+            </div>
+
+            <label class="block">
+              <span class="mb-1.5 block text-xs font-black uppercase tracking-wide text-zinc-500">Title</span>
+              <input
+                class="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-white/20"
+                type="text"
+                name="title"
+                [ngModel]="form().title"
+                (ngModelChange)="form.update(s => ({ ...s, title: $event }))"
+                placeholder="Give it a quick headline"
+                required
+              />
+            </label>
+
+            <label class="block">
+              <span class="mb-1.5 block text-xs font-black uppercase tracking-wide text-zinc-500">Content</span>
+              <textarea
+                class="min-h-[120px] w-full resize-none rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm leading-6 text-white outline-none placeholder:text-zinc-600 focus:border-white/20"
+                name="content"
+                [ngModel]="form().content"
+                (ngModelChange)="form.update(s => ({ ...s, content: $event }))"
+                placeholder="What happened today?"
+                required
+              ></textarea>
+            </label>
+
+            @if (isType('log')) {
+              <label class="block">
+                <span class="mb-1.5 block text-xs font-black uppercase tracking-wide text-zinc-500">Feeling</span>
+                <input
+                  class="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-white/20"
+                  type="text"
+                  name="feeling"
+                  [ngModel]="form().feeling"
+                  (ngModelChange)="form.update(s => ({ ...s, feeling: $event }))"
+                  placeholder="Locked In / Exhausted / Steady"
+                />
+              </label>
+            }
+
+            @if (isType('lfg')) {
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <label class="block">
+                  <span class="mb-1.5 block text-xs font-black uppercase tracking-wide text-zinc-500">Spots total</span>
+                  <input
+                    class="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-white/20"
+                    type="number"
+                    min="1"
+                    name="spots_total"
+                    [ngModel]="form().spots_total"
+                    (ngModelChange)="form.update(s => ({ ...s, spots_total: $event }))"
+                  />
+                </label>
+
+                <label class="block">
+                  <span class="mb-1.5 block text-xs font-black uppercase tracking-wide text-zinc-500">Start time</span>
+                  <input
+                    class="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-white/20"
+                    type="datetime-local"
+                    name="starts_at"
+                    [ngModel]="form().starts_at"
+                    (ngModelChange)="form.update(s => ({ ...s, starts_at: $event }))"
+                  />
+                </label>
+              </div>
+            }
+
+            @if (error()) {
+              <div class="rounded-2xl border border-red-400/30 bg-red-500/10 p-4 text-sm font-semibold text-red-200">
+                {{ error() }}
+              </div>
+            }
+
+            <footer class="flex items-center justify-end gap-3 pt-1">
+              <button
+                type="button"
+                class="rounded-2xl border border-white/10 px-4 py-3 text-sm font-black text-zinc-300 hover:bg-white/5 disabled:opacity-60"
+                (click)="requestClose()"
+                [disabled]="isSubmitting()"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="submit"
+                class="rounded-2xl bg-white px-5 py-3 text-sm font-black text-black shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
+                [disabled]="isSubmitting()"
+              >
+                @if (isSubmitting()) {
+                  Posting...
+                } @else {
+                  Post
+                }
+              </button>
+            </footer>
+          </form>
+        }
+      </section>
+    </div>
+  </div>
+}

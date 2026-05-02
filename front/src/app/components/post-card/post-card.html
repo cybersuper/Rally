@@ -1,0 +1,193 @@
+<article
+  class="rally-card rounded-3xl p-4 transition duration-200 sm:p-5"
+  [style.--club-accent]="post().club.accent_color"
+>
+  <!-- Sticker: now above/right of the card, not covering the type pill -->
+  <div [class]="stickerClass()" aria-hidden="true">
+    <div class="rally-sticker-inner">
+      {{ stickerText() }}
+    </div>
+  </div>
+
+  <header class="relative z-10 mb-4 flex items-start gap-3 pr-16">
+    <div
+      class="grid h-12 w-12 shrink-0 place-items-center rounded-2xl text-sm font-black text-black shadow-lg"
+      [style.background]="post().club.accent_color"
+      [style.boxShadow]="'0 14px 28px ' + post().club.accent_color + '22'"
+    >
+      {{ initials(post().user.name) }}
+    </div>
+
+    <div class="min-w-0 flex-1">
+      <div class="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+        <h3 class="truncate text-base font-black text-white">
+          {{ post().user.name }}
+        </h3>
+
+        <span
+          class="h-1.5 w-1.5 rounded-full"
+          [style.background]="post().club.accent_color"
+        ></span>
+
+        <span class="truncate text-xs font-medium text-zinc-500">
+          {{ post().club.name }}
+        </span>
+      </div>
+
+      <p class="mt-0.5 text-xs font-medium text-zinc-500">
+        {{ post().created_at | date: 'shortTime' }}
+      </p>
+    </div>
+
+    <span
+      class="rounded-full border px-2.5 py-1 text-xs font-black"
+      [style.borderColor]="post().club.accent_color + '44'"
+      [style.background]="post().club.accent_color + '18'"
+      [style.color]="post().club.accent_color"
+    >
+      {{ typeLabel() }}
+    </span>
+  </header>
+
+  <section class="relative z-10 pr-2">
+    <h2 class="mb-2 text-lg font-black tracking-tight text-white">
+      {{ post().title }}
+    </h2>
+
+    <p class="max-w-[64ch] text-[0.95rem] leading-7 text-zinc-100/95">
+      {{ post().content }}
+    </p>
+  </section>
+
+  @switch (post().type) {
+    @case ('lfg') {
+      <section
+        class="relative z-10 mt-5 rounded-2xl border p-4"
+        [style.borderColor]="post().club.accent_color + '66'"
+        [style.background]="post().club.accent_color + '16'"
+      >
+        <div class="mb-2 flex items-center justify-between gap-3">
+          <span class="text-xs font-black uppercase tracking-wide text-zinc-300">
+            Seats filled
+          </span>
+
+          <span class="text-sm font-black text-white">
+            {{ metadataValue('spots_filled', 0) }}/{{ metadataValue('spots_total', 0) }}
+          </span>
+        </div>
+
+        <div class="h-2.5 overflow-hidden rounded-full bg-black/30">
+          <div
+            class="h-full rounded-full transition-all"
+            [style.background]="post().club.accent_color"
+            [style.width.%]="lfgProgress()"
+          ></div>
+        </div>
+
+        <div class="mt-4 flex items-center justify-between gap-3">
+          <button
+            type="button"
+            class="rounded-xl px-5 py-2.5 text-sm font-black text-black shadow-lg transition hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+            [style.background]="post().club.accent_color"
+            [style.boxShadow]="'0 14px 32px ' + post().club.accent_color + '26'"
+            [disabled]="isApplying() || hasApplied()"
+            (click)="applyToLfg()"
+          >
+            @if (hasApplied()) {
+              Applied
+            } @else if (isApplying()) {
+              Applying...
+            } @else {
+              Apply
+            }
+          </button>
+
+          <span class="text-xs font-bold text-zinc-400">
+            {{ metadataValue('form_fields_count', 0) }} form fields
+          </span>
+        </div>
+      </section>
+    }
+
+    @case ('question') {
+      <section
+        class="relative z-10 mt-5 rounded-2xl border p-4"
+        [style.borderColor]="post().club.accent_color + '55'"
+        [style.background]="post().club.accent_color + '18'"
+      >
+        <div class="grid grid-cols-2 gap-4 sm:grid-cols-[1fr_1fr_auto] sm:items-center">
+          <div>
+            <p class="text-xs font-black uppercase tracking-wide text-zinc-400">
+              Answers
+            </p>
+            <p class="mt-1 text-xl font-black text-white">
+              {{ metadataValue('answers_count', 0) }}
+            </p>
+          </div>
+
+          <div>
+            <p class="text-xs font-black uppercase tracking-wide text-zinc-400">
+              Helpful
+            </p>
+            <p class="mt-1 text-xl font-black text-white">
+              {{ metadataValue('helpful_count', 0) }}
+            </p>
+          </div>
+
+          @if (metadataValue('best_answer_pinned', false)) {
+            <div class="col-span-2 flex sm:col-span-1">
+              <span class="rounded-full bg-emerald-400/20 px-3 py-1.5 text-xs font-black text-emerald-300">
+                Best answer pinned
+              </span>
+            </div>
+          }
+        </div>
+      </section>
+    }
+
+    @case ('log') {
+      <section
+        class="relative z-10 mt-5 rounded-2xl border border-emerald-400/25 bg-emerald-400/10 p-4"
+      >
+        <div class="mb-2 flex items-center justify-between gap-3">
+          <span class="text-xs font-black uppercase tracking-wide text-zinc-400">
+            Current streak
+          </span>
+
+          <span class="text-sm font-black text-white">
+            {{ metadataValue('streak_count', 0) }} days
+          </span>
+        </div>
+
+        <div class="h-2.5 overflow-hidden rounded-full bg-black/30">
+          <div
+            class="h-full rounded-full bg-emerald-400"
+            [style.width.%]="metadataValue('progress_percent', 0)"
+          ></div>
+        </div>
+
+        <div class="mt-3 flex items-center justify-between text-xs font-bold">
+          <span class="text-zinc-500">Daily log</span>
+          <span class="text-emerald-300">
+            Feeling: {{ metadataValue('feeling', 'Solid') }}
+          </span>
+        </div>
+      </section>
+    }
+
+    @default {
+      <section class="relative z-10 mt-5 rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-xs font-bold text-zinc-500">
+        Standard post
+      </section>
+    }
+  }
+
+  <footer class="relative z-10 mt-5 border-t border-white/7 pt-4">
+    <div class="flex items-center justify-between">
+      <button class="rally-action" aria-label="Reply">↩</button>
+      <button class="rally-action" aria-label="Repost">↻</button>
+      <button class="rally-action" aria-label="Boost">✦</button>
+      <button class="rally-action" aria-label="More">…</button>
+    </div>
+  </footer>
+</article>

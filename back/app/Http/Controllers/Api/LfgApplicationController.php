@@ -173,15 +173,18 @@ class LfgApplicationController extends Controller
                 continue;
             }
 
-            $key = (string) ($field['key'] ?? '');
+            $key = (string) ($field['key'] ?? $field['id'] ?? '');
 
             if ($key === '') {
                 continue;
             }
 
             $value = $answers[$key] ?? null;
+            $isMissing = $value === null
+                || (is_string($value) && trim($value) === '')
+                || (is_array($value) && count($value) === 0);
 
-            if ($value === null || trim((string) $value) === '') {
+            if ($isMissing) {
                 throw ValidationException::withMessages([
                     "answers.$key" => ['This answer is required.'],
                 ]);

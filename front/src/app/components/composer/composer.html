@@ -108,29 +108,122 @@
             }
 
             @if (isType('lfg')) {
-              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <label class="block">
-                  <span class="mb-1.5 block text-xs font-black uppercase tracking-wide text-zinc-500">Spots total</span>
-                  <input
-                    class="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-white/20"
-                    type="number"
-                    min="1"
-                    name="spots_total"
-                    [ngModel]="form().spots_total"
-                    (ngModelChange)="form.update(s => ({ ...s, spots_total: $event }))"
-                  />
-                </label>
+              <div class="space-y-4">
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <label class="block">
+                    <span class="mb-1.5 block text-xs font-black uppercase tracking-wide text-zinc-500">Spots total</span>
+                    <input
+                      class="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-white/20"
+                      type="number"
+                      min="1"
+                      name="spots_total"
+                      [ngModel]="form().spots_total"
+                      (ngModelChange)="form.update(s => ({ ...s, spots_total: $event }))"
+                    />
+                  </label>
 
-                <label class="block">
-                  <span class="mb-1.5 block text-xs font-black uppercase tracking-wide text-zinc-500">Start time</span>
-                  <input
-                    class="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-white/20"
-                    type="datetime-local"
-                    name="starts_at"
-                    [ngModel]="form().starts_at"
-                    (ngModelChange)="form.update(s => ({ ...s, starts_at: $event }))"
-                  />
-                </label>
+                  <label class="block">
+                    <span class="mb-1.5 block text-xs font-black uppercase tracking-wide text-zinc-500">Start time</span>
+                    <input
+                      class="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-white/20"
+                      type="datetime-local"
+                      name="starts_at"
+                      [ngModel]="form().starts_at"
+                      (ngModelChange)="form.update(s => ({ ...s, starts_at: $event }))"
+                    />
+                  </label>
+                </div>
+
+                <section class="rounded-2xl border border-white/10 bg-black/20 p-4">
+                  <div class="mb-4 flex items-center justify-between gap-3">
+                    <p class="text-xs font-black uppercase tracking-wide text-zinc-500">
+                      Application fields
+                    </p>
+
+                    <button
+                      type="button"
+                      class="rounded-xl border border-white/10 px-3 py-2 text-xs font-black text-zinc-200 hover:bg-white/5"
+                      (click)="addApplicationField()"
+                    >
+                      Add question
+                    </button>
+                  </div>
+
+                  @if (!form().application_fields.length) {
+                    <div class="text-sm font-semibold text-zinc-500">
+                      Applicants will get the default message field.
+                    </div>
+                  } @else {
+                    <div class="space-y-3">
+                      @for (field of form().application_fields; track field.id) {
+                        <div class="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+                          <div class="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_150px_auto]">
+                            <label class="block">
+                              <span class="mb-1.5 block text-xs font-black uppercase tracking-wide text-zinc-500">Question</span>
+                              <input
+                                class="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-white/20"
+                                type="text"
+                                [name]="'application_label_' + field.id"
+                                [ngModel]="field.label"
+                                (ngModelChange)="updateApplicationField(field.id, { label: $event })"
+                                placeholder="What character do you play?"
+                              />
+                            </label>
+
+                            <label class="block">
+                              <span class="mb-1.5 block text-xs font-black uppercase tracking-wide text-zinc-500">Type</span>
+                              <select
+                                class="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-white outline-none focus:border-white/20"
+                                [name]="'application_type_' + field.id"
+                                [ngModel]="field.type"
+                                (ngModelChange)="updateApplicationField(field.id, { type: $event })"
+                              >
+                                <option value="text">Text</option>
+                                <option value="textarea">Long text</option>
+                                <option value="boolean">Boolean</option>
+                                <option value="select">Select</option>
+                                <option value="checkbox">Checkboxes</option>
+                              </select>
+                            </label>
+
+                            <div class="flex items-end gap-2">
+                              <label class="flex h-11 items-center gap-2 rounded-xl border border-white/10 px-3 text-xs font-black text-zinc-300">
+                                <input
+                                  type="checkbox"
+                                  [name]="'application_required_' + field.id"
+                                  [ngModel]="field.required"
+                                  (ngModelChange)="updateApplicationField(field.id, { required: $event })"
+                                />
+                                Required
+                              </label>
+
+                              <button
+                                type="button"
+                                class="h-11 rounded-xl border border-white/10 px-3 text-xs font-black text-zinc-400 hover:bg-white/5 hover:text-white"
+                                (click)="removeApplicationField(field.id)"
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          </div>
+
+                          @if (needsOptions(field)) {
+                            <label class="mt-3 block">
+                              <span class="mb-1.5 block text-xs font-black uppercase tracking-wide text-zinc-500">Options</span>
+                              <textarea
+                                class="min-h-[86px] w-full resize-none rounded-xl border border-white/10 bg-black/30 px-3 py-2.5 text-sm leading-6 text-white outline-none placeholder:text-zinc-600 focus:border-white/20"
+                                [name]="'application_options_' + field.id"
+                                [ngModel]="field.optionsText"
+                                (ngModelChange)="updateApplicationField(field.id, { optionsText: $event })"
+                                placeholder="Gold&#10;Platinum&#10;Diamond"
+                              ></textarea>
+                            </label>
+                          }
+                        </div>
+                      }
+                    </div>
+                  }
+                </section>
               </div>
             }
 

@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../auth';
 import { ClubService, DiscoverClub } from '../../services/club';
 import { TimelineService } from '../../services/timeline';
@@ -14,6 +14,7 @@ export class ClubDiscoveryComponent implements OnInit {
   private readonly clubService = inject(ClubService);
   private readonly authService = inject(AuthService);
   private readonly timelineService = inject(TimelineService);
+  private readonly router = inject(Router);
 
   isGuest = signal(!this.authService.isLoggedIn());
 
@@ -49,6 +50,16 @@ export class ClubDiscoveryComponent implements OnInit {
 
   isOwner(club: DiscoverClub): boolean {
     return club.membership_role === 'OWNER';
+  }
+
+  canManageClub(club: DiscoverClub): boolean {
+    return ['OWNER', 'ADMIN', 'MODERATOR'].includes(String(club.membership_role ?? ''));
+  }
+
+  openAdmin(event: Event, club: DiscoverClub): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.router.navigate(['/clubs', club.slug, 'admin']);
   }
 
   private setUpdating(clubId: number, value: boolean): void {

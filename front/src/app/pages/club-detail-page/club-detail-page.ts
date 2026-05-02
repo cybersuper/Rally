@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { PostCard } from '../../components/post-card/post-card';
 import { AuthService } from '../../auth';
 import { ClubService } from '../../services/club';
@@ -23,7 +23,7 @@ interface ClubDetail {
 
 @Component({
   selector: 'app-club-detail-page',
-  imports: [CommonModule, PostCard],
+  imports: [CommonModule, RouterLink, PostCard],
   templateUrl: './club-detail-page.html',
 })
 export class ClubDetailPageComponent implements OnInit {
@@ -138,5 +138,9 @@ export class ClubDetailPageComponent implements OnInit {
 
   isOwner(): boolean {
     return this.club()?.membership_role === 'OWNER';
+  }
+
+  canManageClub(): boolean {
+    return ['OWNER', 'ADMIN', 'MODERATOR'].includes(String(this.club()?.membership_role ?? ''));
   }
 }

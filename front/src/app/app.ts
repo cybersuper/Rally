@@ -52,4 +52,8 @@ export class App implements OnInit {
       },
     });
   }
+
+  canManageClub(club: any): boolean {
+    return ['OWNER', 'ADMIN', 'MODERATOR'].includes(String(club?.membership_role ?? ''));
+  }
 }

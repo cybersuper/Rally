@@ -161,6 +161,46 @@
                       [placeholder]="field.placeholder ?? ''"
                       (input)="setAnswer(field.key, $any($event.target).value)"
                     ></textarea>
+                  } @else if (field.type === 'boolean') {
+                    <button
+                      type="button"
+                      class="flex w-full items-center justify-between rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-left text-sm font-semibold text-zinc-200 hover:bg-white/[0.04]"
+                      (click)="setAnswer(field.key, !applyAnswers()[field.key])"
+                    >
+                      <span>{{ applyAnswers()[field.key] ? 'Yes' : 'No' }}</span>
+                      <span
+                        class="h-6 w-11 rounded-full p-0.5 transition"
+                        [style.background]="applyAnswers()[field.key] ? post().club.accent_color : '#3f3f46'"
+                      >
+                        <span
+                          class="block h-5 w-5 rounded-full bg-white transition"
+                          [class.translate-x-5]="applyAnswers()[field.key]"
+                        ></span>
+                      </span>
+                    </button>
+                  } @else if (field.type === 'select') {
+                    <select
+                      class="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-white/20"
+                      (change)="setAnswer(field.key, $any($event.target).value)"
+                    >
+                      <option value="">Choose one</option>
+                      @for (option of field.options ?? []; track option) {
+                        <option [value]="option">{{ option }}</option>
+                      }
+                    </select>
+                  } @else if (field.type === 'checkbox') {
+                    <div class="space-y-2 rounded-2xl border border-white/10 bg-black/30 p-3">
+                      @for (option of field.options ?? []; track option) {
+                        <label class="flex items-center gap-2 text-sm font-semibold text-zinc-200">
+                          <input
+                            type="checkbox"
+                            [checked]="isCheckboxSelected(field.key, option)"
+                            (change)="toggleCheckboxAnswer(field.key, option, $any($event.target).checked)"
+                          />
+                          <span>{{ option }}</span>
+                        </label>
+                      }
+                    </div>
                   } @else {
                     <input
                       class="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-white/20"

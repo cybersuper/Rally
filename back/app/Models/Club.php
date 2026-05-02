@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Club extends Model
 {
     public const ROLE_OWNER = 'OWNER';
+    public const ROLE_ADMIN = 'ADMIN';
     public const ROLE_MODERATOR = 'MODERATOR';
     public const ROLE_MEMBER = 'MEMBER';
 
@@ -14,6 +15,8 @@ class Club extends Model
         'name',
         'slug',
         'description',
+        'category',
+        'visibility',
         'accent_color',
         'sticker_type',
         'cover_image_url',

@@ -1,0 +1,150 @@
+<section class="min-w-0 space-y-4">
+  @if (isLoading()) {
+    <div class="rounded-3xl border border-white/10 bg-[#121216]/90 p-6 text-zinc-400 shadow-2xl">
+      Loading settings...
+    </div>
+  } @else if (error() && !club()) {
+    <div class="rounded-3xl border border-red-400/30 bg-red-500/10 p-6 text-red-200">
+      {{ error() }}
+    </div>
+  } @else {
+    <header
+      class="rounded-3xl border border-white/10 bg-[#121216]/90 p-5 shadow-2xl"
+      [style.--club-accent]="accentColor()"
+    >
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div class="min-w-0">
+          <p class="text-xs font-black uppercase tracking-[0.2em] text-zinc-500">
+            Club Admin
+          </p>
+          <h1 class="mt-1 truncate text-3xl font-black tracking-tight sm:text-4xl">
+            {{ club()?.name }}
+          </h1>
+        </div>
+
+        <a
+          class="rounded-2xl border border-white/10 px-4 py-3 text-sm font-black text-zinc-300 hover:bg-white/5"
+          [routerLink]="['/clubs', club()?.slug]"
+        >
+          Club page
+        </a>
+      </div>
+    </header>
+
+    <form class="space-y-4 rounded-3xl border border-white/10 bg-[#121216]/90 p-5 shadow-2xl" (ngSubmit)="save()">
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <label class="block">
+          <span class="mb-1.5 block text-xs font-black uppercase tracking-wide text-zinc-500">Name</span>
+          <input
+            class="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-white/20"
+            type="text"
+            name="name"
+            [ngModel]="name()"
+            (ngModelChange)="name.set($event)"
+            required
+          />
+        </label>
+
+        <label class="block">
+          <span class="mb-1.5 block text-xs font-black uppercase tracking-wide text-zinc-500">Category</span>
+          <input
+            class="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-white/20"
+            type="text"
+            name="category"
+            [ngModel]="category()"
+            (ngModelChange)="category.set($event)"
+            placeholder="Tabletop, Fitness, Art"
+          />
+        </label>
+      </div>
+
+      <label class="block">
+        <span class="mb-1.5 block text-xs font-black uppercase tracking-wide text-zinc-500">Description</span>
+        <textarea
+          class="min-h-[120px] w-full resize-none rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm leading-6 text-white outline-none placeholder:text-zinc-600 focus:border-white/20"
+          name="description"
+          [ngModel]="description()"
+          (ngModelChange)="description.set($event)"
+        ></textarea>
+      </label>
+
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <label class="block">
+          <span class="mb-1.5 block text-xs font-black uppercase tracking-wide text-zinc-500">Theme color</span>
+          <input
+            class="h-12 w-full rounded-2xl border border-white/10 bg-black/30 px-3 py-2"
+            type="color"
+            name="accent_color"
+            [ngModel]="accentColor()"
+            (ngModelChange)="accentColor.set($event)"
+          />
+        </label>
+
+        <label class="block">
+          <span class="mb-1.5 block text-xs font-black uppercase tracking-wide text-zinc-500">Cover image URL</span>
+          <input
+            class="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-white/20"
+            type="url"
+            name="cover_image_url"
+            [ngModel]="coverImageUrl()"
+            (ngModelChange)="coverImageUrl.set($event)"
+            placeholder="https://..."
+          />
+        </label>
+      </div>
+
+      <div class="flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-black/20 p-4">
+        <div>
+          <p class="text-sm font-black text-white">Visibility</p>
+          <p class="mt-1 text-xs font-semibold text-zinc-500">
+            {{ visibility() === 'private' ? 'Private' : 'Public' }}
+          </p>
+        </div>
+
+        <button
+          type="button"
+          class="w-16 rounded-full border border-white/10 bg-white/[0.04] p-1 transition"
+          [class.bg-white]="visibility() === 'private'"
+          (click)="visibility.set(visibility() === 'public' ? 'private' : 'public')"
+        >
+          <span
+            class="block h-7 w-7 rounded-full transition"
+            [class.translate-x-7]="visibility() === 'private'"
+            [style.background]="visibility() === 'private' ? accentColor() : '#71717a'"
+          ></span>
+        </button>
+      </div>
+
+      @if (error()) {
+        <div class="rounded-2xl border border-red-400/30 bg-red-500/10 p-4 text-sm font-semibold text-red-200">
+          {{ error() }}
+        </div>
+      }
+
+      @if (saved()) {
+        <div class="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-4 text-sm font-semibold text-emerald-200">
+          Saved.
+        </div>
+      }
+
+      <footer class="flex items-center justify-end gap-3 pt-1">
+        <button
+          type="button"
+          class="rounded-2xl border border-white/10 px-4 py-3 text-sm font-black text-zinc-300 hover:bg-white/5 disabled:opacity-60"
+          [routerLink]="['/clubs', club()?.slug]"
+          [disabled]="isSaving()"
+        >
+          Cancel
+        </button>
+
+        <button
+          type="submit"
+          class="rounded-2xl bg-white px-5 py-3 text-sm font-black text-black shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
+          [disabled]="isSaving()"
+        >
+          @if (isSaving()) { Saving... } @else { Save settings }
+        </button>
+      </footer>
+    </form>
+  }
+</section>

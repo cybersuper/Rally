@@ -107,18 +107,26 @@ export class PostCard {
     });
   }
 
-  lfgApplicationFields(): Array<{ key: string; label: string; placeholder?: string; required?: boolean; type?: string }> {
+  lfgApplicationFields(): Array<{
+    key: string;
+    label: string;
+    placeholder?: string;
+    required?: boolean;
+    type?: string;
+    options?: string[];
+  }> {
     const raw = this.metadataValue<any[]>('application_fields', []);
 
     if (Array.isArray(raw) && raw.length) {
       return raw
         .filter(Boolean)
         .map(field => ({
-          key: String(field.key ?? ''),
+          key: String(field.key ?? field.id ?? ''),
           label: String(field.label ?? field.key ?? 'Field'),
           placeholder: field.placeholder ? String(field.placeholder) : undefined,
           required: !!field.required,
           type: field.type ? String(field.type) : 'text',
+          options: Array.isArray(field.options) ? field.options.map((option: any) => String(option)) : [],
         }))
         .filter(field => field.key.trim().length > 0);
     }
@@ -220,7 +228,19 @@ export class PostCard {
   openApplyModal(): void {
     if (this.hasApplied() || !this.canApply()) return;
     this.applyError.set(null);
-    this.applyAnswers.set({});
+    const initialAnswers: Record<string, any> = {};
+
+    for (const field of this.lfgApplicationFields()) {
+      if (field.type === 'boolean') {
+        initialAnswers[field.key] = false;
+      }
+
+      if (field.type === 'checkbox') {
+        initialAnswers[field.key] = [];
+      }
+    }
+
+    this.applyAnswers.set(initialAnswers);
     this.isApplyModalOpen.set(true);
   }
 
@@ -231,6 +251,24 @@ export class PostCard {
 
   setAnswer(key: string, value: any): void {
     this.applyAnswers.update(current => ({ ...current, [key]: value }));
+  }
+
+  toggleCheckboxAnswer(key: string, option: string, checked: boolean): void {
+    const current = this.applyAnswers()[key];
+    const selected = Array.isArray(current) ? current : [];
+
+    this.setAnswer(
+      key,
+      checked
+        ? Array.from(new Set([...selected, option]))
+        : selected.filter(value => value !== option)
+    );
+  }
+
+  isCheckboxSelected(key: string, option: string): boolean {
+    const current = this.applyAnswers()[key];
+
+    return Array.isArray(current) && current.includes(option);
   }
 
   submitApplication(): void {

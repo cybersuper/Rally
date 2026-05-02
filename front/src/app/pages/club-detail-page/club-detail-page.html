@@ -45,23 +45,36 @@
           </p>
         </div>
 
-        <button
-          type="button"
-          class="rounded-2xl border border-white/10 px-5 py-3 text-sm font-black text-zinc-200 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-60"
-          [style.borderColor]="club()?.accent_color + '55'"
-          [disabled]="isUpdatingMembership() || isOwner()"
-          (click)="toggleMembership()"
-        >
-          @if (isUpdatingMembership()) {
-            ...
-          } @else if (isOwner()) {
-            Owner
-          } @else if (club()?.is_member) {
-            Leave
-          } @else {
-            Join
+        <div class="flex shrink-0 items-center gap-2">
+          @if (canManageClub()) {
+            <a
+              class="grid h-11 w-11 place-items-center rounded-2xl border border-white/10 text-zinc-300 hover:bg-white/5"
+              [style.borderColor]="club()?.accent_color + '55'"
+              [routerLink]="['/clubs', club()?.slug, 'admin']"
+              aria-label="Club settings"
+            >
+              &#9881;
+            </a>
           }
-        </button>
+
+          <button
+            type="button"
+            class="rounded-2xl border border-white/10 px-5 py-3 text-sm font-black text-zinc-200 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-60"
+            [style.borderColor]="club()?.accent_color + '55'"
+            [disabled]="isUpdatingMembership() || isOwner()"
+            (click)="toggleMembership()"
+          >
+            @if (isUpdatingMembership()) {
+              ...
+            } @else if (isOwner()) {
+              Owner
+            } @else if (club()?.is_member) {
+              Leave
+            } @else {
+              Join
+            }
+          </button>
+        </div>
       </div>
       </div>
     </header>

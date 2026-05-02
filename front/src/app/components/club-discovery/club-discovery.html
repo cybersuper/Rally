@@ -75,23 +75,37 @@
                 Login to join
               </a>
             } @else {
-              <button
-                type="button"
-                class="rounded-xl border border-white/10 px-3 py-2 text-xs font-black text-zinc-200 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-60"
-                [style.borderColor]="club.accent_color + '55'"
-                [disabled]="isUpdating(club.id) || isOwner(club)"
-                (click)="$event.preventDefault(); $event.stopPropagation(); toggleMembership(club)"
-              >
-                @if (isUpdating(club.id)) {
-                  ...
-                } @else if (isOwner(club)) {
-                  Owner
-                } @else if (club.is_member) {
-                  Leave
-                } @else {
-                  Join
+              <div class="flex items-center gap-2">
+                @if (canManageClub(club)) {
+                  <button
+                    type="button"
+                    class="grid h-9 w-9 place-items-center rounded-xl border border-white/10 text-zinc-300 hover:bg-white/5"
+                    [style.borderColor]="club.accent_color + '55'"
+                    aria-label="Club settings"
+                    (click)="openAdmin($event, club)"
+                  >
+                    &#9881;
+                  </button>
                 }
-              </button>
+
+                <button
+                  type="button"
+                  class="rounded-xl border border-white/10 px-3 py-2 text-xs font-black text-zinc-200 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-60"
+                  [style.borderColor]="club.accent_color + '55'"
+                  [disabled]="isUpdating(club.id) || isOwner(club)"
+                  (click)="$event.preventDefault(); $event.stopPropagation(); toggleMembership(club)"
+                >
+                  @if (isUpdating(club.id)) {
+                    ...
+                  } @else if (isOwner(club)) {
+                    Owner
+                  } @else if (club.is_member) {
+                    Leave
+                  } @else {
+                    Join
+                  }
+                </button>
+              </div>
             }
           </div>
         </a>

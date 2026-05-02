@@ -14,6 +14,17 @@ interface ComposerFormState {
   feeling: string;
   spots_total: number | null;
   starts_at: string;
+  application_fields: ApplicationFieldForm[];
+}
+
+type ApplicationFieldType = 'text' | 'textarea' | 'boolean' | 'select' | 'checkbox';
+
+interface ApplicationFieldForm {
+  id: string;
+  label: string;
+  type: ApplicationFieldType;
+  required: boolean;
+  optionsText: string;
 }
 
 @Component({
@@ -54,6 +65,7 @@ export class ComposerComponent {
     feeling: 'Locked In',
     spots_total: 5,
     starts_at: '',
+    application_fields: [],
   });
 
   clubs(): Club[] {
@@ -62,6 +74,44 @@ export class ComposerComponent {
 
   isType(type: PostType): boolean {
     return this.form().type === type;
+  }
+
+  addApplicationField(): void {
+    const id = `q_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+
+    this.form.update(state => ({
+      ...state,
+      application_fields: [
+        ...state.application_fields,
+        {
+          id,
+          label: '',
+          type: 'text',
+          required: false,
+          optionsText: '',
+        },
+      ],
+    }));
+  }
+
+  removeApplicationField(id: string): void {
+    this.form.update(state => ({
+      ...state,
+      application_fields: state.application_fields.filter(field => field.id !== id),
+    }));
+  }
+
+  updateApplicationField(id: string, patch: Partial<ApplicationFieldForm>): void {
+    this.form.update(state => ({
+      ...state,
+      application_fields: state.application_fields.map(field =>
+        field.id === id ? { ...field, ...patch } : field
+      ),
+    }));
+  }
+
+  needsOptions(field: ApplicationFieldForm): boolean {
+    return field.type === 'select' || field.type === 'checkbox';
   }
 
   onBackdropClick(): void {
@@ -108,6 +158,15 @@ export class ComposerComponent {
       if (state.starts_at && state.starts_at.trim()) {
         metadata['starts_at'] = state.starts_at;
       }
+
+      const applicationFields = this.buildApplicationFields(state.application_fields);
+
+      if (applicationFields === null) {
+        return;
+      }
+
+      metadata['application_fields'] = applicationFields;
+      metadata['form_fields_count'] = applicationFields.length;
     }
 
     this.isSubmitting.set(true);
@@ -156,8 +215,43 @@ export class ComposerComponent {
       feeling: 'Locked In',
       spots_total: 5,
       starts_at: '',
+      application_fields: [],
     });
 
     this.error.set(null);
+  }
+
+  private buildApplicationFields(fields: ApplicationFieldForm[]): Array<Record<string, any>> | null {
+    const configured = fields.filter(field => field.label.trim().length > 0);
+
+    for (const field of configured) {
+      if (this.needsOptions(field) && this.parseOptions(field.optionsText).length < 2) {
+        this.error.set('Add at least two options for select and checkbox questions.');
+        return null;
+      }
+    }
+
+    return configured.map(field => {
+      const definition: Record<string, any> = {
+        id: field.id,
+        key: field.id,
+        label: field.label.trim(),
+        type: field.type,
+        required: field.required,
+      };
+
+      if (this.needsOptions(field)) {
+        definition['options'] = this.parseOptions(field.optionsText);
+      }
+
+      return definition;
+    });
+  }
+
+  private parseOptions(value: string): string[] {
+    return value
+      .split(/\r?\n|,/)
+      .map(option => option.trim())
+      .filter(Boolean);
   }
 }

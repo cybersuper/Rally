@@ -10,6 +10,8 @@ export interface Club {
   id: number;
   name: string;
   slug: string;
+  category?: string | null;
+  visibility?: 'public' | 'private' | string;
   accent_color: string;
   sticker_type: string | null;
   membership_role?: 'OWNER' | 'MODERATOR' | 'MEMBER' | string | null;

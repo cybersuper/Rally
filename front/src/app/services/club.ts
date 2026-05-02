@@ -6,6 +6,8 @@ export interface DiscoverClub {
   name: string;
   slug: string;
   description: string | null;
+  category: string | null;
+  visibility: 'public' | 'private' | string;
   accent_color: string;
   sticker_type: string | null;
   cover_image_url?: string | null;
@@ -18,12 +20,23 @@ export interface CreateClubPayload {
   name: string;
   slug: string;
   description: string | null;
+  category?: string | null;
+  visibility?: 'public' | 'private';
   accent_color: string;
   cover_image_url?: string | null;
 }
 
 export interface CreateClubResponse {
   club: DiscoverClub;
+}
+
+export interface UpdateClubPayload {
+  name?: string;
+  description: string | null;
+  category: string | null;
+  visibility: 'public' | 'private';
+  accent_color: string;
+  cover_image_url?: string | null;
 }
 
 @Injectable({
@@ -41,7 +54,11 @@ export class ClubService {
   }
 
   getClub(slug: string) {
-    return this.http.get<{ club: any }>(`/api/clubs/${slug}`);
+    return this.http.get<{ club: DiscoverClub }>(`/api/clubs/${slug}`);
+  }
+
+  updateClub(slug: string, payload: UpdateClubPayload) {
+    return this.http.patch<CreateClubResponse>(`/api/clubs/${slug}`, payload);
   }
 
   getClubTimeline(slug: string) {

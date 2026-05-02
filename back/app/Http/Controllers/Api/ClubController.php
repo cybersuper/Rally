@@ -8,6 +8,7 @@ use App\Models\Post;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class ClubController extends Controller
 {
@@ -19,6 +20,8 @@ class ClubController extends Controller
             'name' => ['required', 'string', 'max:80'],
             'slug' => ['required', 'string', 'max:120', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/', 'unique:clubs,slug'],
             'description' => ['nullable', 'string', 'max:400'],
+            'category' => ['nullable', 'string', 'max:80'],
+            'visibility' => ['nullable', Rule::in(['public', 'private'])],
             'accent_color' => ['required', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'cover_image_url' => ['nullable', 'url', 'max:1000'],
         ]);
@@ -28,6 +31,8 @@ class ClubController extends Controller
                 'name' => $validated['name'],
                 'slug' => $validated['slug'],
                 'description' => $validated['description'] ?? null,
+                'category' => $validated['category'] ?? null,
+                'visibility' => $validated['visibility'] ?? 'public',
                 'accent_color' => $validated['accent_color'],
                 'sticker_type' => 'sparkle',
                 'cover_image_url' => $validated['cover_image_url'] ?? null,
@@ -79,6 +84,38 @@ class ClubController extends Controller
 
         $club->loadCount('users');
         $role = $this->membershipRole($user, $club);
+
+        return response()->json([
+            'club' => $this->serializeClub($club, $role, $club->users_count),
+        ]);
+    }
+
+    public function update(Request $request, Club $club): JsonResponse
+    {
+        $role = $this->membershipRole($request->user(), $club);
+
+        abort_unless($this->canManageClub($role), 403, 'Not allowed.');
+
+        $validated = $request->validate([
+            'name' => ['sometimes', 'required', 'string', 'max:80'],
+            'description' => ['nullable', 'string', 'max:400'],
+            'category' => ['nullable', 'string', 'max:80'],
+            'visibility' => ['required', Rule::in(['public', 'private'])],
+            'accent_color' => ['required', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'cover_image_url' => ['nullable', 'url', 'max:1000'],
+        ]);
+
+        $club->fill([
+            'name' => $validated['name'] ?? $club->name,
+            'description' => $validated['description'] ?? null,
+            'category' => $validated['category'] ?? null,
+            'visibility' => $validated['visibility'],
+            'accent_color' => $validated['accent_color'],
+            'cover_image_url' => $validated['cover_image_url'] ?? null,
+        ]);
+
+        $club->save();
+        $club->loadCount('users');
 
         return response()->json([
             'club' => $this->serializeClub($club, $role, $club->users_count),
@@ -153,6 +190,15 @@ class ClubController extends Controller
             ->value('club_user.role');
     }
 
+    private function canManageClub(?string $role): bool
+    {
+        return in_array($role, [
+            Club::ROLE_OWNER,
+            Club::ROLE_ADMIN,
+            Club::ROLE_MODERATOR,
+        ], true);
+    }
+
     private function serializeClub(Club $club, ?string $role = null, ?int $membersCount = null): array
     {
         return [
@@ -160,6 +206,8 @@ class ClubController extends Controller
             'name' => $club->name,
             'slug' => $club->slug,
             'description' => $club->description,
+            'category' => $club->category,
+            'visibility' => $club->visibility ?? 'public',
             'accent_color' => $club->accent_color,
             'sticker_type' => $club->sticker_type,
             'cover_image_url' => $club->cover_image_url,

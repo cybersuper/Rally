@@ -58,6 +58,38 @@ class RallyPrivacyTest extends TestCase
         ]);
     }
 
+    public function test_only_club_managers_can_update_admin_fields(): void
+    {
+        $owner = User::factory()->create();
+        $member = User::factory()->create();
+        $club = $this->club();
+
+        $owner->clubs()->attach($club->id, ['role' => Club::ROLE_OWNER]);
+        $member->clubs()->attach($club->id, ['role' => Club::ROLE_MEMBER]);
+
+        Sanctum::actingAs($member);
+
+        $this->patchJson("/api/clubs/{$club->slug}", [
+            'description' => 'Members should not be able to rewrite this.',
+            'category' => 'Strategy',
+            'visibility' => 'private',
+            'accent_color' => '#ef4444',
+        ])->assertForbidden();
+
+        Sanctum::actingAs($owner);
+
+        $this->patchJson("/api/clubs/{$club->slug}", [
+            'description' => 'Campaign scheduling and table talk.',
+            'category' => 'Tabletop',
+            'visibility' => 'private',
+            'accent_color' => '#ef4444',
+        ])
+            ->assertOk()
+            ->assertJsonPath('club.category', 'Tabletop')
+            ->assertJsonPath('club.visibility', 'private')
+            ->assertJsonPath('club.accent_color', '#ef4444');
+    }
+
     public function test_only_the_lfg_post_author_can_read_private_application_answers(): void
     {
         $owner = User::factory()->create();
@@ -124,6 +156,58 @@ class RallyPrivacyTest extends TestCase
             ->assertJsonPath('application.status', 'rejected')
             ->assertJsonPath('post.metadata.spots_filled', 0)
             ->assertJsonPath('post.metadata.spots_remaining', 2);
+    }
+
+    public function test_lfg_application_fields_are_saved_and_answers_use_question_ids(): void
+    {
+        $owner = User::factory()->create();
+        $applicant = User::factory()->create();
+        $club = $this->club();
+
+        $owner->clubs()->attach($club->id, ['role' => Club::ROLE_OWNER]);
+        $applicant->clubs()->attach($club->id, ['role' => Club::ROLE_MEMBER]);
+
+        Sanctum::actingAs($owner);
+
+        $postId = $this->postJson('/api/posts', [
+            'club_id' => $club->id,
+            'title' => 'Ranked stack',
+            'content' => 'Looking for a calm ranked squad.',
+            'type' => 'lfg',
+            'metadata' => [
+                'spots_total' => 3,
+                'application_fields' => [
+                    [
+                        'id' => 'rank',
+                        'label' => 'What is your rank?',
+                        'type' => 'select',
+                        'required' => true,
+                        'options' => ['Gold', 'Platinum', 'Diamond'],
+                    ],
+                    [
+                        'id' => 'mic',
+                        'label' => 'Do you have a mic?',
+                        'type' => 'boolean',
+                    ],
+                ],
+            ],
+        ])
+            ->assertCreated()
+            ->assertJsonPath('post.metadata.application_fields.0.key', 'rank')
+            ->assertJsonPath('post.metadata.form_fields_count', 2)
+            ->json('post.id');
+
+        Sanctum::actingAs($applicant);
+
+        $this->postJson("/api/posts/{$postId}/lfg-applications", [
+            'answers' => [
+                'rank' => 'Platinum',
+                'mic' => true,
+            ],
+        ])
+            ->assertCreated()
+            ->assertJsonPath('application.answers.rank', 'Platinum')
+            ->assertJsonPath('application.answers.mic', true);
     }
 
     private function club(): Club

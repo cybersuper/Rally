@@ -35,7 +35,10 @@ export class CreateClubPageComponent {
   slug = signal('');
   slugTouched = signal(false);
   description = signal('');
+  category = signal('');
+  visibility = signal<'public' | 'private'>('public');
   accentColor = signal('#22d3ee');
+  coverImageUrl = signal('');
 
   onNameChange(value: string): void {
     this.name.set(value);
@@ -56,7 +59,9 @@ export class CreateClubPageComponent {
     const name = this.name().trim();
     const slug = slugify(this.slug());
     const description = this.description().trim();
+    const category = this.category().trim();
     const accentColor = this.accentColor().trim();
+    const coverImageUrl = this.coverImageUrl().trim();
 
     if (!name) {
       this.error.set('Enter a club name.');
@@ -75,7 +80,10 @@ export class CreateClubPageComponent {
         name,
         slug,
         description: description.length ? description : null,
+        category: category.length ? category : null,
+        visibility: this.visibility(),
         accent_color: accentColor,
+        cover_image_url: coverImageUrl.length ? coverImageUrl : null,
       })
       .subscribe({
         next: (response: { club: { slug: string } }) => {

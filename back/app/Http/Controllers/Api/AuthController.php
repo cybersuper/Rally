@@ -70,6 +70,8 @@ class AuthController extends Controller
                     'name' => $club->name,
                     'slug' => $club->slug,
                     'description' => $club->description,
+                    'category' => $club->category,
+                    'visibility' => $club->visibility ?? 'public',
                     'accent_color' => $club->accent_color,
                     'sticker_type' => $club->sticker_type,
                     'cover_image_url' => $club->cover_image_url,

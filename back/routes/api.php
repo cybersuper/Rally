@@ -19,6 +19,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/clubs', [ClubController::class, 'store']);
     Route::get('/clubs/{club:slug}', [ClubController::class, 'show']);
+    Route::patch('/clubs/{club:slug}', [ClubController::class, 'update']);
     Route::get('/clubs/{club:slug}/timeline', [ClubController::class, 'timeline']);
     Route::post('/clubs/{club}/join', [ClubController::class, 'join']);
     Route::delete('/clubs/{club}/leave', [ClubController::class, 'leave']);

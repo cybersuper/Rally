@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable, NgZone, inject, signal } from '@angular/core';
+import { Injectable, NgZone, computed, inject, signal } from '@angular/core';
 import { AuthService } from '../auth';
 import { EchoBridge } from './echo-bridge';
 
@@ -43,6 +43,9 @@ export class ChatService {
   messages = signal<ChatMessage[]>([]);
   activeConversation = signal<Conversation | null>(null);
   unreadCount = signal(0);
+  totalUnreadCount = computed(() =>
+    this.conversations().filter(conversation => Number(conversation.unread_count ?? 0) > 0).length
+  );
 
   private activeChannel: string | null = null;
 

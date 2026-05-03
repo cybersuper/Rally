@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, computed, effect, inject, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, effect, inject, signal } from '@angular/core';
 import { Router, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from './auth';
@@ -37,12 +37,7 @@ export class App implements OnInit, OnDestroy {
   private chatEcho: Echo<'reverb'> | null = null;
   private chatUserId: number | null = null;
 
-  totalUnreadCount = computed(() =>
-    this.chatService.conversations().reduce(
-      (sum, conversation) => sum + Number(conversation.unread_count ?? 0),
-      0
-    )
-  );
+  totalUnreadCount = this.chatService.totalUnreadCount;
 
   constructor() {
     effect(() => {
@@ -50,6 +45,7 @@ export class App implements OnInit, OnDestroy {
 
       if (user?.id) {
         this.notificationService.initRealtime();
+        this.chatService.loadConversations();
         this.initChatRealtime();
       }
     });
@@ -62,6 +58,7 @@ export class App implements OnInit, OnDestroy {
       this.authService.me().subscribe({
         next: () => {
           this.loadUnreadNotifications();
+          this.chatService.loadConversations();
           this.notificationService.initRealtime();
           this.initChatRealtime();
           this.isBooting.set(false);

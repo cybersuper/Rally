@@ -23,6 +23,8 @@ class ProfileController extends Controller
             ])
             ->firstOrFail();
 
+        $this->abortIfPrivate($profile, $request->user());
+
         return response()->json([
             'profile' => $this->serializeProfile($profile, $request->user()),
         ]);
@@ -72,6 +74,8 @@ class ProfileController extends Controller
             ->where('username', $username)
             ->firstOrFail();
 
+        $this->abortIfPrivate($profile, $request->user());
+
         $visibleClubIds = $request->user()->clubs()->pluck('clubs.id');
 
         $posts = Post::query()
@@ -109,6 +113,7 @@ class ProfileController extends Controller
             'cover_photo_path' => $profile->cover_photo_path,
             'current_streak' => $profile->current_streak,
             'longest_streak' => $profile->longest_streak,
+            'private_profile' => (bool) $profile->private_profile,
             'is_owner' => $viewer->id === $profile->id,
             'clubs' => $profile->clubs->map(fn ($club) => [
                 'id' => $club->id,
@@ -127,6 +132,21 @@ class ProfileController extends Controller
                 'club' => $flair->club,
             ]),
         ];
+    }
+
+    private function abortIfPrivate(User $profile, User $viewer): void
+    {
+        if (! $profile->private_profile || $profile->id === $viewer->id) {
+            return;
+        }
+
+        $viewerClubIds = $viewer->clubs()->pluck('clubs.id');
+
+        abort_unless(
+            $profile->clubs()->whereIn('clubs.id', $viewerClubIds)->exists(),
+            403,
+            'This profile is private.'
+        );
     }
 
     private function uploadImage($file, string $folder): string

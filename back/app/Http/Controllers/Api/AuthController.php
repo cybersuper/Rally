@@ -89,6 +89,7 @@ class AuthController extends Controller
             'cover_photo_path' => $user->cover_photo_path,
             'current_streak' => $user->current_streak,
             'longest_streak' => $user->longest_streak,
+            'private_profile' => (bool) $user->private_profile,
             'clubs' => $user->clubs->map(fn ($club) => [
                 'id' => $club->id,
                 'name' => $club->name,

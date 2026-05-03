@@ -87,7 +87,7 @@ class ClubController extends Controller
         $role = $this->membershipRole($user, $club);
 
         return response()->json([
-            'club' => $this->serializeClub($club, $role, $club->users_count),
+            'club' => $this->serializeClub($club, $role, $club->users_count, $user),
         ]);
     }
 
@@ -119,7 +119,33 @@ class ClubController extends Controller
         $club->loadCount('users');
 
         return response()->json([
-            'club' => $this->serializeClub($club, $role, $club->users_count),
+            'club' => $this->serializeClub($club, $role, $club->users_count, $request->user()),
+        ]);
+    }
+
+    public function updateIdentity(Request $request, Club $club): JsonResponse
+    {
+        abort_unless($this->membershipRole($request->user(), $club) !== null, 403, 'Join this club first.');
+
+        $validated = $request->validate([
+            'nickname' => ['nullable', 'string', 'max:80'],
+            'show_streak' => ['required', 'boolean'],
+        ]);
+
+        $request->user()->clubs()->updateExistingPivot($club->id, [
+            'nickname' => $validated['nickname'] ?: null,
+            'show_streak' => $validated['show_streak'],
+        ]);
+
+        $club->loadCount('users');
+
+        return response()->json([
+            'club' => $this->serializeClub(
+                $club,
+                $this->membershipRole($request->user(), $club),
+                $club->users_count,
+                $request->user()
+            ),
         ]);
     }
 
@@ -207,8 +233,16 @@ class ClubController extends Controller
         ], true);
     }
 
-    private function serializeClub(Club $club, ?string $role = null, ?int $membersCount = null): array
+    private function serializeClub(Club $club, ?string $role = null, ?int $membersCount = null, $user = null): array
     {
+        $identity = null;
+
+        if ($user && $role) {
+            $identity = $user->clubs()
+                ->where('clubs.id', $club->id)
+                ->first()?->pivot;
+        }
+
         return [
             'id' => $club->id,
             'name' => $club->name,
@@ -222,6 +256,8 @@ class ClubController extends Controller
             'members_count' => $membersCount,
             'is_member' => $role !== null,
             'membership_role' => $role,
+            'my_nickname' => $identity?->nickname,
+            'show_streak' => (bool) ($identity?->show_streak ?? true),
         ];
     }
 }

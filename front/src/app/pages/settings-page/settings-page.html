@@ -1,0 +1,46 @@
+<section class="space-y-5 pb-8">
+  <header class="rounded-3xl border border-white/10 bg-[#121216]/90 p-5 shadow-2xl">
+    <p class="text-xs font-black uppercase tracking-[0.2em] text-zinc-500">Settings</p>
+    <h1 class="mt-1 text-3xl font-black text-white">Account controls</h1>
+  </header>
+
+  @if (status()) {
+    <div class="rounded-3xl border border-emerald-400/30 bg-emerald-500/10 p-4 text-sm font-bold text-emerald-200">{{ status() }}</div>
+  }
+  @if (error()) {
+    <div class="rounded-3xl border border-red-400/30 bg-red-500/10 p-4 text-sm font-bold text-red-200">{{ error() }}</div>
+  }
+
+  <section class="rounded-3xl border border-white/10 bg-[#121216]/90 p-5">
+    <h2 class="text-xl font-black">Account</h2>
+    <label class="mt-4 block">
+      <span class="mb-1 block text-xs font-black uppercase tracking-wide text-zinc-500">Username</span>
+      <input class="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none" [value]="username()" (input)="username.set($any($event.target).value)" />
+    </label>
+    <button class="mt-3 rounded-2xl bg-red-400 px-4 py-3 text-sm font-black text-black disabled:opacity-60" [disabled]="isSaving()" (click)="saveUsername()">Save username</button>
+  </section>
+
+  <section class="rounded-3xl border border-white/10 bg-[#121216]/90 p-5">
+    <h2 class="text-xl font-black">Password</h2>
+    <div class="mt-4 grid gap-3">
+      <input class="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none" type="password" placeholder="Current password" [value]="currentPassword()" (input)="currentPassword.set($any($event.target).value)" />
+      <input class="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none" type="password" placeholder="New password" [value]="password()" (input)="password.set($any($event.target).value)" />
+      <input class="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none" type="password" placeholder="Confirm new password" [value]="passwordConfirmation()" (input)="passwordConfirmation.set($any($event.target).value)" />
+    </div>
+    <button class="mt-3 rounded-2xl bg-red-400 px-4 py-3 text-sm font-black text-black disabled:opacity-60" [disabled]="isSaving()" (click)="savePassword()">Update password</button>
+  </section>
+
+  <section class="rounded-3xl border border-white/10 bg-[#121216]/90 p-5">
+    <h2 class="text-xl font-black">Privacy</h2>
+    <label class="mt-4 flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-black/20 p-4">
+      <span class="text-sm font-bold text-zinc-300">Private profile</span>
+      <input type="checkbox" [checked]="privateProfile()" (change)="privateProfile.set($any($event.target).checked); savePrivacy()" />
+    </label>
+  </section>
+
+  <section class="rounded-3xl border border-red-400/30 bg-red-500/10 p-5">
+    <h2 class="text-xl font-black text-red-100">Danger Zone</h2>
+    <p class="mt-2 text-sm font-semibold text-red-100/75">Deactivate account without deleting your data forever.</p>
+    <button class="mt-4 rounded-2xl border border-red-300/40 px-4 py-3 text-sm font-black text-red-100 hover:bg-red-500/20" (click)="deactivate()">Deactivate Account</button>
+  </section>
+</section>

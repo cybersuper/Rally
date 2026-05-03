@@ -21,6 +21,8 @@ interface ClubDetail {
   members_count?: number;
   is_member: boolean;
   membership_role: 'OWNER' | 'MODERATOR' | 'MEMBER' | string | null;
+  my_nickname?: string | null;
+  show_streak?: boolean;
 }
 
 @Component({
@@ -41,6 +43,11 @@ export class ClubDetailPageComponent implements OnInit {
   error = signal<string | null>(null);
   isTimelinePrivate = signal(false);
   isUpdatingMembership = signal(false);
+  isIdentityOpen = signal(false);
+  isSavingIdentity = signal(false);
+  identityError = signal<string | null>(null);
+  identityNickname = signal('');
+  identityShowStreak = signal(true);
 
   ngOnInit(): void {
     this.route.paramMap.subscribe(() => {
@@ -147,6 +154,47 @@ export class ClubDetailPageComponent implements OnInit {
 
   canManageClub(): boolean {
     return ['OWNER', 'ADMIN', 'MODERATOR'].includes(String(this.club()?.membership_role ?? ''));
+  }
+
+  openIdentity(): void {
+    const club = this.club();
+    if (!club?.is_member) return;
+
+    this.identityNickname.set(club.my_nickname ?? '');
+    this.identityShowStreak.set(club.show_streak ?? true);
+    this.identityError.set(null);
+    this.isIdentityOpen.set(true);
+  }
+
+  closeIdentity(): void {
+    if (this.isSavingIdentity()) return;
+    this.isIdentityOpen.set(false);
+  }
+
+  saveIdentity(): void {
+    const club = this.club();
+    if (!club || this.isSavingIdentity()) return;
+
+    this.isSavingIdentity.set(true);
+    this.identityError.set(null);
+
+    this.http.patch<{ club: ClubDetail }>(`/api/clubs/${club.slug}/identity`, {
+      nickname: this.identityNickname() || null,
+      show_streak: this.identityShowStreak(),
+    }).subscribe({
+      next: response => {
+        this.club.set(this.normalizeClub(response.club));
+        this.timelineService.fetchTimeline().subscribe({ next: () => {}, error: () => {} });
+        this.isSavingIdentity.set(false);
+        this.isIdentityOpen.set(false);
+        this.load();
+      },
+      error: err => {
+        console.error('Club identity save failed', err);
+        this.identityError.set(err?.status === 422 ? 'Check your nickname.' : 'Could not save identity.');
+        this.isSavingIdentity.set(false);
+      },
+    });
   }
 
   private normalizeClub(club: ClubDetail): ClubDetail {

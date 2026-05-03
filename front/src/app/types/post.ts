@@ -38,6 +38,8 @@ export interface Post {
   total_comments_count?: number;
   likes_count?: number;
   liked_by_me?: boolean | number;
+  author_name?: string;
+  author_photo?: string | null;
 }
 
 export interface PaginatedPosts {

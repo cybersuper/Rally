@@ -16,13 +16,17 @@
         [style.background]="post().club.accent_color"
         [style.boxShadow]="'0 14px 28px ' + post().club.accent_color + '22'"
       >
-        {{ initials(post().user.name) }}
+        @if (post().author_photo || post().user.profile_photo_path) {
+          <img class="h-full w-full rounded-2xl object-cover" [src]="post().author_photo || post().user.profile_photo_path || ''" [alt]="post().author_name || post().user.name" />
+        } @else {
+          {{ initials(post().author_name || post().user.club_nickname || post().user.name) }}
+        }
       </div>
 
       <div class="min-w-0 flex-1">
         <div class="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
           <h3 class="truncate text-base font-black text-white">
-            {{ post().user.club_nickname || post().user.name }}
+            {{ post().author_name || post().user.club_nickname || post().user.name }}
           </h3>
 
           <span

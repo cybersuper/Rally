@@ -41,6 +41,8 @@ class PostPresenter
                 'club_nickname',
                 $nicknames->get($post->club_id.':'.$post->user_id)
             );
+            $post->setAttribute('author_name', $post->user->club_nickname ?: $post->user->name);
+            $post->setAttribute('author_photo', $post->user->profile_photo_path);
         });
 
         return $posts;

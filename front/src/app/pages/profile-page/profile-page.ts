@@ -171,6 +171,27 @@ export class ProfilePageComponent implements OnInit {
           });
         }
 
+        this.timelineService.updateAuthor(response.profile.id, {
+          name: response.profile.name,
+          profile_photo_path: response.profile.profile_photo_path,
+        });
+        this.posts.update(posts =>
+          posts.map(post =>
+            post.user_id === response.profile.id
+              ? {
+                  ...post,
+                  author_name: post.user.club_nickname || response.profile.name,
+                  author_photo: response.profile.profile_photo_path,
+                  user: {
+                    ...post.user,
+                    name: response.profile.name,
+                    profile_photo_path: response.profile.profile_photo_path,
+                  },
+                }
+              : post
+          )
+        );
+
         this.isSaving.set(false);
         this.isEditing.set(false);
       },

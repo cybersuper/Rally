@@ -57,6 +57,17 @@
             </a>
           }
 
+          @if (club()?.is_member) {
+            <button
+              type="button"
+              class="rounded-2xl border border-white/10 px-4 py-3 text-sm font-black text-zinc-200 hover:bg-white/5"
+              [style.borderColor]="club()?.accent_color + '55'"
+              (click)="openIdentity()"
+            >
+              My Identity
+            </button>
+          }
+
           <button
             type="button"
             class="rounded-2xl border border-white/10 px-5 py-3 text-sm font-black text-zinc-200 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-60"
@@ -88,6 +99,43 @@
         @for (post of posts(); track post.id) {
           <app-post-card [post]="post" />
         }
+      </div>
+    }
+
+    @if (isIdentityOpen()) {
+      <div class="fixed inset-0 z-50 grid place-items-center p-4">
+        <div class="absolute inset-0 bg-black/70" (click)="closeIdentity()"></div>
+
+        <div class="relative w-full max-w-[520px] rounded-3xl border border-white/10 bg-[#121216] p-5 shadow-2xl">
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <p class="text-xs font-black uppercase tracking-[0.2em] text-zinc-500">Club Identity</p>
+              <h2 class="mt-1 text-2xl font-black text-white">{{ club()?.name }}</h2>
+            </div>
+            <button class="rounded-2xl border border-white/10 px-3 py-2 text-xs font-black text-zinc-300 hover:bg-white/5" type="button" (click)="closeIdentity()">Close</button>
+          </div>
+
+          <label class="mt-5 block">
+            <span class="mb-1 block text-xs font-black uppercase tracking-wide text-zinc-500">Nickname in this club</span>
+            <input class="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none" [value]="identityNickname()" (input)="identityNickname.set($any($event.target).value)" />
+          </label>
+
+          <label class="mt-4 flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-black/20 p-4">
+            <span class="text-sm font-bold text-zinc-300">Show current streak here</span>
+            <input type="checkbox" [checked]="identityShowStreak()" (change)="identityShowStreak.set($any($event.target).checked)" />
+          </label>
+
+          @if (identityError()) {
+            <div class="mt-4 rounded-2xl border border-red-400/30 bg-red-500/10 p-4 text-sm font-semibold text-red-200">{{ identityError() }}</div>
+          }
+
+          <div class="mt-5 flex justify-end gap-3">
+            <button type="button" class="rounded-2xl border border-white/10 px-4 py-3 text-sm font-black text-zinc-200 hover:bg-white/5" (click)="closeIdentity()">Cancel</button>
+            <button type="button" class="rounded-2xl px-5 py-3 text-sm font-black text-black disabled:opacity-60" [style.background]="club()?.accent_color" [disabled]="isSavingIdentity()" (click)="saveIdentity()">
+              @if (isSavingIdentity()) { Saving... } @else { Save }
+            </button>
+          </div>
+        </div>
       </div>
     }
   }

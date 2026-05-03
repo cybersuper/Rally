@@ -13,7 +13,14 @@
           [class.bg-white/7]="chat.activeConversation()?.id === conversation.id"
           (click)="open(conversation)"
         >
-          <p class="truncate text-sm font-black text-white">{{ conversation.title }}</p>
+          <div class="flex items-center gap-2">
+            <p class="min-w-0 flex-1 truncate text-sm font-black text-white">{{ conversation.title }}</p>
+            @if (conversation.unread_count > 0) {
+              <span class="grid min-h-5 min-w-5 place-items-center rounded-full bg-red-500 px-1 text-[0.65rem] font-black text-white">
+                {{ conversation.unread_count }}
+              </span>
+            }
+          </div>
           <p class="mt-1 truncate text-xs font-semibold text-zinc-500">
             {{ conversation.latest_message?.body ?? 'No messages yet.' }}
           </p>
@@ -30,6 +37,9 @@
     @if (chat.activeConversation(); as conversation) {
       <header class="border-b border-white/10 p-4">
         <h2 class="text-lg font-black text-white">{{ conversation.title }}</h2>
+        @if (typingName(); as typing) {
+          <p class="mt-1 text-xs font-semibold text-zinc-500">{{ typing }}</p>
+        }
       </header>
 
       <div #messageScroller class="rally-scrollbar flex max-h-[500px] flex-col-reverse gap-3 overflow-y-auto p-4">
@@ -59,7 +69,7 @@
             class="min-w-0 flex-1 rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none"
             [value]="draft()"
             placeholder="Write message"
-            (input)="draft.set($any($event.target).value)"
+            (input)="onDraftInput($any($event.target).value)"
             (keydown.enter)="send()"
           />
           <button class="rounded-2xl bg-red-400 px-5 py-3 text-sm font-black text-black" type="button" (click)="send()">Send</button>

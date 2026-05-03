@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, effect, inject, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, computed, effect, inject, signal } from '@angular/core';
 import { Router, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from './auth';
@@ -36,6 +36,13 @@ export class App implements OnInit, OnDestroy {
   notificationFlash = this.notificationService.notificationFlash;
   private chatEcho: Echo<'reverb'> | null = null;
   private chatUserId: number | null = null;
+
+  totalUnreadCount = computed(() =>
+    this.chatService.conversations().reduce(
+      (sum, conversation) => sum + Number(conversation.unread_count ?? 0),
+      0
+    )
+  );
 
   constructor() {
     effect(() => {
@@ -115,6 +122,7 @@ private initChatRealtime(): void {
     const user = this.authService.user();
     const token = this.authService.token();
     if (!user?.id || !token) return;
+    if (this.chatEcho && this.chatUserId === user.id) return;
 
     (window as any).Pusher = Pusher;
 
@@ -134,11 +142,28 @@ private initChatRealtime(): void {
       }
     });
 
-    // CRITICAL: Attach it to the window object
     (window as any).Echo = echoInstance; 
+    this.echoBridge.set(echoInstance);
     
     this.chatEcho = echoInstance;
-    console.log('✅ Echo is now global and connected');
+    this.chatUserId = user.id;
+    this.chatEcho.private(`user.${user.id}`).listen('.MessageSent', (payload: { message: ChatMessage }) => {
+      this.zone.run(() => {
+        const message = payload.message;
+        if (message.sender_id === user.id || !message.conversation_id) return;
+
+        this.chatService.receiveIncoming(message);
+
+        if (!this.router.url.startsWith('/chat')) {
+          this.toast.success(`${message.sender?.name ?? 'Someone'} sent a message`, {
+            icon: 'C',
+            className: 'rally-hot-toast',
+          });
+        }
+      });
+    });
+
+    console.log('Echo global connected');
 }
 
   ngOnDestroy(): void {

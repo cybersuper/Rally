@@ -15,18 +15,36 @@ export class ChatPageComponent implements OnInit, OnDestroy, AfterViewChecked {
   private readonly route = inject(ActivatedRoute);
   @ViewChild('messageScroller') private messageScroller?: ElementRef<HTMLElement>;
   draft = signal('');
+  typingName = signal<string | null>(null);
   private lastMessageCount = 0;
+  private typingTimeout: ReturnType<typeof setTimeout> | null = null;
+  private typingChannelId: number | null = null;
 
   ngOnInit(): void {
     this.chat.clearUnread();
     this.chat.loadConversations();
     this.route.paramMap.subscribe(params => {
       const id = Number(params.get('id'));
-      if (id) this.chat.openConversationById(id);
+      if (id) {
+        this.chat.openConversationById(id);
+        this.setupTyping(id);
+      }
     });
   }
 
   ngOnDestroy(): void {
+    if (this.typingTimeout) {
+      clearTimeout(this.typingTimeout);
+      this.typingTimeout = null;
+    }
+
+    if (this.typingChannelId) {
+      const echo = (window as any).Echo;
+      if (echo) {
+        echo.leave(`conversations.${this.typingChannelId}`);
+      }
+    }
+
     this.chat.disconnect();
   }
 
@@ -35,8 +53,7 @@ export class ChatPageComponent implements OnInit, OnDestroy, AfterViewChecked {
     if (count === this.lastMessageCount) return;
     this.lastMessageCount = count;
     queueMicrotask(() => {
-      const el = this.messageScroller?.nativeElement;
-      if (el) el.scrollTop = 0;
+      this.scrollToBottom();
     });
   }
 
@@ -46,6 +63,56 @@ export class ChatPageComponent implements OnInit, OnDestroy, AfterViewChecked {
 
   open(conversation: Conversation): void {
     this.chat.openConversation(conversation);
+    this.setupTyping(conversation.id);
+  }
+
+  onDraftInput(value: string): void {
+    this.draft.set(value);
+    this.whisperTyping();
+  }
+
+  private setupTyping(conversationId: number): void {
+    if (this.typingChannelId === conversationId) return;
+
+    const echo = (window as any).Echo;
+    if (!echo) return;
+
+    if (this.typingChannelId) {
+      echo.leave(`conversations.${this.typingChannelId}`);
+    }
+
+    this.typingChannelId = conversationId;
+    this.typingName.set(null);
+
+    echo.private(`conversations.${conversationId}`).listenForWhisper('typing', (payload: { name?: string } | null) => {
+      const name = payload?.name?.trim();
+      if (!name) return;
+
+      const me = this.authService.user()?.name;
+      if (me && name === me) return;
+
+      this.typingName.set(`${name} is typing...`);
+      if (this.typingTimeout) clearTimeout(this.typingTimeout);
+      this.typingTimeout = setTimeout(() => this.typingName.set(null), 3000);
+    });
+  }
+
+  scrollToBottom(): void {
+    const el = this.messageScroller?.nativeElement;
+    if (el) el.scrollTop = 0;
+  }
+
+  private whisperTyping(): void {
+    const conversationId = this.chat.activeConversation()?.id;
+    if (!conversationId) return;
+
+    const echo = (window as any).Echo;
+    if (!echo) return;
+
+    const name = this.authService.user()?.name;
+    if (!name) return;
+
+    echo.private(`conversations.${conversationId}`).whisper('typing', { name });
   }
 
   send(): void {

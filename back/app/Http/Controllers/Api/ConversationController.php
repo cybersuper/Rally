@@ -21,6 +21,11 @@ class ConversationController extends Controller
                 'users:id,name,username,profile_photo_path',
                 'messages' => fn ($query) => $query->with('sender:id,name,username,profile_photo_path')->latest()->limit(1),
             ])
+            ->withCount([
+                'messages as unread_count' => fn ($query) => $query
+                    ->whereNull('read_at')
+                    ->where('sender_id', '!=', $request->user()->id),
+            ])
             ->latest('conversation_user.updated_at')
             ->get();
 
@@ -106,6 +111,26 @@ class ConversationController extends Controller
         ], 201);
     }
 
+    public function markRead(Request $request, Conversation $conversation): JsonResponse
+    {
+        $this->abortUnlessParticipant($request, $conversation);
+
+        $conversation->messages()
+            ->where('sender_id', '!=', $request->user()->id)
+            ->whereNull('read_at')
+            ->update(['read_at' => now()]);
+
+        $unread = $conversation->messages()
+            ->where('sender_id', '!=', $request->user()->id)
+            ->whereNull('read_at')
+            ->count();
+
+        return response()->json([
+            'conversation_id' => $conversation->id,
+            'unread_count' => $unread,
+        ]);
+    }
+
     private function abortUnlessParticipant(Request $request, Conversation $conversation): void
     {
         abort_unless(
@@ -130,6 +155,7 @@ class ConversationController extends Controller
             ]),
             'title' => $otherUsers->pluck('name')->join(', ') ?: 'Saved notes',
             'latest_message' => $latest ? $this->serializeMessage($latest) : null,
+            'unread_count' => (int) ($conversation->unread_count ?? 0),
             'updated_at' => $conversation->updated_at,
         ];
     }

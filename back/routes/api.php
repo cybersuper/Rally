@@ -64,6 +64,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/conversations', [ConversationController::class, 'start']);
     Route::get('/conversations/{conversation}', [ConversationController::class, 'show']);
     Route::post('/conversations/{conversation}/messages', [ConversationController::class, 'store']);
+    Route::post('/conversations/{conversation}/read', [ConversationController::class, 'markRead']);
     Route::get('/clubs/{club:slug}', [ClubController::class, 'show']);
     Route::patch('/clubs/{club:slug}', [ClubController::class, 'update']);
     Route::post('/clubs/{club:slug}', [ClubController::class, 'update']);

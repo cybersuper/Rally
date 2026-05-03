@@ -26,6 +26,7 @@ export interface Conversation {
   title: string;
   participants: ChatUser[];
   latest_message: ChatMessage | null;
+  unread_count: number;
   updated_at: string;
 }
 
@@ -67,6 +68,7 @@ export class ChatService {
           this.activeConversation.set(response.conversation);
           this.messages.set(response.messages);
           this.subscribe(response.conversation.id);
+          this.markRead(response.conversation.id);
         },
         error: err => console.error('Conversation load failed', err),
       });
@@ -79,6 +81,7 @@ export class ChatService {
           this.activeConversation.set(response.conversation);
           this.messages.set(response.messages);
           this.subscribe(response.conversation.id);
+          this.markRead(response.conversation.id);
         },
         error: err => console.error('Conversation load failed', err),
       });
@@ -138,20 +141,58 @@ export class ChatService {
 
   private receiveMessage(message: ChatMessage): void {
     this.zone.run(() => {
+      if (!message.conversation_id) return;
+
       const active = this.activeConversation();
-      if (active && Number(message.conversation_id) === Number(active.id)) {
+      const isActiveConversation = active && Number(message.conversation_id) === Number(active.id);
+
+      if (isActiveConversation) {
         this.messages.update(current =>
           current.some(item => Number(item.id) === Number(message.id)) ? current : [...current, message]
         );
       }
 
-      this.conversations.update(items =>
-        items.map(item =>
-          Number(item.id) === Number(message.conversation_id)
-            ? { ...item, latest_message: message, updated_at: message.created_at }
-            : item
-        )
-      );
+      this.conversations.update(items => {
+        const conversationId = Number(message.conversation_id);
+        if (!items.some(item => Number(item.id) === conversationId)) {
+          this.loadConversations();
+          return [...items];
+        }
+
+        const updated = items.map(item => {
+          if (Number(item.id) !== conversationId) return item;
+
+          return {
+            ...item,
+            latest_message: message,
+            updated_at: message.created_at,
+            unread_count: isActiveConversation
+              ? 0
+              : (Number(item.unread_count ?? 0) + 1),
+          };
+        });
+
+        const idx = updated.findIndex(item => Number(item.id) === conversationId);
+        if (idx < 0) return updated;
+        if (idx === 0) return [...updated];
+
+        const [moved] = updated.splice(idx, 1);
+        return [moved, ...updated];
+      });
     });
+  }
+
+  private markRead(conversationId: number): void {
+    this.http.post<{ conversation_id: number; unread_count: number }>(`/api/conversations/${conversationId}/read`, {})
+      .subscribe({
+        next: () => {
+          this.conversations.update(items =>
+            items.map(item =>
+              Number(item.id) === Number(conversationId) ? { ...item, unread_count: 0 } : item
+            )
+          );
+        },
+        error: () => {},
+      });
   }
 }

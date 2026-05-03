@@ -117,6 +117,7 @@ class ClubChannelController extends Controller
             'id' => $message->id,
             'conversation_id' => $message->conversation_id,
             'channel_id' => $message->channel_id,
+            'room_id' => $message->channel_id,
             'sender_id' => $message->sender_id,
             'body' => $message->body,
             'read_at' => $message->read_at,

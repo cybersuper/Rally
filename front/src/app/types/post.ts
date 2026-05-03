@@ -31,6 +31,8 @@ export interface Post {
   user: RallyUser;
   club: Club;
   comments_count?: number;
+  top_level_comments_count?: number;
+  total_comments_count?: number;
   likes_count?: number;
   liked_by_me?: boolean | number;
 }

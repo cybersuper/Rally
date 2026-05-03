@@ -1,6 +1,7 @@
 import { DatePipe } from '@angular/common';
-import { Component, inject, input, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Component, computed, inject, input, signal } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
+import { HotToastService } from '@ngxpert/hot-toast';
 import { AuthService } from '../../auth';
 import { LfgApplication, PostComment, PostService } from '../../services/post';
 import { TimelineService } from '../../services/timeline';
@@ -16,6 +17,8 @@ export class PostCard {
   private readonly postService = inject(PostService);
   private readonly authService = inject(AuthService);
   private readonly timelineService = inject(TimelineService);
+  private readonly router = inject(Router);
+  private readonly toast = inject(HotToastService);
 
   post = input.required<Post>();
 
@@ -37,16 +40,28 @@ export class PostCard {
   commentsCountOverride = signal<number | null>(null);
 
   commentsOpen = signal(false);
+  quickViewOpen = signal(false);
   isLoadingComments = signal(false);
   isCommenting = signal(false);
   deletingCommentId = signal<number | null>(null);
   comments = signal<PostComment[]>([]);
   commentText = signal('');
+  replyText = signal('');
+  replyingToId = signal<number | null>(null);
   commentError = signal<string | null>(null);
   likeError = signal<string | null>(null);
   deleteError = signal<string | null>(null);
   isDeletingPost = signal(false);
   isDeleted = signal(false);
+  flatComments = computed(() => this.flattenComments(this.comments()));
+
+  openThread(): void {
+    this.router.navigate(['/clubs', this.post().club.slug, 'posts', this.post().id]);
+  }
+
+  stop(event: Event): void {
+    event.stopPropagation();
+  }
 
   canManageApplications(): boolean {
     const userId = this.authService.user()?.id;
@@ -238,7 +253,13 @@ export class PostCard {
   }
 
   commentsCount(): number {
-    return this.commentsCountOverride() ?? Number(this.post().comments_count ?? 0);
+    return this.commentsCountOverride() ?? Number(
+      this.post().total_comments_count ?? this.post().comments_count ?? 0
+    );
+  }
+
+  topLevelCommentsCount(): number {
+    return Number(this.post().top_level_comments_count ?? this.commentsCount());
   }
 
   likedByMe(): boolean {
@@ -251,7 +272,8 @@ export class PostCard {
     return !!this.post().liked_by_me;
   }
 
-  toggleLike(): void {
+  toggleLike(event?: Event): void {
+    event?.stopPropagation();
     this.likeError.set(null);
 
     const request$ = this.likedByMe()
@@ -267,21 +289,30 @@ export class PostCard {
     });
   }
 
-  toggleComments(): void {
+  toggleComments(event?: Event): void {
+    event?.stopPropagation();
     this.commentsOpen.set(!this.commentsOpen());
+    this.quickViewOpen.set(false);
 
     if (this.commentsOpen() && !this.comments().length) {
-      this.loadComments();
+      this.loadComments(true);
     }
   }
 
-  loadComments(): void {
+  openQuickView(event: Event): void {
+    event.stopPropagation();
+    this.commentsOpen.set(true);
+    this.quickViewOpen.set(true);
+    this.loadComments(false);
+  }
+
+  loadComments(preview = !this.quickViewOpen()): void {
     if (this.isLoadingComments()) return;
 
     this.commentError.set(null);
     this.isLoadingComments.set(true);
 
-    this.postService.getComments(this.post().id, true).subscribe({
+    this.postService.getComments(this.post().id, preview).subscribe({
       next: response => {
         this.comments.set(response.comments);
         this.isLoadingComments.set(false);
@@ -293,7 +324,8 @@ export class PostCard {
     });
   }
 
-  submitComment(): void {
+  submitComment(event?: Event): void {
+    event?.stopPropagation();
     const content = this.commentText().trim();
 
     if (!content || this.isCommenting()) return;
@@ -306,7 +338,7 @@ export class PostCard {
         this.commentText.set('');
         this.commentsOpen.set(true);
         this.commentsCountOverride.set(this.commentsCount() + 1);
-        this.loadComments();
+        this.loadComments(!this.quickViewOpen());
         this.isCommenting.set(false);
       },
       error: () => {
@@ -316,7 +348,70 @@ export class PostCard {
     });
   }
 
-  deleteComment(comment: PostComment): void {
+  startReply(comment: PostComment, event?: Event): void {
+    event?.stopPropagation();
+    const hadFullTree = this.quickViewOpen();
+
+    this.commentsOpen.set(true);
+    this.quickViewOpen.set(true);
+    this.replyingToId.set(comment.id);
+    this.replyText.set('');
+
+    if (!this.comments().length || !hadFullTree) {
+      this.loadComments(false);
+    }
+  }
+
+  cancelReply(event?: Event): void {
+    event?.stopPropagation();
+    this.replyingToId.set(null);
+    this.replyText.set('');
+  }
+
+  submitReply(parentId: number, event?: Event): void {
+    event?.stopPropagation();
+    const content = this.replyText().trim();
+
+    if (!content || this.isCommenting()) return;
+
+    this.commentError.set(null);
+    this.isCommenting.set(true);
+
+    this.postService.addComment(this.post().id, content, parentId).subscribe({
+      next: () => {
+        this.replyText.set('');
+        this.replyingToId.set(null);
+        this.commentsOpen.set(true);
+        this.quickViewOpen.set(true);
+        this.commentsCountOverride.set(this.commentsCount() + 1);
+        this.loadComments(false);
+        this.isCommenting.set(false);
+      },
+      error: () => {
+        this.commentError.set('Could not post reply.');
+        this.isCommenting.set(false);
+      },
+    });
+  }
+
+  sharePost(event: Event): void {
+    event.stopPropagation();
+    const path = `/clubs/${this.post().club.slug}/posts/${this.post().id}`;
+    const url = `${window.location.origin}${path}`;
+
+    if (navigator?.clipboard) {
+      navigator.clipboard
+        .writeText(url)
+        .then(() => this.toast.success('Link copied to clipboard!'))
+        .catch(() => this.toast.error('Could not copy link.'));
+      return;
+    }
+
+    this.toast.error('Clipboard API unavailable.');
+  }
+
+  deleteComment(comment: PostComment, event?: Event): void {
+    event?.stopPropagation();
     if (this.deletingCommentId() !== null || !this.canDeleteComment(comment)) return;
 
     this.commentError.set(null);
@@ -335,7 +430,8 @@ export class PostCard {
     });
   }
 
-  deletePost(): void {
+  deletePost(event?: Event): void {
+    event?.stopPropagation();
     if (this.isDeletingPost() || !this.canDeletePost()) return;
 
     this.deleteError.set(null);
@@ -364,7 +460,14 @@ export class PostCard {
     }));
   }
 
-  openApplyModal(): void {
+  flattenedPreview(): Array<{ comment: PostComment; depth: number }> {
+    return this.quickViewOpen()
+      ? this.flatComments()
+      : this.comments().map(comment => ({ comment, depth: 0 }));
+  }
+
+  openApplyModal(event?: Event): void {
+    event?.stopPropagation();
     if (this.hasApplied() || !this.canApply()) return;
     this.applyError.set(null);
     const initialAnswers: Record<string, any> = {};
@@ -459,5 +562,12 @@ export class PostCard {
       (typeof value === 'string' && value.trim().length === 0) ||
       (Array.isArray(value) && value.length === 0)
     );
+  }
+
+  private flattenComments(comments: PostComment[], depth = 0): Array<{ comment: PostComment; depth: number }> {
+    return comments.flatMap(comment => [
+      { comment, depth },
+      ...this.flattenComments(comment.replies ?? [], depth + 1),
+    ]);
   }
 }

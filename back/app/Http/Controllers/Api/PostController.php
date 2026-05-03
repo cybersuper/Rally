@@ -21,7 +21,8 @@ class PostController extends Controller
             'user:id,name,email',
             'club:id,name,slug,accent_color,sticker_type',
         ])->loadCount([
-            'comments',
+            'comments as total_comments_count',
+            'comments as top_level_comments_count' => fn ($query) => $query->whereNull('parent_id'),
             'likes',
             'lfgApplications',
         ])->loadExists([
@@ -84,7 +85,11 @@ class PostController extends Controller
             'post' => $post->load([
                 'user:id,name,email',
                 'club:id,name,slug,accent_color,sticker_type',
-            ])->loadCount(['comments', 'likes']),
+            ])->loadCount([
+                'comments as total_comments_count',
+                'comments as top_level_comments_count' => fn ($query) => $query->whereNull('parent_id'),
+                'likes',
+            ]),
         ], 201);
     }
 

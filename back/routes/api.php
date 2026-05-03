@@ -1,5 +1,6 @@
 <?php
 
+use App\Events\NotificationSent;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\TimelineController;
 use App\Http\Controllers\Api\PostController;
@@ -8,6 +9,9 @@ use App\Http\Controllers\Api\LikeController;
 use App\Http\Controllers\Api\CommentController;
 use App\Http\Controllers\Api\CommentLikeController;
 use App\Http\Controllers\Api\ClubController;
+use App\Http\Controllers\Api\NotificationController;
+use App\Models\RallyNotification;
+use App\Models\User;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [AuthController::class, 'login']);
@@ -18,6 +22,30 @@ Route::get('/clubs', [ClubController::class, 'index']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
+    Route::patch('/notifications/{notification}/read', [NotificationController::class, 'markRead']);
+    Route::get('/test-broadcast', function () {
+        $user = request()->user();
+
+        $notification = RallyNotification::create([
+            'type' => 'comment',
+            'notifiable_type' => User::class,
+            'notifiable_id' => $user->id,
+            'data' => [
+                'post_title' => 'Realtime test',
+                'actor_id' => $user->id,
+                'actor_name' => 'Rally System',
+            ],
+        ]);
+
+        NotificationSent::dispatch($notification);
+
+        return response()->json([
+            'message' => 'Broadcast sent.',
+            'notification' => $notification,
+        ]);
+    });
 
     Route::post('/clubs', [ClubController::class, 'store']);
     Route::get('/clubs/{club:slug}', [ClubController::class, 'show']);

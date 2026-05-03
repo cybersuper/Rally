@@ -240,7 +240,9 @@ class RallyPrivacyTest extends TestCase
         $this->getJson('/api/timeline')
             ->assertOk()
             ->assertJsonPath('data.0.likes_count', 1)
-            ->assertJsonPath('data.0.liked_by_me', true);
+            ->assertJsonPath('data.0.liked_by_me', true)
+            ->assertJsonPath('data.0.total_comments_count', 1)
+            ->assertJsonPath('data.0.top_level_comments_count', 1);
 
         $this->deleteJson("/api/posts/{$post->id}/likes")
             ->assertOk()
@@ -358,7 +360,62 @@ class RallyPrivacyTest extends TestCase
         $this->getJson("/api/posts/{$post->id}/comments?preview=1")
             ->assertOk()
             ->assertJsonCount(2, 'comments')
+            ->assertJsonPath('comments.0.parent_id', null)
             ->assertJsonPath('comments.0.replies', []);
+    }
+
+    public function test_notifications_are_created_for_post_likes_and_comment_replies(): void
+    {
+        $owner = User::factory()->create();
+        $actor = User::factory()->create();
+        $club = $this->club();
+
+        $owner->clubs()->attach($club->id, ['role' => Club::ROLE_OWNER]);
+        $actor->clubs()->attach($club->id, ['role' => Club::ROLE_MEMBER]);
+        $post = $this->lfgPost($owner, $club);
+        $comment = $post->comments()->create([
+            'user_id' => $owner->id,
+            'content' => 'Original comment.',
+        ]);
+
+        Sanctum::actingAs($actor);
+
+        $this->postJson("/api/posts/{$post->id}/likes")->assertOk();
+        $this->postJson("/api/posts/{$post->id}/comments", [
+            'content' => 'Replying in-thread.',
+            'parent_id' => $comment->id,
+        ])->assertCreated();
+
+        $this->assertDatabaseHas('notifications', [
+            'notifiable_type' => User::class,
+            'notifiable_id' => $owner->id,
+            'type' => 'like',
+        ]);
+
+        $this->assertDatabaseHas('notifications', [
+            'notifiable_type' => User::class,
+            'notifiable_id' => $owner->id,
+            'type' => 'comment',
+        ]);
+
+        Sanctum::actingAs($owner);
+
+        $this->getJson('/api/notifications/unread-count')
+            ->assertOk()
+            ->assertJsonPath('unread_count', 2);
+
+        $notificationId = $this->getJson('/api/notifications')
+            ->assertOk()
+            ->assertJsonCount(2, 'notifications')
+            ->json('notifications.0.id');
+
+        $this->patchJson("/api/notifications/{$notificationId}/read")
+            ->assertOk()
+            ->assertJsonPath('notification.read_at', fn ($value) => $value !== null);
+
+        $this->getJson('/api/notifications/unread-count')
+            ->assertOk()
+            ->assertJsonPath('unread_count', 1);
     }
 
     private function club(): Club

@@ -5,3 +5,10 @@
          ╵                       [32m~~~~~~~~~~[0m
 
 [39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS4111: Property 'post_title' comes from an index signature, so it must be accessed with ['post_title'].[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/services/realtime-notification.ts:69:83:
+[37m      69 │ ...rn `New reply on ${notification.data?.[32mpost_title[37m ?? 'your post'}`;
+         ╵                                          [32m~~~~~~~~~~[0m
+
+[39m[22m

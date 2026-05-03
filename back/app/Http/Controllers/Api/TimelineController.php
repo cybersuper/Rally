@@ -22,7 +22,8 @@ class TimelineController extends Controller
                 'club:id,name,slug,accent_color,sticker_type',
             ])
             ->withCount([
-                'comments',
+                'comments as total_comments_count',
+                'comments as top_level_comments_count' => fn ($query) => $query->whereNull('parent_id'),
                 'likes',
                 'lfgApplications',
             ])

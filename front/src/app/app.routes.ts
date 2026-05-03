@@ -10,6 +10,7 @@ import { LfgDashboardPageComponent } from './pages/lfg-dashboard-page/lfg-dashbo
 import { ClubAdminPageComponent } from './pages/club-admin-page/club-admin-page';
 import { clubAdminGuard } from './guards/club-admin.guard';
 import { PostDetailPageComponent } from './pages/post-detail-page/post-detail-page';
+import { NotificationsPageComponent } from './pages/notifications-page/notifications-page';
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'timeline' },
@@ -17,6 +18,7 @@ export const routes: Routes = [
   { path: 'timeline', component: TimelinePageComponent, canActivate: [authGuard] },
   { path: 'create-club', component: CreateClubPageComponent, canActivate: [authGuard] },
   { path: 'dashboard/lfg', component: LfgDashboardPageComponent, canActivate: [authGuard] },
+  { path: 'notifications', component: NotificationsPageComponent, canActivate: [authGuard] },
   { path: 'discover', component: DiscoverPageComponent },
   { path: 'clubs/:slug/admin', component: ClubAdminPageComponent, canActivate: [authGuard, clubAdminGuard] },
   { path: 'clubs/:slug/posts/:id', component: PostDetailPageComponent, canActivate: [authGuard] },

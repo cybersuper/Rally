@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Events\NotificationSent;
 use Illuminate\Database\Eloquent\Model;
 
 class Comment extends Model
@@ -18,6 +19,44 @@ class Comment extends Model
     protected $casts = [
         'is_best_answer' => 'boolean',
     ];
+
+    protected static function booted(): void
+    {
+        static::created(function (Comment $comment) {
+            $comment->loadMissing([
+                'parent.user:id,name,email',
+                'post.club:id,slug',
+                'post.user:id,name,email',
+                'user:id,name,email',
+            ]);
+
+            $post = $comment->post;
+            $recipientId = $comment->parent_id
+                ? $comment->parent?->user_id
+                : $post?->user_id;
+
+            if (! $post || ! $recipientId || $recipientId === $comment->user_id) {
+                return;
+            }
+
+            $notification = RallyNotification::create([
+                'type' => 'comment',
+                'notifiable_type' => User::class,
+                'notifiable_id' => $recipientId,
+                'data' => [
+                    'post_id' => $post->id,
+                    'post_title' => $post->title,
+                    'comment_id' => $comment->id,
+                    'parent_comment_id' => $comment->parent_id,
+                    'club_slug' => $post->club?->slug,
+                    'actor_id' => $comment->user_id,
+                    'actor_name' => $comment->user?->name,
+                ],
+            ]);
+
+            NotificationSent::dispatch($notification);
+        });
+    }
 
     public function post()
     {

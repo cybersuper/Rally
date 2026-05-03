@@ -1,0 +1,49 @@
+<section class="min-w-0 space-y-4">
+  <header class="rounded-3xl border border-white/10 bg-[#121216]/90 p-5 shadow-2xl">
+    <p class="text-xs font-black uppercase tracking-[0.2em] text-zinc-500">Inbox</p>
+    <h1 class="mt-1 text-3xl font-black tracking-tight">Notifications</h1>
+  </header>
+
+  @if (isLoading()) {
+    <div class="rounded-3xl border border-white/10 bg-[#18181d] p-6 text-zinc-400">
+      Loading notifications...
+    </div>
+  } @else if (error()) {
+    <div class="rounded-3xl border border-red-400/30 bg-red-500/10 p-6 text-red-200">
+      {{ error() }}
+    </div>
+  } @else if (!notifications().length) {
+    <div class="rounded-3xl border border-white/10 bg-[#18181d] p-6 text-zinc-400">
+      No notifications yet.
+    </div>
+  } @else {
+    <div class="overflow-hidden rounded-3xl border border-white/10 bg-[#121216]/90 shadow-2xl">
+      @for (notification of notifications(); track notification.id) {
+        <button
+          type="button"
+          class="flex w-full items-start gap-4 border-b border-white/10 p-4 text-left last:border-b-0 hover:bg-white/[0.04] disabled:opacity-60"
+          [class.bg-white/[0.03]]="!notification.read_at"
+          [disabled]="markingId() === notification.id"
+          (click)="open(notification)"
+        >
+          <span class="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-white/10 text-xs font-black text-white">
+            {{ icon(notification) }}
+          </span>
+
+          <span class="min-w-0 flex-1">
+            <span class="block text-sm font-black text-white">
+              {{ message(notification) }}
+            </span>
+            <span class="mt-1 block text-xs font-semibold text-zinc-500">
+              {{ notification.created_at | date: 'short' }}
+            </span>
+          </span>
+
+          @if (!notification.read_at) {
+            <span class="mt-2 h-2.5 w-2.5 shrink-0 rounded-full bg-red-500"></span>
+          }
+        </button>
+      }
+    </div>
+  }
+</section>

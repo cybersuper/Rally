@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Events\NotificationSent;
 use App\Models\Like;
 use App\Models\Post;
+use App\Models\RallyNotification;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -14,10 +17,28 @@ class LikeController extends Controller
     {
         $this->abortUnlessMember($request, $post);
 
-        Like::firstOrCreate([
+        $like = Like::firstOrCreate([
             'post_id' => $post->id,
             'user_id' => $request->user()->id,
         ]);
+
+        if ($like->wasRecentlyCreated && $post->user_id !== $request->user()->id) {
+            $notification = RallyNotification::create([
+                'type' => 'like',
+                'notifiable_type' => User::class,
+                'notifiable_id' => $post->user_id,
+                'data' => [
+                    'target' => 'post',
+                    'post_id' => $post->id,
+                    'post_title' => $post->title,
+                    'club_slug' => $post->club()->value('slug'),
+                    'actor_id' => $request->user()->id,
+                    'actor_name' => $request->user()->name,
+                ],
+            ]);
+
+            NotificationSent::dispatch($notification);
+        }
 
         return $this->summary($post, true);
     }

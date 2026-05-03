@@ -23,6 +23,20 @@
           <p class="text-lg font-black leading-tight">Rally</p>
           <p class="text-sm text-zinc-500">Club feed</p>
         </div>
+
+        <a
+          class="relative ml-auto grid h-10 w-10 place-items-center rounded-2xl border border-white/10 text-sm font-black text-zinc-300 hover:bg-white/5"
+          [class.rally-bell-pulse]="notificationFlash()"
+          aria-label="Notifications"
+          routerLink="/notifications"
+        >
+          &#128276;
+          @if (unreadNotifications() > 0) {
+            <span class="absolute -right-1 -top-1 grid min-h-5 min-w-5 place-items-center rounded-full bg-red-500 px-1 text-[0.65rem] font-black text-white">
+              {{ unreadNotifications() }}
+            </span>
+          }
+        </a>
       </div>
 
       <nav class="space-y-2 text-sm font-semibold">

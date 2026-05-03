@@ -51,6 +51,7 @@ class Comment extends Model
                     'club_slug' => $post->club?->slug,
                     'actor_id' => $comment->user_id,
                     'actor_name' => $comment->user?->name,
+                    'actor_profile_photo_path' => $comment->user?->profile_photo_path,
                 ],
             ]);
 

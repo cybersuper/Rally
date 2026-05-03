@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Post;
+use App\Support\PostPresenter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -18,7 +19,7 @@ class TimelineController extends Controller
         $posts = Post::query()
             ->whereIn('club_id', $clubIds)
             ->with([
-                'user:id,name,email',
+                'user:id,name,email,username,profile_photo_path',
                 'club:id,name,slug,accent_color,sticker_type',
             ])
             ->withCount([
@@ -32,6 +33,8 @@ class TimelineController extends Controller
             ])
             ->latest()
             ->paginate(20);
+
+        PostPresenter::applyClubNicknames($posts);
 
         return response()->json($posts);
     }

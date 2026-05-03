@@ -11,7 +11,17 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-#[Fillable(['name', 'email', 'password'])]
+#[Fillable([
+    'name',
+    'username',
+    'email',
+    'password',
+    'bio',
+    'profile_photo_path',
+    'cover_photo_path',
+    'current_streak',
+    'longest_streak',
+])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -38,7 +48,12 @@ class User extends Authenticatable
     
     public function clubs()
     {
-        return $this->belongsToMany(\App\Models\Club::class)->withPivot('role')->withTimestamps();
+        return $this->belongsToMany(\App\Models\Club::class)->withPivot(['role', 'nickname'])->withTimestamps();
+    }
+
+    public function flairs()
+    {
+        return $this->belongsToMany(\App\Models\Flair::class)->withTimestamps();
     }
     
     public function comments()

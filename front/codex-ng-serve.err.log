@@ -12,3 +12,169 @@
          ╵                                          [32m~~~~~~~~~~[0m
 
 [39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'nickname' does not exist on type '{ name: string; username: string; bio: string; }'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/profile-page/profile-page.html:131:167:
+[37m      131 │ ...te/20" [value]="editForm().[32mnickname[37m" (input)="setEditField('ni...
+          ╵                               [32m~~~~~~~~[0m
+
+  Error occurs in the template of component ProfilePageComponent.
+
+    src/app/pages/profile-page/profile-page.ts:18:15:
+[37m      18 │   templateUrl: [32m'./profile-page.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2345: Argument of type '"nickname"' is not assignable to parameter of type 'ProfileEditField'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/profile-page/profile-page.html:131:199:
+[37m      131 │ ...me" (input)="setEditField([32m'nickname'[37m, $any($event.target).valu...
+          ╵                              [32m~~~~~~~~~~[0m
+
+  Error occurs in the template of component ProfilePageComponent.
+
+    src/app/pages/profile-page/profile-page.ts:18:15:
+[37m      18 │   templateUrl: [32m'./profile-page.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'profile_photo_path' does not exist on type '{ name: string; username: string; bio: string; }'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/profile-page/profile-page.html:139:167:
+[37m      139 │ ..." [value]="editForm().[32mprofile_photo_path[37m" (input)="setEditFiel...
+          ╵                          [32m~~~~~~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component ProfilePageComponent.
+
+    src/app/pages/profile-page/profile-page.ts:18:15:
+[37m      18 │   templateUrl: [32m'./profile-page.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2345: Argument of type '"profile_photo_path"' is not assignable to parameter of type 'ProfileEditField'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/profile-page/profile-page.html:139:209:
+[37m      139 │ ...input)="setEditField([32m'profile_photo_path'[37m, $any($event.target)...
+          ╵                         [32m~~~~~~~~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component ProfilePageComponent.
+
+    src/app/pages/profile-page/profile-page.ts:18:15:
+[37m      18 │   templateUrl: [32m'./profile-page.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'cover_photo_path' does not exist on type '{ name: string; username: string; bio: string; }'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/profile-page/profile-page.html:143:167:
+[37m      143 │ ...0" [value]="editForm().[32mcover_photo_path[37m" (input)="setEditField...
+          ╵                           [32m~~~~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component ProfilePageComponent.
+
+    src/app/pages/profile-page/profile-page.ts:18:15:
+[37m      18 │   templateUrl: [32m'./profile-page.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2345: Argument of type '"cover_photo_path"' is not assignable to parameter of type 'ProfileEditField'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/profile-page/profile-page.html:143:207:
+[37m      143 │ ...(input)="setEditField([32m'cover_photo_path'[37m, $any($event.target)....
+          ╵                          [32m~~~~~~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component ProfilePageComponent.
+
+    src/app/pages/profile-page/profile-page.ts:18:15:
+[37m      18 │   templateUrl: [32m'./profile-page.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2304: Cannot find name '$any'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/profile-page/profile-page.ts:120:18:
+[37m      120 │     const file = ([32m$any[37m(event.target).files?.[0] ?? null) as File ...
+          ╵                   [32m~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'nickname' does not exist on type '{ name: string; username: string; bio: string; }'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/profile-page/profile-page.html:131:167:
+[37m      131 │ ...te/20" [value]="editForm().[32mnickname[37m" (input)="setEditField('ni...
+          ╵                               [32m~~~~~~~~[0m
+
+  Error occurs in the template of component ProfilePageComponent.
+
+    src/app/pages/profile-page/profile-page.ts:18:15:
+[37m      18 │   templateUrl: [32m'./profile-page.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2345: Argument of type '"nickname"' is not assignable to parameter of type 'ProfileEditField'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/profile-page/profile-page.html:131:199:
+[37m      131 │ ...me" (input)="setEditField([32m'nickname'[37m, $any($event.target).valu...
+          ╵                              [32m~~~~~~~~~~[0m
+
+  Error occurs in the template of component ProfilePageComponent.
+
+    src/app/pages/profile-page/profile-page.ts:18:15:
+[37m      18 │   templateUrl: [32m'./profile-page.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'profile_photo_path' does not exist on type '{ name: string; username: string; bio: string; }'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/profile-page/profile-page.html:139:167:
+[37m      139 │ ..." [value]="editForm().[32mprofile_photo_path[37m" (input)="setEditFiel...
+          ╵                          [32m~~~~~~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component ProfilePageComponent.
+
+    src/app/pages/profile-page/profile-page.ts:18:15:
+[37m      18 │   templateUrl: [32m'./profile-page.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2345: Argument of type '"profile_photo_path"' is not assignable to parameter of type 'ProfileEditField'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/profile-page/profile-page.html:139:209:
+[37m      139 │ ...input)="setEditField([32m'profile_photo_path'[37m, $any($event.target)...
+          ╵                         [32m~~~~~~~~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component ProfilePageComponent.
+
+    src/app/pages/profile-page/profile-page.ts:18:15:
+[37m      18 │   templateUrl: [32m'./profile-page.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'cover_photo_path' does not exist on type '{ name: string; username: string; bio: string; }'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/profile-page/profile-page.html:143:167:
+[37m      143 │ ...0" [value]="editForm().[32mcover_photo_path[37m" (input)="setEditField...
+          ╵                           [32m~~~~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component ProfilePageComponent.
+
+    src/app/pages/profile-page/profile-page.ts:18:15:
+[37m      18 │   templateUrl: [32m'./profile-page.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2345: Argument of type '"cover_photo_path"' is not assignable to parameter of type 'ProfileEditField'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/profile-page/profile-page.html:143:207:
+[37m      143 │ ...(input)="setEditField([32m'cover_photo_path'[37m, $any($event.target)....
+          ╵                          [32m~~~~~~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component ProfilePageComponent.
+
+    src/app/pages/profile-page/profile-page.ts:18:15:
+[37m      18 │   templateUrl: [32m'./profile-page.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[2m18:30:52[22m[1m [31m[1m[vite][22m[1m[31m [31mhttp proxy error: /api/clubs[31m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1636:16)[39m[22m

@@ -44,6 +44,7 @@ class LfgApplication extends Model
                     'club_slug' => $post->club?->slug,
                     'actor_id' => $application->user_id,
                     'actor_name' => $application->user?->name,
+                    'actor_profile_photo_path' => $application->user?->profile_photo_path,
                 ],
             ]);
 

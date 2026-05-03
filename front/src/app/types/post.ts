@@ -4,6 +4,9 @@ export interface RallyUser {
   id: number;
   name: string;
   email: string;
+  username?: string;
+  club_nickname?: string | null;
+  profile_photo_path?: string | null;
 }
 
 export interface Club {

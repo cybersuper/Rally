@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Club;
 use App\Models\Post;
 use App\Models\Streak;
+use App\Support\PostPresenter;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -18,7 +19,7 @@ class PostController extends Controller
         $this->abortUnlessMember($request, $post);
 
         $post->load([
-            'user:id,name,email',
+            'user:id,name,email,username,profile_photo_path',
             'club:id,name,slug,accent_color,sticker_type',
         ])->loadCount([
             'comments as total_comments_count',
@@ -28,6 +29,8 @@ class PostController extends Controller
         ])->loadExists([
             'likes as liked_by_me' => fn ($query) => $query->where('user_id', $request->user()->id),
         ]);
+
+        PostPresenter::applyClubNicknames(collect([$post]));
 
         return response()->json([
             'post' => $post,
@@ -64,6 +67,10 @@ class PostController extends Controller
 
         if ($validated['type'] === 'log') {
             $streak = $this->updateStreak($user->id, $validated['club_id']);
+            $user->forceFill([
+                'current_streak' => $streak->count,
+                'longest_streak' => max((int) $user->longest_streak, $streak->count),
+            ])->save();
 
             $metadata = array_merge([
                 'streak_count' => $streak->count,
@@ -81,15 +88,19 @@ class PostController extends Controller
             'metadata' => $metadata,
         ]);
 
-        return response()->json([
-            'post' => $post->load([
-                'user:id,name,email',
+        $post->load([
+                'user:id,name,email,username,profile_photo_path',
                 'club:id,name,slug,accent_color,sticker_type',
             ])->loadCount([
                 'comments as total_comments_count',
                 'comments as top_level_comments_count' => fn ($query) => $query->whereNull('parent_id'),
                 'likes',
-            ]),
+            ]);
+
+        PostPresenter::applyClubNicknames(collect([$post]));
+
+        return response()->json([
+            'post' => $post,
         ], 201);
     }
 

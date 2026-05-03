@@ -22,7 +22,7 @@
       <div class="min-w-0 flex-1">
         <div class="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
           <h3 class="truncate text-base font-black text-white">
-            {{ post().user.name }}
+            {{ post().user.club_nickname || post().user.name }}
           </h3>
 
           <span
@@ -30,9 +30,11 @@
             [style.background]="post().club.accent_color"
           ></span>
 
-          <span class="truncate text-xs font-medium text-zinc-500">
-            {{ post().club.name }}
-          </span>
+          @if (post().club) {
+            <span class="truncate text-xs font-medium text-zinc-500">
+              posted in {{ post().club.name }}
+            </span>
+          }
         </div>
 
         <p class="mt-0.5 text-xs font-medium text-zinc-500">

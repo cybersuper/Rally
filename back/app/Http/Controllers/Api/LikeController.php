@@ -34,6 +34,7 @@ class LikeController extends Controller
                     'club_slug' => $post->club()->value('slug'),
                     'actor_id' => $request->user()->id,
                     'actor_name' => $request->user()->name,
+                    'actor_profile_photo_path' => $request->user()->profile_photo_path,
                 ],
             ]);
 

@@ -147,3 +147,27 @@ body {
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
 }
+
+.rally-hot-toast {
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  border-radius: 999px !important;
+  background: rgba(18, 18, 22, 0.78) !important;
+  color: #f7f7fb !important;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.34) !important;
+  backdrop-filter: blur(16px);
+}
+
+.rally-hot-toast [data-icon],
+.rally-hot-toast .hot-toast-icon {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--rally-toast-avatar, linear-gradient(135deg, #ff4444, #22d3ee));
+  background-position: center;
+  background-size: cover;
+  color: #0b0b0e;
+  font-size: 0.8rem;
+  font-weight: 950;
+}

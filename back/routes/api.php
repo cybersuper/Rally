@@ -4,6 +4,7 @@ use App\Events\NotificationSent;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\TimelineController;
 use App\Http\Controllers\Api\PostController;
+use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\LfgApplicationController;
 use App\Http\Controllers\Api\LikeController;
 use App\Http\Controllers\Api\CommentController;
@@ -48,6 +49,10 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::post('/clubs', [ClubController::class, 'store']);
+    Route::get('/profiles/{username}', [ProfileController::class, 'show']);
+    Route::patch('/profiles/me', [ProfileController::class, 'update']);
+    Route::post('/profiles/me', [ProfileController::class, 'update']);
+    Route::get('/profiles/{username}/posts', [ProfileController::class, 'posts']);
     Route::get('/clubs/{club:slug}', [ClubController::class, 'show']);
     Route::patch('/clubs/{club:slug}', [ClubController::class, 'update']);
     Route::get('/clubs/{club:slug}/timeline', [ClubController::class, 'timeline']);

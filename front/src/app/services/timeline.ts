@@ -22,6 +22,15 @@ export class TimelineService {
     );
   }
 
+  getUserTimeline(username: string): Observable<PaginatedPosts> {
+    return this.http.get<PaginatedPosts>(`/api/profiles/${username}/posts`).pipe(
+      map(response => ({
+        ...response,
+        data: this.normalizePosts(response.data),
+      }))
+    );
+  }
+
   fetchTimeline(): Observable<PaginatedPosts> {
     return this.getTimeline().pipe(
       tap(response => {

@@ -16,6 +16,7 @@ export const appConfig: ApplicationConfig = {
       position: 'top-right',
       dismissible: true,
       duration: 3000,
+      className: 'rally-hot-toast',
     }),
   ],
 };

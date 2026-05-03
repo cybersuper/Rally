@@ -40,6 +40,7 @@ class CommentLike extends Model
                     'club_slug' => $post->club?->slug,
                     'actor_id' => $like->user_id,
                     'actor_name' => $like->user?->name,
+                    'actor_profile_photo_path' => $like->user?->profile_photo_path,
                 ],
             ]);
 

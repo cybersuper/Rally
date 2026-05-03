@@ -17,6 +17,7 @@ export interface RallyNotification {
     application_id?: number;
     club_slug?: string;
     actor_name?: string;
+    actor_profile_photo_path?: string;
     [key: string]: any;
   } | null;
   read_at: string | null;
@@ -107,7 +108,13 @@ export class NotificationService {
           this.incrementUnread();
           this.flashBell();
           this.playPing();
-          this.toast.success(this.messageFor(payload.notification));
+          this.toast.success(this.messageFor(payload.notification), {
+            icon: this.toastIcon(payload.notification),
+            className: 'rally-hot-toast',
+            style: {
+              '--rally-toast-avatar': this.toastAvatar(payload.notification),
+            },
+          });
         });
       });
   }
@@ -179,5 +186,23 @@ export class NotificationService {
     if (notification.type === 'lfg_app') return `${actor} applied to your group!`;
 
     return 'New Rally notification';
+  }
+
+  private toastIcon(notification: RallyNotification): string {
+    if (notification.data?.actor_profile_photo_path) {
+      return ' ';
+    }
+
+    const actor = notification.data?.actor_name ?? '?';
+
+    return actor.trim().slice(0, 1).toUpperCase() || '?';
+  }
+
+  private toastAvatar(notification: RallyNotification): string {
+    const photo = notification.data?.actor_profile_photo_path;
+
+    return photo
+      ? `url("${photo}")`
+      : 'linear-gradient(135deg, #ff4444, #22d3ee)';
   }
 }

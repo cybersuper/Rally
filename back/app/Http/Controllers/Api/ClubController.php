@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Club;
 use App\Models\Post;
+use App\Support\PostPresenter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -133,7 +134,7 @@ class ClubController extends Controller
         $posts = Post::query()
             ->where('club_id', $club->id)
             ->with([
-                'user:id,name,email',
+                'user:id,name,email,username,profile_photo_path',
                 'club:id,name,slug,accent_color,sticker_type',
             ])
             ->withCount([
@@ -147,6 +148,8 @@ class ClubController extends Controller
             ])
             ->latest()
             ->paginate(20);
+
+        PostPresenter::applyClubNicknames($posts);
 
         return response()->json($posts);
     }

@@ -1,13 +1,14 @@
 import { DatePipe } from '@angular/common';
-import { Component, input, inject, signal } from '@angular/core';
-import { Post } from '../../types/post';
-import { LfgApplication, PostService } from '../../services/post';
+import { Component, inject, input, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { AuthService } from '../../auth';
+import { LfgApplication, PostComment, PostService } from '../../services/post';
 import { TimelineService } from '../../services/timeline';
+import { Post } from '../../types/post';
 
 @Component({
   selector: 'app-post-card',
-  imports: [DatePipe],
+  imports: [DatePipe, RouterLink],
   templateUrl: './post-card.html',
   styleUrl: './post-card.css',
 })
@@ -20,7 +21,6 @@ export class PostCard {
 
   isApplying = signal(false);
   hasApplied = signal(false);
-
   isApplyModalOpen = signal(false);
   applyError = signal<string | null>(null);
   applyAnswers = signal<Record<string, any>>({});
@@ -30,11 +30,44 @@ export class PostCard {
   manageError = signal<string | null>(null);
   applications = signal<LfgApplication[]>([]);
   updatingApplicationId = signal<number | null>(null);
+
   metadataOverride = signal<Record<string, any> | null>(null);
+  likesCountOverride = signal<number | null>(null);
+  likedOverride = signal<boolean | null>(null);
+  commentsCountOverride = signal<number | null>(null);
+
+  commentsOpen = signal(false);
+  isLoadingComments = signal(false);
+  isCommenting = signal(false);
+  deletingCommentId = signal<number | null>(null);
+  comments = signal<PostComment[]>([]);
+  commentText = signal('');
+  commentError = signal<string | null>(null);
+  likeError = signal<string | null>(null);
+  deleteError = signal<string | null>(null);
+  isDeletingPost = signal(false);
+  isDeleted = signal(false);
 
   canManageApplications(): boolean {
     const userId = this.authService.user()?.id;
     return this.post().type === 'lfg' && !!userId && this.post().user_id === userId;
+  }
+
+  canModerateClub(): boolean {
+    const clubs = this.authService.user()?.clubs ?? [];
+    const club = clubs.find((item: any) => item.id === this.post().club_id || item.slug === this.post().club.slug);
+
+    return ['OWNER', 'ADMIN', 'MODERATOR'].includes(String(club?.membership_role ?? ''));
+  }
+
+  canDeletePost(): boolean {
+    const userId = this.authService.user()?.id;
+    return !!userId && (this.post().user_id === userId || this.canModerateClub());
+  }
+
+  canDeleteComment(comment: PostComment): boolean {
+    const userId = this.authService.user()?.id;
+    return !!userId && (comment.user_id === userId || this.canModerateClub());
   }
 
   openManage(): void {
@@ -61,13 +94,9 @@ export class PostCard {
       },
       error: err => {
         this.isLoadingApplications.set(false);
-
-        if (err?.status === 403) {
-          this.manageError.set('Only the party leader can view applications.');
-          return;
-        }
-
-        this.manageError.set('Could not load applications.');
+        this.manageError.set(
+          err?.status === 403 ? 'Only the party leader can view applications.' : 'Could not load applications.'
+        );
       },
     });
   }
@@ -86,23 +115,13 @@ export class PostCard {
         );
 
         this.timelineService.fetchTimeline().subscribe({
-          next: () => {
-            this.updatingApplicationId.set(null);
-          },
-          error: () => {
-            this.updatingApplicationId.set(null);
-          },
+          next: () => this.updatingApplicationId.set(null),
+          error: () => this.updatingApplicationId.set(null),
         });
       },
       error: err => {
         this.updatingApplicationId.set(null);
-
-        if (err?.status === 422) {
-          this.manageError.set('No open seats remain.');
-          return;
-        }
-
-        this.manageError.set('Could not update application.');
+        this.manageError.set(err?.status === 422 ? 'No open seats remain.' : 'Could not update application.');
       },
     });
   }
@@ -181,9 +200,9 @@ export class PostCard {
 
     if (type === 'lfg') return 'D20';
     if (type === 'question') return '?';
-    if (type === 'log') return '🔥';
+    if (type === 'log') return 'HOT';
 
-    return '✦';
+    return '*';
   }
 
   lfgProgress(): number {
@@ -212,6 +231,126 @@ export class PostCard {
 
   canApply(): boolean {
     return !this.canManageApplications() && this.lfgStatusLabel() !== 'Full' && this.spotsRemaining() > 0;
+  }
+
+  likesCount(): number {
+    return this.likesCountOverride() ?? Number(this.post().likes_count ?? 0);
+  }
+
+  commentsCount(): number {
+    return this.commentsCountOverride() ?? Number(this.post().comments_count ?? 0);
+  }
+
+  likedByMe(): boolean {
+    const override = this.likedOverride();
+
+    if (override !== null) {
+      return override;
+    }
+
+    return !!this.post().liked_by_me;
+  }
+
+  toggleLike(): void {
+    this.likeError.set(null);
+
+    const request$ = this.likedByMe()
+      ? this.postService.unlikePost(this.post().id)
+      : this.postService.likePost(this.post().id);
+
+    request$.subscribe({
+      next: response => {
+        this.likedOverride.set(response.liked);
+        this.likesCountOverride.set(response.likes_count);
+      },
+      error: () => this.likeError.set('Could not update like.'),
+    });
+  }
+
+  toggleComments(): void {
+    this.commentsOpen.set(!this.commentsOpen());
+
+    if (this.commentsOpen() && !this.comments().length) {
+      this.loadComments();
+    }
+  }
+
+  loadComments(): void {
+    if (this.isLoadingComments()) return;
+
+    this.commentError.set(null);
+    this.isLoadingComments.set(true);
+
+    this.postService.getComments(this.post().id, true).subscribe({
+      next: response => {
+        this.comments.set(response.comments);
+        this.isLoadingComments.set(false);
+      },
+      error: () => {
+        this.commentError.set('Could not load comments.');
+        this.isLoadingComments.set(false);
+      },
+    });
+  }
+
+  submitComment(): void {
+    const content = this.commentText().trim();
+
+    if (!content || this.isCommenting()) return;
+
+    this.commentError.set(null);
+    this.isCommenting.set(true);
+
+    this.postService.addComment(this.post().id, content).subscribe({
+      next: () => {
+        this.commentText.set('');
+        this.commentsOpen.set(true);
+        this.commentsCountOverride.set(this.commentsCount() + 1);
+        this.loadComments();
+        this.isCommenting.set(false);
+      },
+      error: () => {
+        this.commentError.set('Could not post comment.');
+        this.isCommenting.set(false);
+      },
+    });
+  }
+
+  deleteComment(comment: PostComment): void {
+    if (this.deletingCommentId() !== null || !this.canDeleteComment(comment)) return;
+
+    this.commentError.set(null);
+    this.deletingCommentId.set(comment.id);
+
+    this.postService.deleteComment(comment.id).subscribe({
+      next: () => {
+        this.comments.update(list => list.filter(item => item.id !== comment.id));
+        this.commentsCountOverride.set(Math.max(0, this.commentsCount() - 1));
+        this.deletingCommentId.set(null);
+      },
+      error: () => {
+        this.commentError.set('Could not delete comment.');
+        this.deletingCommentId.set(null);
+      },
+    });
+  }
+
+  deletePost(): void {
+    if (this.isDeletingPost() || !this.canDeletePost()) return;
+
+    this.deleteError.set(null);
+    this.isDeletingPost.set(true);
+
+    this.postService.deletePost(this.post().id).subscribe({
+      next: () => {
+        this.isDeleted.set(true);
+        this.timelineService.removePost(this.post().id);
+      },
+      error: () => {
+        this.deleteError.set('Could not delete post.');
+        this.isDeletingPost.set(false);
+      },
+    });
   }
 
   isApplicationUpdating(application: LfgApplication): boolean {
@@ -282,9 +421,7 @@ export class PostCard {
     for (const field of fields) {
       if (!field.required) continue;
 
-      const value = answers[field.key];
-
-      if (value === null || value === undefined || String(value).trim().length === 0) {
+      if (this.isMissingAnswer(answers[field.key])) {
         this.applyError.set('Please complete the required fields.');
         return;
       }
@@ -313,5 +450,14 @@ export class PostCard {
         this.isApplying.set(false);
       },
     });
+  }
+
+  private isMissingAnswer(value: any): boolean {
+    return (
+      value === null ||
+      value === undefined ||
+      (typeof value === 'string' && value.trim().length === 0) ||
+      (Array.isArray(value) && value.length === 0)
+    );
   }
 }

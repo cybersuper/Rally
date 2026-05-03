@@ -1,445 +1,560 @@
-<article
-  class="rally-card rounded-3xl p-4 transition duration-200 sm:p-5"
-  [style.--club-accent]="post().club.accent_color"
->
-  <!-- Sticker: now above/right of the card, not covering the type pill -->
-  <div [class]="stickerClass()" aria-hidden="true">
-    <div class="rally-sticker-inner">
-      {{ stickerText() }}
-    </div>
-  </div>
-
-  <header class="relative z-10 mb-4 flex items-start gap-3 pr-16">
-    <div
-      class="grid h-12 w-12 shrink-0 place-items-center rounded-2xl text-sm font-black text-black shadow-lg"
-      [style.background]="post().club.accent_color"
-      [style.boxShadow]="'0 14px 28px ' + post().club.accent_color + '22'"
-    >
-      {{ initials(post().user.name) }}
+@if (!isDeleted()) {
+  <article
+    class="rally-card rounded-3xl p-4 transition duration-200 sm:p-5"
+    [style.--club-accent]="post().club.accent_color"
+  >
+    <div [class]="stickerClass()" aria-hidden="true">
+      <div class="rally-sticker-inner">
+        {{ stickerText() }}
+      </div>
     </div>
 
-    <div class="min-w-0 flex-1">
-      <div class="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-        <h3 class="truncate text-base font-black text-white">
-          {{ post().user.name }}
-        </h3>
-
-        <span
-          class="h-1.5 w-1.5 rounded-full"
-          [style.background]="post().club.accent_color"
-        ></span>
-
-        <span class="truncate text-xs font-medium text-zinc-500">
-          {{ post().club.name }}
-        </span>
+    <header class="relative z-10 mb-4 flex items-start gap-3 pr-16">
+      <div
+        class="grid h-12 w-12 shrink-0 place-items-center rounded-2xl text-sm font-black text-black shadow-lg"
+        [style.background]="post().club.accent_color"
+        [style.boxShadow]="'0 14px 28px ' + post().club.accent_color + '22'"
+      >
+        {{ initials(post().user.name) }}
       </div>
 
-      <p class="mt-0.5 text-xs font-medium text-zinc-500">
-        {{ post().created_at | date: 'shortTime' }}
-      </p>
-    </div>
+      <div class="min-w-0 flex-1">
+        <div class="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+          <h3 class="truncate text-base font-black text-white">
+            {{ post().user.name }}
+          </h3>
 
-    <span
-      class="rounded-full border px-2.5 py-1 text-xs font-black"
-      [style.borderColor]="post().club.accent_color + '44'"
-      [style.background]="post().club.accent_color + '18'"
-      [style.color]="post().club.accent_color"
-    >
-      {{ typeLabel() }}
-    </span>
-  </header>
-
-  <section class="relative z-10 pr-2">
-    <h2 class="mb-2 text-lg font-black tracking-tight text-white">
-      {{ post().title }}
-    </h2>
-
-    <p class="max-w-[64ch] text-[0.95rem] leading-7 text-zinc-100/95">
-      {{ post().content }}
-    </p>
-  </section>
-
-  @switch (post().type) {
-    @case ('lfg') {
-      <section
-        class="relative z-10 mt-5 rounded-2xl border p-4"
-        [style.borderColor]="post().club.accent_color + '66'"
-        [style.background]="post().club.accent_color + '16'"
-      >
-        <div class="mb-2 flex items-center justify-between gap-3">
-          <span class="text-xs font-black uppercase tracking-wide text-zinc-300">
-            Seats filled
-          </span>
-
-          <span class="text-sm font-black text-white">
-            {{ metadataValue('spots_filled', 0) }}/{{ metadataValue('spots_total', 0) }}
-          </span>
-        </div>
-
-        <div class="h-2.5 overflow-hidden rounded-full bg-black/30">
-          <div
-            class="h-full rounded-full transition-all"
+          <span
+            class="h-1.5 w-1.5 rounded-full"
             [style.background]="post().club.accent_color"
-            [style.width.%]="lfgProgress()"
-          ></div>
-        </div>
+          ></span>
 
-        <div class="mt-4 flex items-center justify-between gap-3">
-          @if (canManageApplications()) {
-            <button
-              type="button"
-              class="rounded-xl px-5 py-2.5 text-sm font-black text-black shadow-lg transition hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
-              [style.background]="post().club.accent_color"
-              [style.boxShadow]="'0 14px 32px ' + post().club.accent_color + '26'"
-              [disabled]="isLoadingApplications()"
-              (click)="openManage()"
-            >
-              Review applications
-            </button>
-          } @else {
-            <button
-              type="button"
-              class="rounded-xl px-5 py-2.5 text-sm font-black text-black shadow-lg transition hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
-              [style.background]="post().club.accent_color"
-              [style.boxShadow]="'0 14px 32px ' + post().club.accent_color + '26'"
-              [disabled]="isApplying() || hasApplied() || !canApply()"
-              (click)="openApplyModal()"
-            >
-              @if (hasApplied()) {
-                Applied
-              } @else if (isApplying()) {
-                Applying...
-              } @else if (!canApply()) {
-                Full
-              } @else {
-                Apply
-              }
-            </button>
-          }
-
-          <span class="text-xs font-bold text-zinc-400">
-            {{ spotsRemaining() }} open / {{ lfgStatusLabel() }}
+          <span class="truncate text-xs font-medium text-zinc-500">
+            {{ post().club.name }}
           </span>
         </div>
-      </section>
 
-      @if (isApplyModalOpen()) {
-        <div class="fixed inset-0 z-50 grid place-items-center p-4" (click)="closeApplyModal()">
-          <div class="absolute inset-0 bg-black/70"></div>
+        <p class="mt-0.5 text-xs font-medium text-zinc-500">
+          {{ post().created_at | date: 'shortTime' }}
+        </p>
+      </div>
 
-          <div
-            class="relative w-full max-w-[560px] rounded-3xl border border-white/10 bg-[#121216] p-5 shadow-2xl"
-            (click)="$event.stopPropagation()"
-          >
-            <div class="flex items-start justify-between gap-4">
-              <div class="min-w-0">
-                <p class="text-xs font-black uppercase tracking-[0.2em] text-zinc-500">Apply</p>
-                <p class="mt-1 truncate text-xl font-black">{{ post().title }}</p>
-                <p class="mt-1 text-xs font-semibold text-zinc-500">{{ post().club.name }}</p>
-              </div>
+      <span
+        class="rounded-full border px-2.5 py-1 text-xs font-black"
+        [style.borderColor]="post().club.accent_color + '44'"
+        [style.background]="post().club.accent_color + '18'"
+        [style.color]="post().club.accent_color"
+      >
+        {{ typeLabel() }}
+      </span>
+    </header>
 
+    <section class="relative z-10 pr-2">
+      <h2 class="mb-2 text-lg font-black tracking-tight text-white">
+        <a class="hover:underline" [routerLink]="['/clubs', post().club.slug, 'posts', post().id]">
+      {{ post().title }}
+        </a>
+      </h2>
+
+      <p class="max-w-[64ch] text-[0.95rem] leading-7 text-zinc-100/95">
+        {{ post().content }}
+      </p>
+    </section>
+
+    @switch (post().type) {
+      @case ('lfg') {
+        <section
+          class="relative z-10 mt-5 rounded-2xl border p-4"
+          [style.borderColor]="post().club.accent_color + '66'"
+          [style.background]="post().club.accent_color + '16'"
+        >
+          <div class="mb-2 flex items-center justify-between gap-3">
+            <span class="text-xs font-black uppercase tracking-wide text-zinc-300">
+              Seats filled
+            </span>
+
+            <span class="text-sm font-black text-white">
+              {{ metadataValue('spots_filled', 0) }}/{{ metadataValue('spots_total', 0) }}
+            </span>
+          </div>
+
+          <div class="h-2.5 overflow-hidden rounded-full bg-black/30">
+            <div
+              class="h-full rounded-full transition-all"
+              [style.background]="post().club.accent_color"
+              [style.width.%]="lfgProgress()"
+            ></div>
+          </div>
+
+          <div class="mt-4 flex items-center justify-between gap-3">
+            @if (canManageApplications()) {
               <button
                 type="button"
-                class="rounded-2xl border border-white/10 px-3 py-2 text-xs font-black text-zinc-300 hover:bg-white/5"
-                (click)="closeApplyModal()"
-              >
-                Close
-              </button>
-            </div>
-
-            <div class="mt-4 space-y-3">
-              @for (field of lfgApplicationFields(); track field.key) {
-                <label class="block">
-                  <span class="mb-1.5 block text-xs font-black uppercase tracking-wide text-zinc-500">
-                    {{ field.label }}
-                    @if (field.required) { <span class="text-red-300">*</span> }
-                  </span>
-
-                  @if (field.type === 'textarea') {
-                    <textarea
-                      class="h-28 w-full resize-none rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-white/20"
-                      [placeholder]="field.placeholder ?? ''"
-                      (input)="setAnswer(field.key, $any($event.target).value)"
-                    ></textarea>
-                  } @else if (field.type === 'boolean') {
-                    <button
-                      type="button"
-                      class="flex w-full items-center justify-between rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-left text-sm font-semibold text-zinc-200 hover:bg-white/[0.04]"
-                      (click)="setAnswer(field.key, !applyAnswers()[field.key])"
-                    >
-                      <span>{{ applyAnswers()[field.key] ? 'Yes' : 'No' }}</span>
-                      <span
-                        class="h-6 w-11 rounded-full p-0.5 transition"
-                        [style.background]="applyAnswers()[field.key] ? post().club.accent_color : '#3f3f46'"
-                      >
-                        <span
-                          class="block h-5 w-5 rounded-full bg-white transition"
-                          [class.translate-x-5]="applyAnswers()[field.key]"
-                        ></span>
-                      </span>
-                    </button>
-                  } @else if (field.type === 'select') {
-                    <select
-                      class="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-white/20"
-                      (change)="setAnswer(field.key, $any($event.target).value)"
-                    >
-                      <option value="">Choose one</option>
-                      @for (option of field.options ?? []; track option) {
-                        <option [value]="option">{{ option }}</option>
-                      }
-                    </select>
-                  } @else if (field.type === 'checkbox') {
-                    <div class="space-y-2 rounded-2xl border border-white/10 bg-black/30 p-3">
-                      @for (option of field.options ?? []; track option) {
-                        <label class="flex items-center gap-2 text-sm font-semibold text-zinc-200">
-                          <input
-                            type="checkbox"
-                            [checked]="isCheckboxSelected(field.key, option)"
-                            (change)="toggleCheckboxAnswer(field.key, option, $any($event.target).checked)"
-                          />
-                          <span>{{ option }}</span>
-                        </label>
-                      }
-                    </div>
-                  } @else {
-                    <input
-                      class="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-white/20"
-                      [type]="field.type ?? 'text'"
-                      [placeholder]="field.placeholder ?? ''"
-                      (input)="setAnswer(field.key, $any($event.target).value)"
-                    />
-                  }
-                </label>
-              }
-            </div>
-
-            @if (applyError()) {
-              <div class="mt-4 rounded-2xl border border-red-400/30 bg-red-500/10 p-4 text-sm font-semibold text-red-200">
-                {{ applyError() }}
-              </div>
-            }
-
-            <div class="mt-5 flex items-center justify-end gap-3">
-              <button
-                type="button"
-                class="rounded-2xl border border-white/10 px-4 py-3 text-sm font-black text-zinc-200 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-60"
-                [disabled]="isApplying()"
-                (click)="closeApplyModal()"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                class="rounded-2xl px-5 py-3 text-sm font-black text-black shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
+                class="rounded-xl px-5 py-2.5 text-sm font-black text-black shadow-lg transition hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
                 [style.background]="post().club.accent_color"
-                [disabled]="isApplying() || hasApplied()"
-                (click)="submitApplication()"
+                [style.boxShadow]="'0 14px 32px ' + post().club.accent_color + '26'"
+                [disabled]="isLoadingApplications()"
+                (click)="openManage()"
               >
-                @if (isApplying()) {
-                  Sending...
+                Review applications
+              </button>
+            } @else {
+              <button
+                type="button"
+                class="rounded-xl px-5 py-2.5 text-sm font-black text-black shadow-lg transition hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+                [style.background]="post().club.accent_color"
+                [style.boxShadow]="'0 14px 32px ' + post().club.accent_color + '26'"
+                [disabled]="isApplying() || hasApplied() || !canApply()"
+                (click)="openApplyModal()"
+              >
+                @if (hasApplied()) {
+                  Applied
+                } @else if (isApplying()) {
+                  Applying...
+                } @else if (!canApply()) {
+                  Full
                 } @else {
-                  Send application
+                  Apply
                 }
               </button>
-            </div>
+            }
+
+            <span class="text-xs font-bold text-zinc-400">
+              {{ spotsRemaining() }} open / {{ lfgStatusLabel() }}
+            </span>
           </div>
-        </div>
+        </section>
       }
 
-      @if (isManageOpen()) {
-        <div class="fixed inset-0 z-50 grid place-items-center p-4" (click)="closeManage()">
-          <div class="absolute inset-0 bg-black/70"></div>
-
-          <div
-            class="relative max-h-[90vh] w-full max-w-[720px] overflow-y-auto rounded-3xl border border-white/10 bg-[#121216] p-5 shadow-2xl"
-            (click)="$event.stopPropagation()"
-          >
-            <div class="flex items-start justify-between gap-4">
-              <div class="min-w-0">
-                <p class="text-xs font-black uppercase tracking-[0.2em] text-zinc-500">Applications</p>
-                <p class="mt-1 truncate text-xl font-black">{{ post().title }}</p>
-                <p class="mt-1 text-xs font-semibold text-zinc-500">{{ post().club.name }}</p>
-              </div>
-
-              <button
-                type="button"
-                class="rounded-2xl border border-white/10 px-3 py-2 text-xs font-black text-zinc-300 hover:bg-white/5"
-                (click)="closeManage()"
-              >
-                Close
-              </button>
+      @case ('question') {
+        <section
+          class="relative z-10 mt-5 rounded-2xl border p-4"
+          [style.borderColor]="post().club.accent_color + '55'"
+          [style.background]="post().club.accent_color + '18'"
+        >
+          <div class="grid grid-cols-2 gap-4 sm:grid-cols-[1fr_1fr_auto] sm:items-center">
+            <div>
+              <p class="text-xs font-black uppercase tracking-wide text-zinc-400">
+                Answers
+              </p>
+              <p class="mt-1 text-xl font-black text-white">
+                {{ commentsCount() }}
+              </p>
             </div>
 
-            <section class="mt-5 rounded-2xl border p-4" [style.borderColor]="post().club.accent_color + '55'">
-              <div class="mb-2 flex items-center justify-between gap-3">
-                <span class="text-xs font-black uppercase tracking-wide text-zinc-400">Seats</span>
-                <span class="text-sm font-black text-white">
-                  {{ metadataValue('spots_filled', 0) }}/{{ metadataValue('spots_total', 0) }}
+            <div>
+              <p class="text-xs font-black uppercase tracking-wide text-zinc-400">
+                Helpful
+              </p>
+              <p class="mt-1 text-xl font-black text-white">
+                {{ metadataValue('helpful_count', 0) }}
+              </p>
+            </div>
+
+            @if (metadataValue('best_answer_pinned', false)) {
+              <div class="col-span-2 flex sm:col-span-1">
+                <span class="rounded-full bg-emerald-400/20 px-3 py-1.5 text-xs font-black text-emerald-300">
+                  Best answer pinned
                 </span>
               </div>
-
-              <div class="h-2.5 overflow-hidden rounded-full bg-black/30">
-                <div
-                  class="h-full rounded-full transition-all"
-                  [style.background]="post().club.accent_color"
-                  [style.width.%]="lfgProgress()"
-                ></div>
-              </div>
-            </section>
-
-            @if (manageError()) {
-              <div class="mt-4 rounded-2xl border border-red-400/30 bg-red-500/10 p-4 text-sm font-semibold text-red-200">
-                {{ manageError() }}
-              </div>
-            }
-
-            @if (isLoadingApplications()) {
-              <div class="mt-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm text-zinc-400">
-                Loading applications...
-              </div>
-            } @else if (!applications().length) {
-              <div class="mt-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm text-zinc-400">
-                No applications yet.
-              </div>
-            } @else {
-              <div class="mt-5 divide-y divide-white/10">
-                @for (application of applications(); track application.id) {
-                  <div class="py-4">
-                    <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                      <div class="min-w-0">
-                        <div class="flex flex-wrap items-center gap-2">
-                          <p class="font-black">{{ application.user?.name ?? 'Applicant' }}</p>
-                          <span class="rounded-full bg-white/10 px-2 py-1 text-xs font-black text-zinc-300">
-                            {{ application.status }}
-                          </span>
-                        </div>
-                        <p class="mt-1 text-xs font-semibold text-zinc-500">
-                          {{ application.user?.email }}
-                        </p>
-                      </div>
-
-                      <div class="flex shrink-0 items-center gap-2">
-                        <button
-                          type="button"
-                          class="rounded-xl px-3 py-2 text-xs font-black text-black disabled:cursor-not-allowed disabled:opacity-60"
-                          [style.background]="post().club.accent_color"
-                          [disabled]="isApplicationUpdating(application) || application.status === 'accepted'"
-                          (click)="setApplicationStatus(application, 'accepted')"
-                        >
-                          Accept
-                        </button>
-
-                        <button
-                          type="button"
-                          class="rounded-xl border border-white/10 px-3 py-2 text-xs font-black text-zinc-200 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-60"
-                          [disabled]="isApplicationUpdating(application) || application.status === 'rejected'"
-                          (click)="setApplicationStatus(application, 'rejected')"
-                        >
-                          Decline
-                        </button>
-                      </div>
-                    </div>
-
-                    <div class="mt-3 space-y-2">
-                      @for (answer of applicationAnswerEntries(application); track answer.key) {
-                        <div class="rounded-2xl bg-black/20 p-3">
-                          <p class="text-xs font-black uppercase tracking-wide text-zinc-500">
-                            {{ answer.key }}
-                          </p>
-                          <p class="mt-1 text-sm font-semibold leading-6 text-zinc-200">
-                            {{ answer.value }}
-                          </p>
-                        </div>
-                      }
-                    </div>
-                  </div>
-                }
-              </div>
             }
           </div>
-        </div>
+        </section>
+      }
+
+      @case ('log') {
+        <section class="relative z-10 mt-5 rounded-2xl border border-emerald-400/25 bg-emerald-400/10 p-4">
+          <div class="mb-2 flex items-center justify-between gap-3">
+            <span class="text-xs font-black uppercase tracking-wide text-zinc-400">
+              Current streak
+            </span>
+
+            <span class="text-sm font-black text-white">
+              {{ metadataValue('streak_count', 0) }} days
+            </span>
+          </div>
+
+          <div class="h-2.5 overflow-hidden rounded-full bg-black/30">
+            <div
+              class="h-full rounded-full bg-emerald-400"
+              [style.width.%]="metadataValue('progress_percent', 0)"
+            ></div>
+          </div>
+
+          <div class="mt-3 flex items-center justify-between text-xs font-bold">
+            <span class="text-zinc-500">Daily log</span>
+            <span class="text-emerald-300">
+              Feeling: {{ metadataValue('feeling', 'Solid') }}
+            </span>
+          </div>
+        </section>
+      }
+
+      @default {
+        <section class="relative z-10 mt-5 rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-xs font-bold text-zinc-500">
+          Standard post
+        </section>
       }
     }
 
-    @case ('question') {
-      <section
-        class="relative z-10 mt-5 rounded-2xl border p-4"
-        [style.borderColor]="post().club.accent_color + '55'"
-        [style.background]="post().club.accent_color + '18'"
-      >
-        <div class="grid grid-cols-2 gap-4 sm:grid-cols-[1fr_1fr_auto] sm:items-center">
-          <div>
-            <p class="text-xs font-black uppercase tracking-wide text-zinc-400">
-              Answers
-            </p>
-            <p class="mt-1 text-xl font-black text-white">
-              {{ metadataValue('answers_count', 0) }}
-            </p>
+    <footer class="relative z-10 mt-5 border-t border-white/7 pt-4">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            class="rally-action w-auto gap-2 px-3 text-xs font-black"
+            aria-label="Comments"
+            (click)="toggleComments()"
+          >
+            Reply {{ commentsCount() }}
+          </button>
+
+          <button
+            type="button"
+            class="rally-action w-auto gap-2 px-3 text-xs font-black"
+            [class.text-red-300]="likedByMe()"
+            aria-label="Boost"
+            (click)="toggleLike()"
+          >
+            Boost {{ likesCount() }}
+          </button>
+        </div>
+
+        @if (canDeletePost()) {
+          <button
+            type="button"
+            class="rounded-xl border border-red-400/25 px-3 py-2 text-xs font-black text-red-200 hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-60"
+            [disabled]="isDeletingPost()"
+            (click)="deletePost()"
+          >
+            @if (isDeletingPost()) { Deleting... } @else { Delete }
+          </button>
+        }
+      </div>
+
+      @if (likeError() || deleteError()) {
+        <div class="mt-3 rounded-2xl border border-red-400/30 bg-red-500/10 p-3 text-xs font-semibold text-red-200">
+          {{ likeError() || deleteError() }}
+        </div>
+      }
+
+      @if (commentsOpen()) {
+        <section class="mt-4 space-y-3">
+          <div class="flex gap-2">
+            <input
+              class="min-w-0 flex-1 rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-white/20"
+              type="text"
+              [value]="commentText()"
+              (input)="commentText.set($any($event.target).value)"
+              placeholder="Add comment"
+            />
+
+            <button
+              type="button"
+              class="rounded-2xl px-4 py-3 text-sm font-black text-black disabled:cursor-not-allowed disabled:opacity-60"
+              [style.background]="post().club.accent_color"
+              [disabled]="isCommenting() || !commentText().trim()"
+              (click)="submitComment()"
+            >
+              Send
+            </button>
           </div>
 
-          <div>
-            <p class="text-xs font-black uppercase tracking-wide text-zinc-400">
-              Helpful
-            </p>
-            <p class="mt-1 text-xl font-black text-white">
-              {{ metadataValue('helpful_count', 0) }}
-            </p>
+          @if (commentError()) {
+            <div class="rounded-2xl border border-red-400/30 bg-red-500/10 p-3 text-xs font-semibold text-red-200">
+              {{ commentError() }}
+            </div>
+          }
+
+          @if (isLoadingComments()) {
+            <div class="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm text-zinc-400">
+              Loading comments...
+            </div>
+          } @else if (!comments().length) {
+            <div class="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm text-zinc-400">
+              No comments yet.
+            </div>
+          } @else {
+            <div class="divide-y divide-white/10 rounded-2xl border border-white/10 bg-black/20">
+              @for (comment of comments(); track comment.id) {
+                <div class="p-4">
+                  <div class="flex items-start justify-between gap-3">
+                    <div class="min-w-0">
+                      <p class="text-sm font-black text-white">
+                        {{ comment.user?.name ?? 'Member' }}
+                      </p>
+                      <p class="mt-0.5 text-xs font-semibold text-zinc-500">
+                        {{ comment.created_at | date: 'shortTime' }}
+                      </p>
+                    </div>
+
+                    @if (canDeleteComment(comment)) {
+                      <button
+                        type="button"
+                        class="rounded-xl border border-white/10 px-3 py-2 text-xs font-black text-zinc-400 hover:bg-white/5 hover:text-red-200 disabled:opacity-60"
+                        [disabled]="deletingCommentId() === comment.id"
+                        (click)="deleteComment(comment)"
+                      >
+                        Delete
+                      </button>
+                    }
+                  </div>
+
+                  <p class="mt-2 text-sm font-semibold leading-6 text-zinc-200">
+                    {{ comment.content }}
+                  </p>
+                </div>
+              }
+            </div>
+
+            @if (commentsCount() > comments().length) {
+              <a
+                class="block rounded-2xl border border-white/10 px-4 py-3 text-center text-sm font-black text-zinc-200 hover:bg-white/5"
+                [routerLink]="['/clubs', post().club.slug, 'posts', post().id]"
+              >
+                View all {{ commentsCount() }} comments
+              </a>
+            }
+          }
+        </section>
+      }
+    </footer>
+
+    @if (isApplyModalOpen()) {
+      <div class="fixed inset-0 z-50 grid place-items-center p-4" (click)="closeApplyModal()">
+        <div class="absolute inset-0 bg-black/70"></div>
+
+        <div
+          class="relative max-h-[80vh] w-full max-w-[560px] overflow-y-auto rounded-3xl border border-white/10 bg-[#121216] p-5 shadow-2xl"
+          (click)="$event.stopPropagation()"
+        >
+          <div class="flex items-start justify-between gap-4">
+            <div class="min-w-0">
+              <p class="text-xs font-black uppercase tracking-[0.2em] text-zinc-500">Apply</p>
+              <p class="mt-1 truncate text-xl font-black">{{ post().title }}</p>
+              <p class="mt-1 text-xs font-semibold text-zinc-500">{{ post().club.name }}</p>
+            </div>
+
+            <button
+              type="button"
+              class="rounded-2xl border border-white/10 px-3 py-2 text-xs font-black text-zinc-300 hover:bg-white/5"
+              (click)="closeApplyModal()"
+            >
+              Close
+            </button>
           </div>
 
-          @if (metadataValue('best_answer_pinned', false)) {
-            <div class="col-span-2 flex sm:col-span-1">
-              <span class="rounded-full bg-emerald-400/20 px-3 py-1.5 text-xs font-black text-emerald-300">
-                Best answer pinned
+          <div class="mt-4 space-y-3">
+            @for (field of lfgApplicationFields(); track field.key) {
+              <label class="block">
+                <span class="mb-1.5 block text-xs font-black uppercase tracking-wide text-zinc-500">
+                  {{ field.label }}
+                  @if (field.required) { <span class="text-red-300">*</span> }
+                </span>
+
+                @if (field.type === 'textarea') {
+                  <textarea
+                    class="h-28 w-full resize-none rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-white/20"
+                    [placeholder]="field.placeholder ?? ''"
+                    (input)="setAnswer(field.key, $any($event.target).value)"
+                  ></textarea>
+                } @else if (field.type === 'boolean') {
+                  <button
+                    type="button"
+                    class="flex w-full items-center justify-between rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-left text-sm font-semibold text-zinc-200 hover:bg-white/[0.04]"
+                    (click)="setAnswer(field.key, !applyAnswers()[field.key])"
+                  >
+                    <span>{{ applyAnswers()[field.key] ? 'Yes' : 'No' }}</span>
+                    <span
+                      class="h-6 w-11 rounded-full p-0.5 transition"
+                      [style.background]="applyAnswers()[field.key] ? post().club.accent_color : '#3f3f46'"
+                    >
+                      <span
+                        class="block h-5 w-5 rounded-full bg-white transition"
+                        [class.translate-x-5]="applyAnswers()[field.key]"
+                      ></span>
+                    </span>
+                  </button>
+                } @else if (field.type === 'select') {
+                  <select
+                    class="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-white/20"
+                    (change)="setAnswer(field.key, $any($event.target).value)"
+                  >
+                    <option value="">Choose one</option>
+                    @for (option of field.options ?? []; track option) {
+                      <option [value]="option">{{ option }}</option>
+                    }
+                  </select>
+                } @else if (field.type === 'checkbox') {
+                  <div class="space-y-2 rounded-2xl border border-white/10 bg-black/30 p-3">
+                    @for (option of field.options ?? []; track option) {
+                      <label class="flex items-center gap-2 text-sm font-semibold text-zinc-200">
+                        <input
+                          type="checkbox"
+                          [checked]="isCheckboxSelected(field.key, option)"
+                          (change)="toggleCheckboxAnswer(field.key, option, $any($event.target).checked)"
+                        />
+                        <span>{{ option }}</span>
+                      </label>
+                    }
+                  </div>
+                } @else {
+                  <input
+                    class="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-white/20"
+                    [type]="field.type ?? 'text'"
+                    [placeholder]="field.placeholder ?? ''"
+                    (input)="setAnswer(field.key, $any($event.target).value)"
+                  />
+                }
+              </label>
+            }
+          </div>
+
+          @if (applyError()) {
+            <div class="mt-4 rounded-2xl border border-red-400/30 bg-red-500/10 p-4 text-sm font-semibold text-red-200">
+              {{ applyError() }}
+            </div>
+          }
+
+          <div class="mt-5 flex items-center justify-end gap-3">
+            <button
+              type="button"
+              class="rounded-2xl border border-white/10 px-4 py-3 text-sm font-black text-zinc-200 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-60"
+              [disabled]="isApplying()"
+              (click)="closeApplyModal()"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              class="rounded-2xl px-5 py-3 text-sm font-black text-black shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
+              [style.background]="post().club.accent_color"
+              [disabled]="isApplying() || hasApplied()"
+              (click)="submitApplication()"
+            >
+              @if (isApplying()) {
+                Sending...
+              } @else {
+                Send application
+              }
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    @if (isManageOpen()) {
+      <div class="fixed inset-0 z-50 grid place-items-center p-4" (click)="closeManage()">
+        <div class="absolute inset-0 bg-black/70"></div>
+
+        <div
+          class="relative max-h-[90vh] w-full max-w-[720px] overflow-y-auto rounded-3xl border border-white/10 bg-[#121216] p-5 shadow-2xl"
+          (click)="$event.stopPropagation()"
+        >
+          <div class="flex items-start justify-between gap-4">
+            <div class="min-w-0">
+              <p class="text-xs font-black uppercase tracking-[0.2em] text-zinc-500">Applications</p>
+              <p class="mt-1 truncate text-xl font-black">{{ post().title }}</p>
+              <p class="mt-1 text-xs font-semibold text-zinc-500">{{ post().club.name }}</p>
+            </div>
+
+            <button
+              type="button"
+              class="rounded-2xl border border-white/10 px-3 py-2 text-xs font-black text-zinc-300 hover:bg-white/5"
+              (click)="closeManage()"
+            >
+              Close
+            </button>
+          </div>
+
+          <section class="mt-5 rounded-2xl border p-4" [style.borderColor]="post().club.accent_color + '55'">
+            <div class="mb-2 flex items-center justify-between gap-3">
+              <span class="text-xs font-black uppercase tracking-wide text-zinc-400">Seats</span>
+              <span class="text-sm font-black text-white">
+                {{ metadataValue('spots_filled', 0) }}/{{ metadataValue('spots_total', 0) }}
               </span>
+            </div>
+
+            <div class="h-2.5 overflow-hidden rounded-full bg-black/30">
+              <div
+                class="h-full rounded-full transition-all"
+                [style.background]="post().club.accent_color"
+                [style.width.%]="lfgProgress()"
+              ></div>
+            </div>
+          </section>
+
+          @if (manageError()) {
+            <div class="mt-4 rounded-2xl border border-red-400/30 bg-red-500/10 p-4 text-sm font-semibold text-red-200">
+              {{ manageError() }}
+            </div>
+          }
+
+          @if (isLoadingApplications()) {
+            <div class="mt-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm text-zinc-400">
+              Loading applications...
+            </div>
+          } @else if (!applications().length) {
+            <div class="mt-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm text-zinc-400">
+              No applications yet.
+            </div>
+          } @else {
+            <div class="mt-5 divide-y divide-white/10">
+              @for (application of applications(); track application.id) {
+                <div class="py-4">
+                  <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div class="min-w-0">
+                      <div class="flex flex-wrap items-center gap-2">
+                        <p class="font-black">{{ application.user?.name ?? 'Applicant' }}</p>
+                        <span class="rounded-full bg-white/10 px-2 py-1 text-xs font-black text-zinc-300">
+                          {{ application.status }}
+                        </span>
+                      </div>
+                      <p class="mt-1 text-xs font-semibold text-zinc-500">
+                        {{ application.user?.email }}
+                      </p>
+                    </div>
+
+                    <div class="flex shrink-0 items-center gap-2">
+                      <button
+                        type="button"
+                        class="rounded-xl px-3 py-2 text-xs font-black text-black disabled:cursor-not-allowed disabled:opacity-60"
+                        [style.background]="post().club.accent_color"
+                        [disabled]="isApplicationUpdating(application) || application.status === 'accepted'"
+                        (click)="setApplicationStatus(application, 'accepted')"
+                      >
+                        Accept
+                      </button>
+
+                      <button
+                        type="button"
+                        class="rounded-xl border border-white/10 px-3 py-2 text-xs font-black text-zinc-200 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-60"
+                        [disabled]="isApplicationUpdating(application) || application.status === 'rejected'"
+                        (click)="setApplicationStatus(application, 'rejected')"
+                      >
+                        Decline
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="mt-3 space-y-2">
+                    @for (answer of applicationAnswerEntries(application); track answer.key) {
+                      <div class="rounded-2xl bg-black/20 p-3">
+                        <p class="text-xs font-black uppercase tracking-wide text-zinc-500">
+                          {{ answer.key }}
+                        </p>
+                        <p class="mt-1 text-sm font-semibold leading-6 text-zinc-200">
+                          {{ answer.value }}
+                        </p>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
             </div>
           }
         </div>
-      </section>
+      </div>
     }
-
-    @case ('log') {
-      <section
-        class="relative z-10 mt-5 rounded-2xl border border-emerald-400/25 bg-emerald-400/10 p-4"
-      >
-        <div class="mb-2 flex items-center justify-between gap-3">
-          <span class="text-xs font-black uppercase tracking-wide text-zinc-400">
-            Current streak
-          </span>
-
-          <span class="text-sm font-black text-white">
-            {{ metadataValue('streak_count', 0) }} days
-          </span>
-        </div>
-
-        <div class="h-2.5 overflow-hidden rounded-full bg-black/30">
-          <div
-            class="h-full rounded-full bg-emerald-400"
-            [style.width.%]="metadataValue('progress_percent', 0)"
-          ></div>
-        </div>
-
-        <div class="mt-3 flex items-center justify-between text-xs font-bold">
-          <span class="text-zinc-500">Daily log</span>
-          <span class="text-emerald-300">
-            Feeling: {{ metadataValue('feeling', 'Solid') }}
-          </span>
-        </div>
-      </section>
-    }
-
-    @default {
-      <section class="relative z-10 mt-5 rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-xs font-bold text-zinc-500">
-        Standard post
-      </section>
-    }
-  }
-
-  <footer class="relative z-10 mt-5 border-t border-white/7 pt-4">
-    <div class="flex items-center justify-between">
-      <button class="rally-action" aria-label="Reply">↩</button>
-      <button class="rally-action" aria-label="Repost">↻</button>
-      <button class="rally-action" aria-label="Boost">✦</button>
-      <button class="rally-action" aria-label="More">…</button>
-    </div>
-  </footer>
-</article>
+  </article>
+}

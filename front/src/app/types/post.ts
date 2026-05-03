@@ -12,7 +12,8 @@ export interface Club {
   slug: string;
   category?: string | null;
   visibility?: 'public' | 'private' | string;
-  accent_color: string;
+  accent_color: string | null;
+  theme_color?: string | null;
   sticker_type: string | null;
   membership_role?: 'OWNER' | 'MODERATOR' | 'MEMBER' | string | null;
 }
@@ -29,6 +30,9 @@ export interface Post {
   updated_at: string;
   user: RallyUser;
   club: Club;
+  comments_count?: number;
+  likes_count?: number;
+  liked_by_me?: boolean | number;
 }
 
 export interface PaginatedPosts {

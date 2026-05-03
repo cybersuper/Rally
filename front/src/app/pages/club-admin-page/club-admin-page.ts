@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../auth';
 import { ClubService, DiscoverClub } from '../../services/club';
+import { safeHexColor } from '../../utils/color';
 
 @Component({
   selector: 'app-club-admin-page',
@@ -49,7 +50,7 @@ export class ClubAdminPageComponent implements OnInit {
         this.description.set(club.description ?? '');
         this.category.set(club.category ?? '');
         this.visibility.set(club.visibility === 'private' ? 'private' : 'public');
-        this.accentColor.set(club.accent_color);
+        this.accentColor.set(safeHexColor(club.accent_color ?? club.theme_color));
         this.coverImageUrl.set(club.cover_image_url ?? '');
         this.isLoading.set(false);
       },

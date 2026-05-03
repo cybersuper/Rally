@@ -23,7 +23,11 @@ class TimelineController extends Controller
             ])
             ->withCount([
                 'comments',
+                'likes',
                 'lfgApplications',
+            ])
+            ->withExists([
+                'likes as liked_by_me' => fn ($query) => $query->where('user_id', $user->id),
             ])
             ->latest()
             ->paginate(20);

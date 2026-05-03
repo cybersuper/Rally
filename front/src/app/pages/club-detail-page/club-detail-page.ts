@@ -7,13 +7,15 @@ import { ClubService } from '../../services/club';
 import { HttpClient } from '@angular/common/http';
 import { PaginatedPosts, Post } from '../../types/post';
 import { TimelineService } from '../../services/timeline';
+import { safeHexColor } from '../../utils/color';
 
 interface ClubDetail {
   id: number;
   name: string;
   slug: string;
   description: string | null;
-  accent_color: string;
+  accent_color: string | null;
+  theme_color?: string | null;
   sticker_type: string | null;
   cover_image_url?: string | null;
   members_count?: number;
@@ -59,16 +61,18 @@ export class ClubDetailPageComponent implements OnInit {
 
     this.http.get<{ club: ClubDetail }>(`/api/clubs/${slug}`).subscribe({
       next: response => {
-        this.club.set(response.club);
+        this.club.set(this.normalizeClub(response.club));
 
         this.http
           .get<PaginatedPosts>(`/api/clubs/${slug}/timeline`)
           .subscribe({
             next: timeline => {
-              this.posts.set(timeline.data);
+              this.posts.set(this.timelineService.normalizePosts(timeline.data));
               this.isLoading.set(false);
             },
             error: err => {
+              console.error('Club timeline load failed', err);
+
               if (err?.status === 403) {
                 this.posts.set([]);
                 this.isTimelinePrivate.set(true);
@@ -81,7 +85,8 @@ export class ClubDetailPageComponent implements OnInit {
             },
           });
       },
-      error: () => {
+      error: err => {
+        console.error('Club load failed', err);
         this.error.set('Could not load club.');
         this.isLoading.set(false);
       },
@@ -142,5 +147,12 @@ export class ClubDetailPageComponent implements OnInit {
 
   canManageClub(): boolean {
     return ['OWNER', 'ADMIN', 'MODERATOR'].includes(String(this.club()?.membership_role ?? ''));
+  }
+
+  private normalizeClub(club: ClubDetail): ClubDetail {
+    return {
+      ...club,
+      accent_color: safeHexColor(club.accent_color ?? club.theme_color),
+    };
   }
 }

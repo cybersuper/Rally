@@ -1,6 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { tap } from 'rxjs';
+import { safeHexColor } from './utils/color';
 
 interface LoginResponse {
   user: any;
@@ -26,7 +27,7 @@ export class AuthService {
       tap(response => {
         localStorage.setItem('rally_token', response.token);
         this.token.set(response.token);
-        this.user.set(response.user);
+        this.user.set(this.normalizeUser(response.user));
       })
     );
   }
@@ -38,7 +39,7 @@ export class AuthService {
         tap(response => {
           localStorage.setItem('rally_token', response.token);
           this.token.set(response.token);
-          this.user.set(response.user);
+          this.user.set(this.normalizeUser(response.user));
         })
       );
   }
@@ -50,7 +51,7 @@ export class AuthService {
   me() {
     return this.http.get<{ user: any }>('/api/me').pipe(
       tap(response => {
-        this.user.set(response.user);
+        this.user.set(this.normalizeUser(response.user));
       })
     );
   }
@@ -63,5 +64,23 @@ export class AuthService {
         this.user.set(null);
       })
     );
+  }
+
+  private normalizeUser(user: any): any {
+    if (!user) {
+      return user;
+    }
+
+    const clubs = Array.isArray(user.clubs)
+      ? user.clubs.map((club: any) => ({
+          ...club,
+          accent_color: safeHexColor(club.accent_color ?? club.theme_color),
+        }))
+      : user.clubs;
+
+    return {
+      ...user,
+      clubs,
+    };
   }
 }

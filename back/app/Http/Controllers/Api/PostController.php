@@ -13,6 +13,26 @@ use Illuminate\Validation\Rule;
 
 class PostController extends Controller
 {
+    public function show(Request $request, Post $post): JsonResponse
+    {
+        $this->abortUnlessMember($request, $post);
+
+        $post->load([
+            'user:id,name,email',
+            'club:id,name,slug,accent_color,sticker_type',
+        ])->loadCount([
+            'comments',
+            'likes',
+            'lfgApplications',
+        ])->loadExists([
+            'likes as liked_by_me' => fn ($query) => $query->where('user_id', $request->user()->id),
+        ]);
+
+        return response()->json([
+            'post' => $post,
+        ]);
+    }
+
     public function store(Request $request): JsonResponse
     {
         $user = $request->user();
@@ -25,11 +45,7 @@ class PostController extends Controller
             'metadata' => ['nullable', 'array'],
         ]);
 
-        $isMember = $user->clubs()
-            ->where('clubs.id', $validated['club_id'])
-            ->exists();
-
-        abort_unless($isMember, 403, 'You must join this club before posting.');
+        $this->abortUnlessMember($request, Club::findOrFail($validated['club_id']));
 
         $metadata = $validated['metadata'] ?? [];
 
@@ -68,8 +84,41 @@ class PostController extends Controller
             'post' => $post->load([
                 'user:id,name,email',
                 'club:id,name,slug,accent_color,sticker_type',
-            ]),
+            ])->loadCount(['comments', 'likes']),
         ], 201);
+    }
+
+    public function destroy(Request $request, Post $post): JsonResponse
+    {
+        $role = $request->user()
+            ->clubs()
+            ->where('clubs.id', $post->club_id)
+            ->value('club_user.role');
+
+        $canModerate = in_array($role, [
+            Club::ROLE_OWNER,
+            Club::ROLE_ADMIN,
+            Club::ROLE_MODERATOR,
+        ], true);
+
+        abort_unless($post->user_id === $request->user()->id || $canModerate, 403, 'Not allowed.');
+
+        $post->delete();
+
+        return response()->json([
+            'message' => 'Post deleted.',
+        ]);
+    }
+
+    private function abortUnlessMember(Request $request, Post|Club $target): void
+    {
+        $clubId = $target instanceof Post ? $target->club_id : $target->id;
+
+        abort_unless(
+            $request->user()->clubs()->where('clubs.id', $clubId)->exists(),
+            403,
+            'You must join this club first.'
+        );
     }
 
     private function updateStreak(int $userId, int $clubId): Streak

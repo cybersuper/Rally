@@ -210,6 +210,157 @@ class RallyPrivacyTest extends TestCase
             ->assertJsonPath('application.answers.mic', true);
     }
 
+    public function test_only_club_members_can_comment_and_like_posts(): void
+    {
+        $owner = User::factory()->create();
+        $outsider = User::factory()->create();
+        $club = $this->club();
+        $owner->clubs()->attach($club->id, ['role' => Club::ROLE_OWNER]);
+        $post = $this->lfgPost($owner, $club);
+
+        Sanctum::actingAs($outsider);
+
+        $this->getJson("/api/posts/{$post->id}/comments")->assertForbidden();
+        $this->postJson("/api/posts/{$post->id}/comments", [
+            'content' => 'I should not see this.',
+        ])->assertForbidden();
+        $this->postJson("/api/posts/{$post->id}/likes")->assertForbidden();
+
+        Sanctum::actingAs($owner);
+
+        $this->postJson("/api/posts/{$post->id}/comments", [
+            'content' => 'Welcome in.',
+        ])->assertCreated();
+
+        $this->postJson("/api/posts/{$post->id}/likes")
+            ->assertOk()
+            ->assertJsonPath('liked', true)
+            ->assertJsonPath('likes_count', 1);
+
+        $this->getJson('/api/timeline')
+            ->assertOk()
+            ->assertJsonPath('data.0.likes_count', 1)
+            ->assertJsonPath('data.0.liked_by_me', true);
+
+        $this->deleteJson("/api/posts/{$post->id}/likes")
+            ->assertOk()
+            ->assertJsonPath('liked', false)
+            ->assertJsonPath('likes_count', 0);
+    }
+
+    public function test_post_authors_and_club_moderators_can_delete_content(): void
+    {
+        $owner = User::factory()->create();
+        $moderator = User::factory()->create();
+        $member = User::factory()->create();
+        $club = $this->club();
+
+        $owner->clubs()->attach($club->id, ['role' => Club::ROLE_OWNER]);
+        $moderator->clubs()->attach($club->id, ['role' => Club::ROLE_MODERATOR]);
+        $member->clubs()->attach($club->id, ['role' => Club::ROLE_MEMBER]);
+
+        $post = $this->lfgPost($owner, $club);
+        $comment = $post->comments()->create([
+            'user_id' => $member->id,
+            'content' => 'Needs moderation.',
+        ]);
+
+        Sanctum::actingAs($moderator);
+
+        $this->deleteJson("/api/comments/{$comment->id}")->assertOk();
+        $this->assertDatabaseMissing('comments', ['id' => $comment->id]);
+
+        $this->deleteJson("/api/posts/{$post->id}")->assertOk();
+        $this->assertDatabaseMissing('posts', ['id' => $post->id]);
+    }
+
+    public function test_regular_members_cannot_delete_other_people_content(): void
+    {
+        $owner = User::factory()->create();
+        $member = User::factory()->create();
+        $club = $this->club();
+
+        $owner->clubs()->attach($club->id, ['role' => Club::ROLE_OWNER]);
+        $member->clubs()->attach($club->id, ['role' => Club::ROLE_MEMBER]);
+
+        $post = $this->lfgPost($owner, $club);
+        $comment = $post->comments()->create([
+            'user_id' => $owner->id,
+            'content' => 'Keep this.',
+        ]);
+
+        Sanctum::actingAs($member);
+
+        $this->deleteJson("/api/comments/{$comment->id}")->assertForbidden();
+        $this->deleteJson("/api/posts/{$post->id}")->assertForbidden();
+    }
+
+    public function test_post_detail_requires_club_membership(): void
+    {
+        $owner = User::factory()->create();
+        $outsider = User::factory()->create();
+        $club = $this->club();
+
+        $owner->clubs()->attach($club->id, ['role' => Club::ROLE_OWNER]);
+        $post = $this->lfgPost($owner, $club);
+
+        Sanctum::actingAs($outsider);
+
+        $this->getJson("/api/posts/{$post->id}")->assertForbidden();
+
+        Sanctum::actingAs($owner);
+
+        $this->getJson("/api/posts/{$post->id}")
+            ->assertOk()
+            ->assertJsonPath('post.id', $post->id);
+    }
+
+    public function test_comments_can_be_threaded_and_sorted_by_likes(): void
+    {
+        $owner = User::factory()->create();
+        $voter = User::factory()->create();
+        $club = $this->club();
+
+        $owner->clubs()->attach($club->id, ['role' => Club::ROLE_OWNER]);
+        $voter->clubs()->attach($club->id, ['role' => Club::ROLE_MEMBER]);
+        $post = $this->lfgPost($owner, $club);
+
+        $first = $post->comments()->create([
+            'user_id' => $owner->id,
+            'content' => 'First answer.',
+        ]);
+
+        $best = $post->comments()->create([
+            'user_id' => $owner->id,
+            'content' => 'Best answer.',
+        ]);
+
+        $reply = $post->comments()->create([
+            'user_id' => $voter->id,
+            'parent_id' => $best->id,
+            'content' => 'Nested reply.',
+        ]);
+
+        Sanctum::actingAs($voter);
+
+        $this->postJson("/api/comments/{$best->id}/likes")
+            ->assertOk()
+            ->assertJsonPath('liked', true)
+            ->assertJsonPath('likes_count', 1);
+
+        $this->getJson("/api/posts/{$post->id}/comments")
+            ->assertOk()
+            ->assertJsonPath('comments.0.id', $best->id)
+            ->assertJsonPath('comments.0.likes_count', 1)
+            ->assertJsonPath('comments.0.replies.0.id', $reply->id)
+            ->assertJsonPath('comments.1.id', $first->id);
+
+        $this->getJson("/api/posts/{$post->id}/comments?preview=1")
+            ->assertOk()
+            ->assertJsonCount(2, 'comments')
+            ->assertJsonPath('comments.0.replies', []);
+    }
+
     private function club(): Club
     {
         return Club::create([

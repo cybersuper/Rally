@@ -31,7 +31,8 @@ export class TimelinePageComponent implements OnInit {
         this.timelineService.setPosts(response.data);
         this.isLoading.set(false);
       },
-      error: () => {
+      error: err => {
+        console.error('Timeline load failed', err);
         this.error.set('Could not load timeline.');
         this.isLoading.set(false);
       },

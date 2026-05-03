@@ -4,7 +4,9 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\TimelineController;
 use App\Http\Controllers\Api\PostController;
 use App\Http\Controllers\Api\LfgApplicationController;
+use App\Http\Controllers\Api\LikeController;
 use App\Http\Controllers\Api\CommentController;
+use App\Http\Controllers\Api\CommentLikeController;
 use App\Http\Controllers\Api\ClubController;
 use Illuminate\Support\Facades\Route;
 
@@ -26,6 +28,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/timeline', [TimelineController::class, 'index']);
     Route::post('/posts', [PostController::class, 'store']);
+    Route::get('/posts/{post}', [PostController::class, 'show']);
+    Route::delete('/posts/{post}', [PostController::class, 'destroy']);
+    Route::post('/posts/{post}/likes', [LikeController::class, 'store']);
+    Route::delete('/posts/{post}/likes', [LikeController::class, 'destroy']);
     Route::get('/me/lfg-posts', [LfgApplicationController::class, 'ownedPosts']);
 
     Route::post('/posts/{post}/lfg-applications', [LfgApplicationController::class, 'store']);
@@ -34,4 +40,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/posts/{post}/comments', [CommentController::class, 'index']);
     Route::post('/posts/{post}/comments', [CommentController::class, 'store']);
+    Route::delete('/comments/{comment}', [CommentController::class, 'destroy']);
+    Route::post('/comments/{comment}/likes', [CommentLikeController::class, 'store']);
+    Route::delete('/comments/{comment}/likes', [CommentLikeController::class, 'destroy']);
 });

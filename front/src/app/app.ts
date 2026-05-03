@@ -126,7 +126,7 @@ private initChatRealtime(): void {
       wsPort: 8080,
       forceTLS: false,
       enabledTransports: ['ws', 'wss'],
-      authEndpoint: '/api/broadcasting/auth',
+      authEndpoint: 'http://localhost:8000/broadcasting/auth',
       auth: {
         headers: {
           Authorization: `Bearer ${token}`

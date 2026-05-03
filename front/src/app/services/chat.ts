@@ -96,10 +96,8 @@ export class ChatService {
   }
 
   disconnect(): void {
-    const echo = this.echoBridge.get();
-    if (echo && this.activeChannel) {
-      echo.leave(this.activeChannel);
-    }
+    const echo = (window as any).Echo;
+    if (echo && this.activeChannel) echo.leave(this.activeChannel);
     this.activeChannel = null;
   }
 
@@ -116,34 +114,44 @@ export class ChatService {
   }
 
   private subscribe(conversationId: number): void {
-    const echo = this.echoBridge.get();
-    if (!echo) return;
+    const echo = (window as any).Echo;
+    if (!echo) {
+      console.error('Real-time bridge not found. Refresh the page.');
+      return;
+    }
 
     const channelName = `conversations.${conversationId}`;
     if (this.activeChannel === channelName) return;
 
-    this.disconnect();
+    if (this.activeChannel) {
+      echo.leave(this.activeChannel);
+    }
 
     this.activeChannel = channelName;
     echo.private(channelName).listen('.MessageSent', (payload: { message: ChatMessage }) => {
-      this.zone.run(() => this.receiveMessage(payload.message));
+      console.log('Event Captured!', payload);
+      this.receiveMessage(payload.message);
     });
+
+    console.log(`Now listening on: ${channelName}`);
   }
 
   private receiveMessage(message: ChatMessage): void {
-    const active = this.activeConversation();
-    if (active && Number(message.conversation_id) === Number(active.id)) {
-      this.messages.update(current =>
-        current.some(item => Number(item.id) === Number(message.id)) ? current : [...current, message]
-      );
-    }
+    this.zone.run(() => {
+      const active = this.activeConversation();
+      if (active && Number(message.conversation_id) === Number(active.id)) {
+        this.messages.update(current =>
+          current.some(item => Number(item.id) === Number(message.id)) ? current : [...current, message]
+        );
+      }
 
-    this.conversations.update(items =>
-      items.map(item =>
-        Number(item.id) === Number(message.conversation_id)
-          ? { ...item, latest_message: message, updated_at: message.created_at }
-          : item
-      )
-    );
+      this.conversations.update(items =>
+        items.map(item =>
+          Number(item.id) === Number(message.conversation_id)
+            ? { ...item, latest_message: message, updated_at: message.created_at }
+            : item
+        )
+      );
+    });
   }
 }

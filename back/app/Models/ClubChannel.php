@@ -13,6 +13,7 @@ class ClubChannel extends Model
         'club_id',
         'name',
         'type',
+        'category',
     ];
 
     public function club()

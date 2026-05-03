@@ -1,7 +1,6 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable, NgZone, computed, inject, signal } from '@angular/core';
-import { AuthService } from '../auth';
-import { EchoBridge } from './echo-bridge';
+import { Injectable, NgZone, computed, effect, inject, signal } from '@angular/core';
+import { BehaviorSubject } from 'rxjs';
 
 export interface ChatUser {
   id: number;
@@ -17,8 +16,16 @@ export interface ChatMessage {
   body: string;
   read_at: string | null;
   created_at: string;
+  is_pinned?: boolean;
+  deleted_at?: string | null;
   sender: ChatUser | null;
   channel_id?: number | null;
+  room_id?: number | null;
+  room_name?: string | null;
+  room_category?: string | null;
+  club_id?: number | null;
+  club_name?: string | null;
+  club_slug?: string | null;
 }
 
 export interface Conversation {
@@ -35,19 +42,28 @@ export interface Conversation {
 })
 export class ChatService {
   private readonly http = inject(HttpClient);
-  private readonly authService = inject(AuthService);
   private readonly zone = inject(NgZone);
-  private readonly echoBridge = inject(EchoBridge);
 
   conversations = signal<Conversation[]>([]);
   messages = signal<ChatMessage[]>([]);
   activeConversation = signal<Conversation | null>(null);
   unreadCount = signal(0);
+  loungeUnreadCounts = signal<Record<number, number>>({});
+  loungeClubIds = signal<Record<number, number>>({});
+  activeLoungeId = signal<number | null>(null);
   totalUnreadCount = computed(() =>
     this.conversations().filter(conversation => Number(conversation.unread_count ?? 0) > 0).length
   );
+  private readonly totalUnreadCountSubject = new BehaviorSubject<number>(0);
+  readonly totalUnreadCount$ = this.totalUnreadCountSubject.asObservable();
 
   private activeChannel: string | null = null;
+
+  constructor() {
+    effect(() => {
+      this.totalUnreadCountSubject.next(this.totalUnreadCount());
+    });
+  }
 
   getConversations() {
     return this.http.get<{ conversations: Conversation[] }>('/api/conversations');
@@ -113,6 +129,75 @@ export class ChatService {
 
   incrementUnread(): void {
     this.unreadCount.update(count => count + 1);
+  }
+
+  loungeUnreadCount(roomId: number): number {
+    return Number(this.loungeUnreadCounts()[Number(roomId)] ?? 0);
+  }
+
+  hasClubUnread(clubId: number): boolean {
+    const clubMap = this.loungeClubIds();
+    const unread = this.loungeUnreadCounts();
+
+    return Object.entries(unread).some(([roomId, count]) =>
+      Number(count) > 0 && Number(clubMap[Number(roomId)]) === Number(clubId)
+    );
+  }
+
+  hasKnownClubLounges(clubId: number): boolean {
+    return Object.values(this.loungeClubIds()).some(id => Number(id) === Number(clubId));
+  }
+
+  receiveLoungeMessage(message: ChatMessage): void {
+    const roomId = Number(message.room_id ?? message.channel_id);
+    const clubId = Number(message.club_id);
+    if (!roomId) return;
+
+    if (clubId) {
+      this.loungeClubIds.update(current => ({ ...current, [roomId]: clubId }));
+    }
+
+    this.loungeUnreadCounts.update(current => ({
+      ...current,
+      [roomId]: Number(current[roomId] ?? 0) + 1,
+    }));
+  }
+
+  syncLoungeUnreadCounts(channels: Array<{ id: number; club_id?: number; unread_count?: number }>): void {
+    if (!channels.length) return;
+
+    this.loungeClubIds.update(current => {
+      const next = { ...current };
+      for (const channel of channels) {
+        if (channel.club_id) next[Number(channel.id)] = Number(channel.club_id);
+      }
+      return next;
+    });
+
+    this.loungeUnreadCounts.update(current => {
+      const next = { ...current };
+      for (const channel of channels) {
+        next[Number(channel.id)] = Number(channel.unread_count ?? 0);
+      }
+      return next;
+    });
+  }
+
+  markLoungeRead(roomId: number): void {
+    this.loungeUnreadCounts.update(current => ({
+      ...current,
+      [Number(roomId)]: 0,
+    }));
+  }
+
+  markRoomAsRead(roomId: number): void {
+    this.activeLoungeId.set(Number(roomId));
+    this.markLoungeRead(roomId);
+    this.http.post<{ lounge_id: number; unread_count: number }>(`/api/lounges/${roomId}/read`, {})
+      .subscribe({
+        next: response => this.markLoungeRead(response.lounge_id),
+        error: err => console.error('Lounge read failed', err),
+      });
   }
 
   receiveIncoming(message: ChatMessage): void {

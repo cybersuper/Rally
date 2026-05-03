@@ -4,6 +4,7 @@ import { Injectable, signal } from '@angular/core';
 export class ClubChatOverlayState {
   isOpen = signal(false);
   slug = signal<string>('');
+  currentClub = signal<{ id: number; slug: string; name: string } | null>(null);
 
   open(slug: string): void {
     this.slug.set(slug);
@@ -14,5 +15,9 @@ export class ClubChatOverlayState {
   close(): void {
     this.isOpen.set(false);
     document.body.style.overflow = '';
+  }
+
+  setCurrentClub(club: { id: number; slug: string; name: string } | null): void {
+    this.currentClub.set(club);
   }
 }

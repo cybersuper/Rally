@@ -37,7 +37,28 @@ export class App implements OnInit, OnDestroy {
   private chatEcho: Echo<'reverb'> | null = null;
   private chatUserId: number | null = null;
 
-  totalUnreadCount = this.chatService.totalUnreadCount;
+  totalUnreadCount$ = this.chatService.totalUnreadCount$;
+
+  currentClubUnreadCount(): number {
+    const club = this.clubChatOverlay.currentClub();
+    if (!club) return 0;
+
+    return Object.entries(this.chatService.loungeUnreadCounts())
+      .filter(([roomId, count]) =>
+        Number(count) > 0
+        && Number(this.chatService.loungeClubIds()[Number(roomId)]) === Number(club.id)
+      )
+      .length;
+  }
+
+  badgeCount(count: number): string {
+    return count > 99 ? '99+' : String(count);
+  }
+
+  openCurrentClubChat(): void {
+    const club = this.clubChatOverlay.currentClub();
+    if (club) this.clubChatOverlay.open(club.slug);
+  }
 
   constructor() {
     effect(() => {
@@ -108,6 +129,19 @@ export class App implements OnInit, OnDestroy {
     return ['OWNER', 'ADMIN', 'MODERATOR'].includes(String(club?.membership_role ?? ''));
   }
 
+  hasClubActivity(clubId: number): boolean {
+    if (this.chatService.hasKnownClubLounges(Number(clubId))) {
+      return this.chatService.hasClubUnread(Number(clubId));
+    }
+
+    const club = this.user()?.clubs?.find((item: any) => Number(item.id) === Number(clubId));
+    return Number(club?.unread_lounges_count ?? 0) > 0;
+  }
+
+  clearClubActivity(clubId: number): void {
+    //
+  }
+
   loadUnreadNotifications(): void {
     this.notificationService.getUnreadCount().subscribe({
       next: () => {},
@@ -147,7 +181,29 @@ private initChatRealtime(): void {
     this.chatEcho.private(`user.${user.id}`).listen('.MessageSent', (payload: { message: ChatMessage }) => {
       this.zone.run(() => {
         const message = payload.message;
-        if (message.sender_id === user.id || !message.conversation_id) return;
+        if (message.sender_id === user.id) return;
+
+        if (message.room_id) {
+          const activeRoomId = this.chatService.activeLoungeId();
+          if (!this.clubChatOverlay.isOpen() || Number(activeRoomId) !== Number(message.room_id)) {
+            const clubName = message.club_name ?? 'Club';
+            const roomName = (message.room_name ?? 'lounge').replace(/^#\s*/, '');
+
+            if (!this.clubChatOverlay.isOpen()) {
+              this.toast.success(`New message in ${clubName} > #${roomName}`, {
+                icon: '#',
+                className: 'rally-hot-toast',
+              });
+            }
+
+            if (message.club_id) {
+              this.chatService.receiveLoungeMessage(message);
+            }
+          }
+          return;
+        }
+
+        if (!message.conversation_id) return;
 
         this.chatService.receiveIncoming(message);
 

@@ -1,36 +1,101 @@
-<section class="absolute inset-0 z-40 flex flex-col overflow-hidden rounded-3xl border border-white/10 bg-[#0e0e12]/95 shadow-2xl backdrop-blur">
-  <header class="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3">
+<section class="mx-auto flex h-full max-h-[760px] w-full max-w-[1200px] flex-col overflow-hidden rounded-3xl border border-white/10 bg-[#0e0e12]/95 shadow-[0_28px_90px_rgba(0,0,0,0.65),0_0_0_1px_rgba(255,68,68,0.12)] backdrop-blur" (click)="closeContextMenu()">
+  <header class="relative flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3">
     <div class="min-w-0">
-      <p class="text-[0.65rem] font-black uppercase tracking-[0.2em] text-zinc-500">Chat</p>
-      <h2 class="truncate text-sm font-black text-white">
-        {{ slug }}
-      </h2>
+      <p class="text-[0.65rem] font-black uppercase tracking-[0.2em] text-zinc-500">Lounges</p>
+      <h2 class="truncate text-sm font-black text-white">{{ slug }}</h2>
     </div>
 
-    <button
-      type="button"
-      class="rounded-2xl border border-white/10 px-3 py-2 text-xs font-black text-zinc-300 hover:bg-white/5"
-      (click)="close()"
-    >
-      Close
-    </button>
+    <div class="flex items-center gap-2">
+      <button
+        type="button"
+        class="rounded-2xl border border-white/10 px-3 py-2 text-xs font-black text-zinc-300 hover:bg-white/5"
+        (click)="isPinnedOpen.set(!isPinnedOpen())"
+      >
+        Pinned
+      </button>
+      <button
+        type="button"
+        class="rounded-2xl border border-white/10 px-3 py-2 text-xs font-black text-zinc-300 hover:bg-white/5"
+        (click)="close()"
+      >
+        Close
+      </button>
+    </div>
+
+    @if (isPinnedOpen()) {
+      <div class="absolute right-4 top-14 z-50 max-h-72 w-80 overflow-y-auto rounded-2xl border border-white/10 bg-[#121216] p-3 shadow-2xl">
+        <p class="mb-2 text-xs font-black uppercase tracking-[0.2em] text-zinc-500">Pinned Messages</p>
+        <div class="space-y-2">
+          @for (message of pinnedMessages(); track message.id) {
+            <div class="rounded-xl border border-yellow-300/20 bg-yellow-300/10 p-3 text-sm text-zinc-100">
+              <p>{{ message.body }}</p>
+              <p class="mt-1 text-[0.65rem] text-zinc-500">{{ message.sender?.name }} - {{ message.created_at | date: 'HH:mm' }}</p>
+            </div>
+          } @empty {
+            <p class="text-sm font-semibold text-zinc-500">No pinned messages.</p>
+          }
+        </div>
+      </div>
+    }
   </header>
 
   <div class="flex min-h-0 flex-1">
     <aside class="hidden w-[220px] shrink-0 border-r border-white/10 p-3 md:block">
-      <p class="mb-3 text-xs font-black uppercase tracking-[0.2em] text-zinc-500">Rooms</p>
-
-      <div class="rally-scrollbar min-h-0 space-y-2 overflow-y-auto pr-1">
-        @for (channel of channelService.channels(); track channel.id) {
+      <div class="mb-3 flex items-center justify-between gap-2">
+        <p class="text-xs font-black uppercase tracking-[0.2em] text-zinc-500">Lounges</p>
+        @if (canCreateLounge()) {
           <button
             type="button"
-            class="w-full rounded-2xl border border-white/10 px-3 py-2 text-left text-sm font-black text-zinc-300 hover:bg-white/5"
-            [class.bg-white/10]="channelService.activeChannel()?.id === channel.id"
-            (click)="select(channel)"
+            class="grid h-7 w-7 place-items-center rounded-lg border border-white/10 text-xs font-black text-zinc-300 hover:bg-white/5"
+            (click)="isCreatingLounge.set(!isCreatingLounge())"
+            aria-label="Create lounge"
           >
-            @if (channel.type === 'announcement') { <span>!</span> } @else { <span>#</span> }
-            {{ roomName(channel.name) }}
+            +
           </button>
+        }
+      </div>
+
+      @if (isCreatingLounge()) {
+        <div class="mb-3 space-y-2 rounded-2xl border border-white/10 bg-black/25 p-2">
+          <input
+            class="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-xs text-white outline-none"
+            placeholder="#off-topic"
+            [value]="newLoungeName()"
+            (input)="newLoungeName.set($any($event.target).value)"
+            (keydown.enter)="createLounge()"
+          />
+          <input
+            class="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-xs text-white outline-none"
+            placeholder="Category"
+            [value]="newLoungeCategory()"
+            (input)="newLoungeCategory.set($any($event.target).value)"
+            (keydown.enter)="createLounge()"
+          />
+          <button class="w-full rounded-xl bg-red-400 px-3 py-2 text-xs font-black text-black" type="button" (click)="createLounge()">Create</button>
+        </div>
+      }
+
+      <div class="rally-scrollbar min-h-0 space-y-2 overflow-y-auto pr-1">
+        @for (category of loungeCategories(); track category.name) {
+          <section class="space-y-1">
+            <p class="px-2 pt-2 text-[0.65rem] font-black uppercase tracking-[0.18em] text-zinc-600">{{ category.name }}</p>
+            @for (channel of category.channels; track channel.id) {
+              <button
+                type="button"
+                class="w-full rounded-2xl border border-white/10 px-3 py-2 text-left text-sm font-black text-zinc-300 hover:bg-white/5"
+                [class.bg-white/10]="channelService.activeChannel()?.id === channel.id"
+                (click)="select(channel)"
+              >
+                @if (channel.type === 'announcement') { <span>!</span> } @else { <span>#</span> }
+                {{ roomName(channel.name) }}
+                @if (chatService.loungeUnreadCount(channel.id) > 0) {
+                  <span class="float-right grid min-h-5 min-w-5 place-items-center rounded-full bg-red-500 px-1 text-[0.65rem] font-black text-white">
+                    {{ badgeCount(chatService.loungeUnreadCount(channel.id)) }}
+                  </span>
+                }
+              </button>
+            }
+          </section>
         }
       </div>
     </aside>
@@ -40,18 +105,41 @@
         <div #scrollHost class="rally-scrollbar flex h-[450px] flex-col-reverse gap-3 overflow-y-auto">
           <div class="flex flex-col gap-3 pb-4">
             @for (message of orderedMessages(); track message.id) {
-              <div class="flex" [class.justify-end]="message.sender_id === authService.user()?.id">
+              <div class="flex items-end gap-2" [class.justify-end]="message.sender_id === authService.user()?.id">
+                @if (message.sender_id !== authService.user()?.id) {
+                  <div class="grid h-8 w-8 shrink-0 place-items-center overflow-hidden rounded-full bg-white/10 text-[0.65rem] font-black text-zinc-300">
+                    @if (message.sender?.profile_photo_path) {
+                      <img class="h-full w-full object-cover" [src]="message.sender?.profile_photo_path" [alt]="message.sender?.name ?? 'Sender'" />
+                    } @else {
+                      {{ (message.sender?.name ?? '?').slice(0, 1).toUpperCase() }}
+                    }
+                  </div>
+                }
                 <div
                   class="max-w-[80%] rounded-2xl border border-white/10 px-4 py-3 text-sm font-semibold leading-6"
+                  (click)="$event.stopPropagation()"
+                  (contextmenu)="openMessageMenu($event, message)"
+                  (touchstart)="startLongPress($event, message)"
+                  (touchend)="cancelLongPress()"
+                  (touchmove)="cancelLongPress()"
+                  [class.border-yellow-300/40]="message.is_pinned"
+                  [class.bg-yellow-300/10]="message.is_pinned"
                   [class.bg-red-400]="message.sender_id === authService.user()?.id"
                   [class.text-black]="message.sender_id === authService.user()?.id"
                   [class.bg-black/30]="message.sender_id !== authService.user()?.id"
                   [class.text-zinc-100]="message.sender_id !== authService.user()?.id"
                 >
-                  <p>{{ message.body }}</p>
+                  @if (message.is_pinned) {
+                    <p class="mb-1 text-[0.65rem] font-black uppercase tracking-[0.16em] text-yellow-200">Pinned</p>
+                  }
+                  <p [class.italic]="message.deleted_at" [class.opacity-60]="message.deleted_at">
+                    @if (message.deleted_at) { This message was deleted } @else { {{ message.body }} }
+                  </p>
                   <p class="mt-1 text-[0.65rem] opacity-60">
-                    {{ message.sender?.name }}
-                    <span class="mx-1">•</span>
+                    @if (message.sender_id !== authService.user()?.id) {
+                      {{ message.sender?.name }}
+                      <span class="mx-1">-</span>
+                    }
                     {{ message.created_at | date: 'HH:mm' }}
                   </p>
                 </div>
@@ -65,12 +153,24 @@
 
       @if (canSend()) {
         <footer class="mt-auto border-t border-white/10 p-3">
+          @if (replyTarget(); as target) {
+            <div class="mb-2 flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-black/30 px-3 py-2">
+              <div class="min-w-0">
+                <p class="text-[0.65rem] font-black uppercase tracking-[0.16em] text-zinc-500">Replying to {{ target.sender?.name }}</p>
+                <p class="truncate text-xs font-semibold text-zinc-300">{{ target.body }}</p>
+              </div>
+              <button class="text-xs font-black text-zinc-400 hover:text-white" type="button" (click)="replyTarget.set(null)">x</button>
+            </div>
+          }
+          @if (typingText(); as typing) {
+            <p class="mb-2 px-1 text-xs font-semibold text-zinc-500">{{ typing }}</p>
+          }
           <div class="flex gap-2">
             <input
               class="min-w-0 flex-1 rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none"
               [value]="draft()"
               placeholder="Write message"
-              (input)="draft.set($any($event.target).value)"
+              (input)="onDraftInput($any($event.target).value)"
               (keydown.enter)="send()"
             />
             <button class="rounded-2xl bg-red-400 px-4 py-3 text-sm font-black text-black" type="button" (click)="send()">
@@ -83,4 +183,34 @@
       }
     </div>
   </div>
+
+  @if (contextMenu(); as menu) {
+    <div
+      class="!fixed min-w-44 overflow-hidden rounded-2xl border border-white/10 bg-[#121216] p-1 text-sm font-bold text-zinc-200 shadow-2xl"
+      style="position: fixed !important; z-index: 10000;"
+      [style.left]="menu.left"
+      [style.top]="menu.top"
+      (click)="$event.stopPropagation()"
+    >
+      <button class="block w-full rounded-xl px-3 py-2 text-left hover:bg-white/5" type="button" (click)="reply(menu.message)">Reply</button>
+      <button class="block w-full rounded-xl px-3 py-2 text-left hover:bg-white/5" type="button" (click)="forward(menu.message)">Forward</button>
+      <button class="block w-full rounded-xl px-3 py-2 text-left hover:bg-white/5" type="button" (click)="copyText(menu.message)">Copy Text</button>
+
+      @if (isSender(menu.message)) {
+        <div class="my-1 border-t border-white/10"></div>
+        <button class="block w-full rounded-xl px-3 py-2 text-left hover:bg-white/5" type="button" (click)="edit(menu.message)">Edit</button>
+      }
+
+      @if (canOwnOrAdmin()) {
+        <div class="my-1 border-t border-white/10"></div>
+        <button class="block w-full rounded-xl px-3 py-2 text-left hover:bg-white/5" type="button" (click)="togglePin(menu.message)">
+          {{ menu.message.is_pinned ? 'Unpin' : 'Pin' }}
+        </button>
+      }
+
+      @if (canDelete(menu.message)) {
+        <button class="block w-full rounded-xl px-3 py-2 text-left text-red-200 hover:bg-red-500/10" type="button" (click)="delete(menu.message)">Delete</button>
+      }
+    </div>
+  }
 </section>

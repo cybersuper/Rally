@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { map } from 'rxjs/operators';
+import { map } from 'rxjs';
 import { safeHexColor } from '../utils/color';
 
 export interface DiscoverClub {
@@ -17,6 +17,15 @@ export interface DiscoverClub {
   members_count: number;
   is_member: boolean;
   membership_role: 'OWNER' | 'MODERATOR' | 'MEMBER' | string | null;
+  unread_lounges_count?: number;
+  channels?: Array<{
+    id: number;
+    club_id: number;
+    name: string;
+    type: 'text' | 'announcement';
+    category?: string | null;
+    unread_count?: number;
+  }>;
 }
 
 export interface CreateClubPayload {

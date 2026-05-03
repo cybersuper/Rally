@@ -15,9 +15,9 @@ export class ChatPageComponent implements OnInit, OnDestroy, AfterViewChecked {
   private readonly route = inject(ActivatedRoute);
   @ViewChild('messageScroller') private messageScroller?: ElementRef<HTMLElement>;
   draft = signal('');
-  typingName = signal<string | null>(null);
+  typingUsers = signal<Set<string>>(new Set());
   private lastMessageCount = 0;
-  private typingTimeout: ReturnType<typeof setTimeout> | null = null;
+  private typingTimeouts = new Map<string, ReturnType<typeof setTimeout>>();
   private typingChannelId: number | null = null;
 
   ngOnInit(): void {
@@ -33,10 +33,8 @@ export class ChatPageComponent implements OnInit, OnDestroy, AfterViewChecked {
   }
 
   ngOnDestroy(): void {
-    if (this.typingTimeout) {
-      clearTimeout(this.typingTimeout);
-      this.typingTimeout = null;
-    }
+    this.typingTimeouts.forEach(timeout => clearTimeout(timeout));
+    this.typingTimeouts.clear();
 
     if (this.typingChannelId) {
       const echo = (window as any).Echo;
@@ -68,6 +66,10 @@ export class ChatPageComponent implements OnInit, OnDestroy, AfterViewChecked {
 
   onDraftInput(value: string): void {
     this.draft.set(value);
+    if (value.length === 0) {
+      this.whisperStopTyping();
+      return;
+    }
     this.whisperTyping();
   }
 
@@ -82,18 +84,62 @@ export class ChatPageComponent implements OnInit, OnDestroy, AfterViewChecked {
     }
 
     this.typingChannelId = conversationId;
-    this.typingName.set(null);
+    this.typingUsers.set(new Set());
+    this.typingTimeouts.forEach(timeout => clearTimeout(timeout));
+    this.typingTimeouts.clear();
 
-    echo.private(`conversations.${conversationId}`).listenForWhisper('typing', (payload: { name?: string } | null) => {
+    echo.private(`conversations.${conversationId}`).listenForWhisper('typing', (payload: { name?: string; typing?: boolean } | null) => {
       const name = payload?.name?.trim();
       if (!name) return;
 
       const me = this.authService.user()?.name;
       if (me && name === me) return;
 
-      this.typingName.set(`${name} is typing...`);
-      if (this.typingTimeout) clearTimeout(this.typingTimeout);
-      this.typingTimeout = setTimeout(() => this.typingName.set(null), 3000);
+      if (payload?.typing === false) {
+        this.removeTypingUser(name);
+        return;
+      }
+
+      this.addTypingUser(name);
+    });
+  }
+
+  typingText(): string | null {
+    const names = [...this.typingUsers()];
+
+    if (names.length === 0) return null;
+    if (names.length > 5) return 'Multiple people are typing...';
+    if (names.length === 1) return `${names[0]} is typing...`;
+    if (names.length === 2) return `${names[0]} and ${names[1]} are typing...`;
+
+    return `${names.slice(0, -1).join(', ')}, and ${names[names.length - 1]} are typing...`;
+  }
+
+  private addTypingUser(name: string): void {
+    this.typingUsers.update(current => new Set(current).add(name));
+
+    const existing = this.typingTimeouts.get(name);
+    if (existing) clearTimeout(existing);
+
+    this.typingTimeouts.set(name, setTimeout(() => {
+      this.typingUsers.update(current => {
+        const next = new Set(current);
+        next.delete(name);
+        return next;
+      });
+      this.typingTimeouts.delete(name);
+    }, 1500));
+  }
+
+  private removeTypingUser(name: string): void {
+    const existing = this.typingTimeouts.get(name);
+    if (existing) clearTimeout(existing);
+    this.typingTimeouts.delete(name);
+
+    this.typingUsers.update(current => {
+      const next = new Set(current);
+      next.delete(name);
+      return next;
     });
   }
 
@@ -112,13 +158,28 @@ export class ChatPageComponent implements OnInit, OnDestroy, AfterViewChecked {
     const name = this.authService.user()?.name;
     if (!name) return;
 
-    echo.private(`conversations.${conversationId}`).whisper('typing', { name });
+    echo.private(`conversations.${conversationId}`).whisper('typing', { name, typing: true });
+  }
+
+  private whisperStopTyping(): void {
+    const conversationId = this.chat.activeConversation()?.id;
+    if (!conversationId) return;
+
+    const echo = (window as any).Echo;
+    if (!echo) return;
+
+    const name = this.authService.user()?.name;
+    if (!name) return;
+
+    this.removeTypingUser(name);
+    echo.private(`conversations.${conversationId}`).whisper('typing', { name, typing: false });
   }
 
   send(): void {
     const body = this.draft().trim();
     if (!body) return;
     this.chat.sendMessage(body);
+    this.whisperStopTyping();
     this.draft.set('');
   }
 

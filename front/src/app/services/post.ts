@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { map } from 'rxjs/operators';
+import { map } from 'rxjs';
 import { TimelineService } from './timeline';
 import { Post } from '../types/post';
 

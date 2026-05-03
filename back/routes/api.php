@@ -71,8 +71,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/clubs/{club:slug}/identity', [ClubController::class, 'updateIdentity']);
     Route::get('/clubs/{club:slug}/channels', [ClubChannelController::class, 'index']);
     Route::post('/clubs/{club:slug}/channels', [ClubChannelController::class, 'store']);
+    Route::post('/clubs/{club:slug}/rooms', [ClubChannelController::class, 'storeRoom']);
+    Route::post('/lounges/{lounge}/read', [ClubChannelController::class, 'markRead']);
     Route::get('/clubs/{club:slug}/channels/{channel}/messages', [ClubChannelController::class, 'messages']);
     Route::post('/clubs/{club:slug}/channels/{channel}/messages', [ClubChannelController::class, 'send']);
+    Route::put('/messages/{message}/pin', [ClubChannelController::class, 'pin']);
+    Route::patch('/messages/{message}', [ClubChannelController::class, 'updateMessage']);
+    Route::delete('/messages/{message}', [ClubChannelController::class, 'deleteMessage']);
     Route::get('/clubs/{club:slug}/timeline', [ClubController::class, 'timeline']);
     Route::post('/clubs/{club}/join', [ClubController::class, 'join']);
     Route::delete('/clubs/{club}/leave', [ClubController::class, 'leave']);

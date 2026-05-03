@@ -1,7 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { map, tap } from 'rxjs/operators';
+import { Observable, map, tap } from 'rxjs';
 import { PaginatedPosts, Post } from '../types/post';
 import { safeHexColor } from '../utils/color';
 

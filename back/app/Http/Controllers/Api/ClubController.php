@@ -85,7 +85,7 @@ class ClubController extends Controller
         $user = $request->user();
 
         $club->loadCount('users');
-        $club->load(['channels' => fn ($query) => $query->orderBy('id')]);
+        $club->load(['channels' => fn ($query) => $query->orderBy('category')->orderBy('id')]);
         $role = $this->membershipRole($user, $club);
 
         return response()->json([
@@ -198,6 +198,23 @@ class ClubController extends Controller
 
         if (! $role) {
             $user->clubs()->attach($club->id, ['role' => Club::ROLE_MEMBER]);
+            $now = now();
+            $reads = $club->channels()->pluck('id')->map(fn ($channelId) => [
+                'club_channel_id' => $channelId,
+                'user_id' => $user->id,
+                'last_read_at' => $now,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ])->all();
+
+            if ($reads) {
+                DB::table('lounge_user_reads')->upsert(
+                    $reads,
+                    ['club_channel_id', 'user_id'],
+                    ['last_read_at', 'updated_at'],
+                );
+            }
+
             $role = Club::ROLE_MEMBER;
             $attached = true;
         }
@@ -273,9 +290,24 @@ class ClubController extends Controller
                     'club_id' => $channel->club_id,
                     'name' => $channel->name,
                     'type' => $channel->type,
+                    'category' => $channel->category ?? 'Text Lounges',
+                    'unread_count' => $user ? $this->loungeUnreadCount($channel, $user) : 0,
                 ])
                 : [],
         ];
+    }
+
+    private function loungeUnreadCount($channel, $user): int
+    {
+        $lastReadAt = DB::table('lounge_user_reads')
+            ->where('club_channel_id', $channel->id)
+            ->where('user_id', $user->id)
+            ->value('last_read_at');
+
+        return $channel->messages()
+            ->where('sender_id', '!=', $user->id)
+            ->when($lastReadAt, fn ($query) => $query->where('created_at', '>', $lastReadAt))
+            ->count();
     }
 
     private function uploadImage($file, string $folder): string

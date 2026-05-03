@@ -18,6 +18,8 @@ class MessageSent implements ShouldBroadcastNow
         $this->message->loadMissing([
             'sender:id,name,username,profile_photo_path',
             'conversation.users:id',
+            'channel:id,club_id,name,type,category',
+            'channel.club:id,name,slug',
             'channel.club.users:id',
         ]);
     }
@@ -26,12 +28,18 @@ class MessageSent implements ShouldBroadcastNow
     {
         $channels = [
             $this->message->channel_id
-                ? new PresenceChannel('club.'.$this->message->channel?->club_id)
+                ? new PresenceChannel('clubs.'.$this->message->channel?->club_id.'.rooms.'.$this->message->channel_id)
                 : new PrivateChannel('conversations.'.$this->message->conversation_id),
         ];
 
         if (! $this->message->channel_id) {
             foreach ($this->message->conversation?->users ?? collect() as $user) {
+                if ((int) $user->id !== (int) $this->message->sender_id) {
+                    $channels[] = new PrivateChannel('user.'.$user->id);
+                }
+            }
+        } else {
+            foreach ($this->message->channel?->club?->users ?? collect() as $user) {
                 if ((int) $user->id !== (int) $this->message->sender_id) {
                     $channels[] = new PrivateChannel('user.'.$user->id);
                 }
@@ -53,10 +61,17 @@ class MessageSent implements ShouldBroadcastNow
                 'id' => $this->message->id,
                 'conversation_id' => $this->message->conversation_id,
                 'channel_id' => $this->message->channel_id,
-                'room_id' => $this->message->channel_id,
+                'room_id' => $this->message->room_id ?? $this->message->channel_id,
+                'room_name' => $this->message->channel?->name,
+                'room_category' => $this->message->channel?->category,
+                'club_id' => $this->message->channel?->club_id,
+                'club_name' => $this->message->channel?->club?->name,
+                'club_slug' => $this->message->channel?->club?->slug,
                 'sender_id' => $this->message->sender_id,
                 'body' => $this->message->body,
                 'read_at' => $this->message->read_at,
+                'is_pinned' => (bool) $this->message->is_pinned,
+                'deleted_at' => $this->message->deleted_at,
                 'created_at' => $this->message->created_at,
                 'sender' => [
                     'id' => $this->message->sender?->id,

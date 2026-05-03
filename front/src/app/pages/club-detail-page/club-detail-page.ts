@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { PostCard } from '../../components/post-card/post-card';
 import { AuthService } from '../../auth';
@@ -9,6 +9,7 @@ import { PaginatedPosts, Post } from '../../types/post';
 import { TimelineService } from '../../services/timeline';
 import { safeHexColor } from '../../utils/color';
 import { ClubChatOverlayState } from '../../services/club-chat-overlay';
+import { ChatService } from '../../services/chat';
 
 interface ClubDetail {
   id: number;
@@ -29,6 +30,8 @@ interface ClubDetail {
     club_id: number;
     name: string;
     type: 'text' | 'announcement';
+    category?: string | null;
+    unread_count?: number;
   }>;
 }
 
@@ -37,13 +40,14 @@ interface ClubDetail {
   imports: [CommonModule, RouterLink, PostCard],
   templateUrl: './club-detail-page.html',
 })
-export class ClubDetailPageComponent implements OnInit {
+export class ClubDetailPageComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly http = inject(HttpClient);
   private readonly clubService = inject(ClubService);
   private readonly authService = inject(AuthService);
   private readonly timelineService = inject(TimelineService);
   private readonly chatOverlay = inject(ClubChatOverlayState);
+  private readonly chatService = inject(ChatService);
 
   club = signal<ClubDetail | null>(null);
   posts = signal<Post[]>([]);
@@ -76,7 +80,10 @@ export class ClubDetailPageComponent implements OnInit {
 
     this.http.get<{ club: ClubDetail }>(`/api/clubs/${slug}`).subscribe({
       next: response => {
-        this.club.set(this.normalizeClub(response.club));
+        const club = this.normalizeClub(response.club);
+        this.club.set(club);
+        this.chatOverlay.setCurrentClub({ id: club.id, slug: club.slug, name: club.name });
+        this.chatService.syncLoungeUnreadCounts(club.channels ?? []);
 
         this.http
           .get<PaginatedPosts>(`/api/clubs/${slug}/timeline`)
@@ -106,6 +113,10 @@ export class ClubDetailPageComponent implements OnInit {
         this.isLoading.set(false);
       },
     });
+  }
+
+  ngOnDestroy(): void {
+    this.chatOverlay.setCurrentClub(null);
   }
 
   toggleMembership(): void {
@@ -162,15 +173,6 @@ export class ClubDetailPageComponent implements OnInit {
 
   canManageClub(): boolean {
     return ['OWNER', 'ADMIN', 'MODERATOR'].includes(String(this.club()?.membership_role ?? ''));
-  }
-
-  openChat(): void {
-    const slug = this.club()?.slug;
-    if (slug) this.chatOverlay.open(slug);
-  }
-
-  closeChat(): void {
-    this.chatOverlay.close();
   }
 
   openIdentity(): void {

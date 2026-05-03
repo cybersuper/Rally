@@ -30,3 +30,27 @@ Broadcast::channel('club.{id}', function ($user, $id) {
         'profile_photo_path' => $user->profile_photo_path,
     ];
 });
+
+Broadcast::channel('clubs.{clubId}.rooms.{roomId}', function ($user, $clubId, $roomId) {
+    $isMember = $user->clubs()->where('clubs.id', $clubId)->exists();
+
+    if (! $isMember) {
+        return false;
+    }
+
+    $roomBelongsToClub = \App\Models\ClubChannel::query()
+        ->whereKey((int) $roomId)
+        ->where('club_id', (int) $clubId)
+        ->exists();
+
+    if (! $roomBelongsToClub) {
+        return false;
+    }
+
+    return [
+        'id' => $user->id,
+        'name' => $user->name,
+        'username' => $user->username,
+        'profile_photo_path' => $user->profile_photo_path,
+    ];
+});

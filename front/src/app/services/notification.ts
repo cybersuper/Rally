@@ -3,8 +3,7 @@ import { Injectable, NgZone, inject, signal } from '@angular/core';
 import { HotToastService } from '@ngxpert/hot-toast';
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
-import { BehaviorSubject } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { BehaviorSubject, tap } from 'rxjs';
 import { AuthService } from '../auth';
 
 export interface RallyNotification {

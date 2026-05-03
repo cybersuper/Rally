@@ -37,7 +37,7 @@
     @if (chat.activeConversation(); as conversation) {
       <header class="border-b border-white/10 p-4">
         <h2 class="text-lg font-black text-white">{{ conversation.title }}</h2>
-        @if (typingName(); as typing) {
+        @if (typingText(); as typing) {
           <p class="mt-1 text-xs font-semibold text-zinc-500">{{ typing }}</p>
         }
       </header>

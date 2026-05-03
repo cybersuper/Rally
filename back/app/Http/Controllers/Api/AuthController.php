@@ -102,8 +102,30 @@ class AuthController extends Controller
                     'cover_image_url' => $club->cover_image_url,
                     'membership_role' => $club->pivot->role,
                     'nickname' => $club->pivot->nickname,
+                    'unread_lounges_count' => $this->unreadLoungesCount($club, $user),
                 ]),
         ];
+    }
+
+    private function unreadLoungesCount($club, User $user): int
+    {
+        return $club->channels()
+            ->whereExists(function ($query) use ($user) {
+                $query->selectRaw('1')
+                    ->from('messages')
+                    ->leftJoin('lounge_user_reads', function ($join) use ($user) {
+                        $join->on('lounge_user_reads.club_channel_id', '=', 'messages.channel_id')
+                            ->where('lounge_user_reads.user_id', '=', $user->id);
+                    })
+                    ->whereColumn('messages.channel_id', 'club_channels.id')
+                    ->where('messages.sender_id', '!=', $user->id)
+                    ->whereNull('messages.deleted_at')
+                    ->where(function ($query) {
+                        $query->whereNull('lounge_user_reads.last_read_at')
+                            ->orWhereColumn('messages.created_at', '>', 'lounge_user_reads.last_read_at');
+                    });
+            })
+            ->count();
     }
 
     private function uniqueUsername(string $name, string $email): string

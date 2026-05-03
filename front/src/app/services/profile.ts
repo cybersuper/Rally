@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { map } from 'rxjs/operators';
+import { map } from 'rxjs';
 import { safeHexColor } from '../utils/color';
 
 export interface ProfileClub {

@@ -100,9 +100,9 @@
         >
           <span class="grid h-6 w-6 place-items-center rounded-lg border border-white/10 text-xs">C</span>
           Chat
-          @if (totalUnreadCount() > 0) {
+          @if ((totalUnreadCount$ | async) ?? 0; as count) {
             <span class="ml-auto grid min-h-5 min-w-5 place-items-center rounded-full bg-red-500 px-1 text-[0.65rem] font-black text-white">
-              {{ totalUnreadCount() }}
+              {{ count }}
             </span>
           }
         </a>
@@ -122,6 +122,9 @@
                   >
                     <span class="h-2.5 w-2.5 rounded-full" [style.background]="club.accent_color"></span>
                     <span class="truncate">{{ club.name }}</span>
+                    @if (hasClubActivity(club.id)) {
+                      <span class="ml-auto h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-red-500 shadow-lg shadow-red-500/50"></span>
+                    }
                   </a>
 
                   @if (canManageClub(club)) {
@@ -159,10 +162,31 @@
       <router-outlet />
     </section>
 
+    @if (clubChatOverlay.currentClub(); as currentClub) {
+      @if (!clubChatOverlay.isOpen()) {
+        <button
+          type="button"
+          class="!fixed z-[1000] rounded-2xl border border-red-400/60 bg-black/60 px-5 py-3 text-sm font-black text-red-200 shadow-2xl shadow-red-500/20 backdrop-blur hover:bg-black/70"
+          style="position: fixed !important; bottom: 30px; left: max(18px, calc((100vw - 1500px) / 2 + 260px));"
+          (click)="openCurrentClubChat()"
+        >
+          <span class="mr-2 inline-grid h-8 w-8 place-items-center rounded-xl bg-red-400 text-sm font-black text-black">R</span>
+          Chat
+          @if (currentClubUnreadCount() > 0) {
+            <span class="absolute -right-2 -top-2 grid min-h-6 min-w-6 place-items-center rounded-full bg-red-500 px-1 text-[0.65rem] font-black text-white shadow-lg shadow-red-500/40">
+              {{ badgeCount(currentClubUnreadCount()) }}
+            </span>
+          }
+        </button>
+      }
+    }
+
     @if (clubChatOverlay.isOpen()) {
-      <div class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50" (click)="clubChatOverlay.close()">
-        <div class="h-[min(720px,86vh)] w-[min(1100px,92vw)]" (click)="$event.stopPropagation()">
-          <app-club-chat-overlay [slug]="clubChatOverlay.slug()" (closed)="clubChatOverlay.close()" />
+      <div class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/45 px-4 backdrop-blur-sm" (click)="clubChatOverlay.close()">
+        <div class="h-[min(760px,86vh)] w-full max-w-[1200px]" (click)="$event.stopPropagation()">
+          @defer {
+            <app-club-chat-overlay [slug]="clubChatOverlay.slug()" (closed)="clubChatOverlay.close()" />
+          }
         </div>
       </div>
     }
@@ -219,7 +243,9 @@
 
       <div class="flex flex-1 overflow-y-auto">
         <div class="min-h-0 flex-1 overflow-y-auto pr-1">
-          <app-club-discovery />
+          @defer {
+            <app-club-discovery />
+          }
         </div>
       </div>
     </aside>

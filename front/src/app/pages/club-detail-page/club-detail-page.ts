@@ -8,6 +8,7 @@ import { HttpClient } from '@angular/common/http';
 import { PaginatedPosts, Post } from '../../types/post';
 import { TimelineService } from '../../services/timeline';
 import { safeHexColor } from '../../utils/color';
+import { ClubChatOverlayState } from '../../services/club-chat-overlay';
 
 interface ClubDetail {
   id: number;
@@ -23,6 +24,12 @@ interface ClubDetail {
   membership_role: 'OWNER' | 'MODERATOR' | 'MEMBER' | string | null;
   my_nickname?: string | null;
   show_streak?: boolean;
+  channels?: Array<{
+    id: number;
+    club_id: number;
+    name: string;
+    type: 'text' | 'announcement';
+  }>;
 }
 
 @Component({
@@ -36,6 +43,7 @@ export class ClubDetailPageComponent implements OnInit {
   private readonly clubService = inject(ClubService);
   private readonly authService = inject(AuthService);
   private readonly timelineService = inject(TimelineService);
+  private readonly chatOverlay = inject(ClubChatOverlayState);
 
   club = signal<ClubDetail | null>(null);
   posts = signal<Post[]>([]);
@@ -154,6 +162,15 @@ export class ClubDetailPageComponent implements OnInit {
 
   canManageClub(): boolean {
     return ['OWNER', 'ADMIN', 'MODERATOR'].includes(String(this.club()?.membership_role ?? ''));
+  }
+
+  openChat(): void {
+    const slug = this.club()?.slug;
+    if (slug) this.chatOverlay.open(slug);
+  }
+
+  closeChat(): void {
+    this.chatOverlay.close();
   }
 
   openIdentity(): void {

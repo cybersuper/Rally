@@ -37,8 +37,8 @@ export class SettingsPageComponent {
     this.mutate(
       this.http.patch('/api/settings/password', {
         current_password: this.currentPassword(),
-        password: this.password(),
-        password_confirmation: this.passwordConfirmation(),
+        new_password: this.password(),
+        new_password_confirmation: this.passwordConfirmation(),
       }),
       () => {
         this.currentPassword.set('');

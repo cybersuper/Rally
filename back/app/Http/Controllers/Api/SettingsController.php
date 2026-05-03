@@ -33,8 +33,8 @@ class SettingsController extends Controller
     public function updatePassword(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'current_password' => ['required', 'string'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'current_password' => ['required'],
+            'new_password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
         if (! Hash::check($validated['current_password'], $request->user()->password)) {
@@ -43,7 +43,7 @@ class SettingsController extends Controller
             ]);
         }
 
-        $request->user()->update(['password' => Hash::make($validated['password'])]);
+        $request->user()->update(['password' => Hash::make($validated['new_password'])]);
 
         return response()->json(['message' => 'Password updated.']);
     }

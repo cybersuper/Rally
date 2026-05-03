@@ -81,15 +81,19 @@
         </label>
 
         <label class="block">
-          <span class="mb-1.5 block text-xs font-black uppercase tracking-wide text-zinc-500">Cover image URL</span>
-          <input
-            class="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-white/20"
-            type="url"
-            name="cover_image_url"
-            [ngModel]="coverImageUrl()"
-            (ngModelChange)="coverImageUrl.set($event)"
-            placeholder="https://..."
-          />
+          <span class="mb-1.5 block text-xs font-black uppercase tracking-wide text-zinc-500">Cover image</span>
+          <div class="overflow-hidden rounded-2xl border border-white/10 bg-black/30">
+            @if (coverPreview()) {
+              <img class="h-28 w-full object-cover" [src]="coverPreview()" alt="Cover preview" />
+            }
+            <input
+              class="w-full px-4 py-3 text-sm text-zinc-300 file:mr-3 file:rounded-full file:border-0 file:bg-red-400 file:px-4 file:py-2 file:text-xs file:font-black file:text-black"
+              type="file"
+              name="cover_image"
+              accept="image/*"
+              (change)="setCoverImage($event)"
+            />
+          </div>
         </label>
       </div>
 

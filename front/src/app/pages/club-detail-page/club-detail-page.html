@@ -95,10 +95,19 @@
         Join this club to view posts.
       </div>
     } @else {
-      <div class="space-y-5 pb-8">
-        @for (post of posts(); track post.id) {
-          <app-post-card [post]="post" />
-        }
+      <div class="relative space-y-5 pb-16">
+          @for (post of posts(); track post.id) {
+            <app-post-card [post]="post" />
+          }
+
+          <button
+            type="button"
+            class="fixed bottom-[20px] right-[20px] z-[1000] rounded-2xl border border-red-400/60 bg-black/50 px-5 py-3 text-sm font-black text-red-200 shadow-2xl shadow-red-500/20 backdrop-blur hover:bg-black/60"
+            (click)="openChat()"
+          >
+            <span class="mr-2 inline-grid h-8 w-8 place-items-center rounded-xl bg-red-400 text-sm font-black text-black">R</span>
+            Chat
+          </button>
       </div>
     }
 
@@ -138,5 +147,6 @@
         </div>
       </div>
     }
+
   }
 </section>

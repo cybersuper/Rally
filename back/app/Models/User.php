@@ -68,4 +68,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(\App\Models\LfgApplication::class);
     }
+
+    public function conversations()
+    {
+        return $this->belongsToMany(\App\Models\Conversation::class)->withTimestamps();
+    }
 }

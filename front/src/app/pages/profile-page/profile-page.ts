@@ -1,10 +1,11 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../auth';
 import { PostCard } from '../../components/post-card/post-card';
 import { ProfileService, UserProfile } from '../../services/profile';
 import { TimelineService } from '../../services/timeline';
+import { ChatService } from '../../services/chat';
 import { Post } from '../../types/post';
 
 type ProfileEditField =
@@ -22,6 +23,8 @@ export class ProfilePageComponent implements OnInit {
   private readonly profileService = inject(ProfileService);
   private readonly timelineService = inject(TimelineService);
   private readonly authService = inject(AuthService);
+  private readonly chatService = inject(ChatService);
+  private readonly router = inject(Router);
 
   profile = signal<UserProfile | null>(null);
   posts = signal<Post[]>([]);
@@ -200,6 +203,16 @@ export class ProfilePageComponent implements OnInit {
         this.editError.set(err?.status === 422 ? 'Check username and required fields.' : 'Could not save profile.');
         this.isSaving.set(false);
       },
+    });
+  }
+
+  messageUser(): void {
+    const user = this.profile();
+    if (!user || user.is_owner) return;
+
+    this.chatService.startConversation(user.id).subscribe({
+      next: response => this.router.navigate(['/chat', response.conversation.id]),
+      error: err => console.error('Start chat failed', err),
     });
   }
 }

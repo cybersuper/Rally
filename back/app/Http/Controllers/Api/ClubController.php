@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Club;
 use App\Models\Post;
 use App\Support\PostPresenter;
+use Cloudinary\Cloudinary;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -84,6 +85,7 @@ class ClubController extends Controller
         $user = $request->user();
 
         $club->loadCount('users');
+        $club->load(['channels' => fn ($query) => $query->orderBy('id')]);
         $role = $this->membershipRole($user, $club);
 
         return response()->json([
@@ -104,7 +106,12 @@ class ClubController extends Controller
             'visibility' => ['required', Rule::in(['public', 'private'])],
             'accent_color' => ['required', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'cover_image_url' => ['nullable', 'url', 'max:1000'],
+            'cover_image' => ['nullable', 'image', 'max:8192'],
         ]);
+
+        if ($request->hasFile('cover_image')) {
+            $validated['cover_image_url'] = $this->uploadImage($request->file('cover_image'), 'club-covers');
+        }
 
         $club->fill([
             'name' => $validated['name'] ?? $club->name,
@@ -112,7 +119,9 @@ class ClubController extends Controller
             'category' => $validated['category'] ?? null,
             'visibility' => $validated['visibility'],
             'accent_color' => $validated['accent_color'],
-            'cover_image_url' => $validated['cover_image_url'] ?? null,
+            'cover_image_url' => array_key_exists('cover_image_url', $validated)
+                ? $validated['cover_image_url']
+                : $club->cover_image_url,
         ]);
 
         $club->save();
@@ -258,6 +267,40 @@ class ClubController extends Controller
             'membership_role' => $role,
             'my_nickname' => $identity?->nickname,
             'show_streak' => (bool) ($identity?->show_streak ?? true),
+            'channels' => $club->relationLoaded('channels')
+                ? $club->channels->map(fn ($channel) => [
+                    'id' => $channel->id,
+                    'club_id' => $channel->club_id,
+                    'name' => $channel->name,
+                    'type' => $channel->type,
+                ])
+                : [],
         ];
+    }
+
+    private function uploadImage($file, string $folder): string
+    {
+        abort_unless(
+            config('services.cloudinary.url') || config('services.cloudinary.cloud_name'),
+            422,
+            'Cloudinary is not configured.'
+        );
+
+        $cloudinary = config('services.cloudinary.url')
+            ? new Cloudinary(config('services.cloudinary.url'))
+            : new Cloudinary([
+                'cloud' => [
+                    'cloud_name' => config('services.cloudinary.cloud_name'),
+                    'api_key' => config('services.cloudinary.api_key'),
+                    'api_secret' => config('services.cloudinary.api_secret'),
+                ],
+            ]);
+
+        $result = $cloudinary->uploadApi()->upload($file->getRealPath(), [
+            'folder' => "rally/{$folder}",
+            'resource_type' => 'image',
+        ]);
+
+        return $result['secure_url'];
     }
 }

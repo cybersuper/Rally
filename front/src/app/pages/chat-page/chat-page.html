@@ -1,0 +1,77 @@
+<section class="grid min-h-[calc(100vh-2rem)] overflow-hidden rounded-3xl border border-white/10 bg-[#121216]/90 shadow-2xl md:grid-cols-[260px_1fr]">
+  <aside class="border-b border-white/10 p-4 md:border-b-0 md:border-r">
+    <div class="mb-4">
+      <p class="text-xs font-black uppercase tracking-[0.2em] text-zinc-500">Chat</p>
+      <h1 class="mt-1 text-2xl font-black text-white">Messages</h1>
+    </div>
+
+    <div class="space-y-2">
+      @for (conversation of chat.conversations(); track conversation.id) {
+        <button
+          type="button"
+          class="w-full rounded-2xl border border-white/10 p-3 text-left hover:bg-white/5"
+          [class.bg-white/7]="chat.activeConversation()?.id === conversation.id"
+          (click)="open(conversation)"
+        >
+          <p class="truncate text-sm font-black text-white">{{ conversation.title }}</p>
+          <p class="mt-1 truncate text-xs font-semibold text-zinc-500">
+            {{ conversation.latest_message?.body ?? 'No messages yet.' }}
+          </p>
+        </button>
+      } @empty {
+        <div class="rounded-2xl border border-white/10 p-4 text-sm font-semibold text-zinc-500">
+          No conversations yet.
+        </div>
+      }
+    </div>
+  </aside>
+
+  <section class="flex min-h-[560px] flex-col">
+    @if (chat.activeConversation(); as conversation) {
+      <header class="border-b border-white/10 p-4">
+        <h2 class="text-lg font-black text-white">{{ conversation.title }}</h2>
+      </header>
+
+      <div #messageScroller class="rally-scrollbar flex max-h-[500px] flex-col-reverse gap-3 overflow-y-auto p-4">
+        @for (message of orderedMessages(); track message.id) {
+          <div class="flex" [class.justify-end]="message.sender_id === authService.user()?.id">
+            <div
+              class="max-w-[75%] rounded-2xl border border-white/10 px-4 py-3 text-sm font-semibold leading-6"
+              [class.bg-red-400]="message.sender_id === authService.user()?.id"
+              [class.text-black]="message.sender_id === authService.user()?.id"
+              [class.bg-black/30]="message.sender_id !== authService.user()?.id"
+              [class.text-zinc-100]="message.sender_id !== authService.user()?.id"
+            >
+              <p>{{ message.body }}</p>
+              <p class="mt-1 text-[0.65rem] opacity-60">
+                {{ message.sender?.name }}
+                <span class="mx-1">•</span>
+                {{ message.created_at | date: 'HH:mm' }}
+              </p>
+            </div>
+          </div>
+        }
+      </div>
+
+      <footer class="border-t border-white/10 p-4">
+        <div class="flex gap-2">
+          <input
+            class="min-w-0 flex-1 rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none"
+            [value]="draft()"
+            placeholder="Write message"
+            (input)="draft.set($any($event.target).value)"
+            (keydown.enter)="send()"
+          />
+          <button class="rounded-2xl bg-red-400 px-5 py-3 text-sm font-black text-black" type="button" (click)="send()">Send</button>
+        </div>
+      </footer>
+    } @else {
+      <div class="grid flex-1 place-items-center p-6 text-center text-zinc-500">
+        <div>
+          <p class="text-xl font-black text-zinc-300">Pick a conversation</p>
+          <p class="mt-2 text-sm font-semibold">Messages update live through Reverb.</p>
+        </div>
+      </div>
+    }
+  </section>
+</section>

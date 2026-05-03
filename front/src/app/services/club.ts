@@ -80,6 +80,14 @@ export class ClubService {
     );
   }
 
+  updateClubForm(slug: string, payload: FormData) {
+    return this.http.post<CreateClubResponse>(`/api/clubs/${slug}`, payload).pipe(
+      map(response => ({
+        club: this.normalizeClub(response.club),
+      }))
+    );
+  }
+
   getClubTimeline(slug: string) {
     return this.http.get(`/api/clubs/${slug}/timeline`);
   }

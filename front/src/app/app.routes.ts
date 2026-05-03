@@ -13,6 +13,7 @@ import { PostDetailPageComponent } from './pages/post-detail-page/post-detail-pa
 import { NotificationsPageComponent } from './pages/notifications-page/notifications-page';
 import { ProfilePageComponent } from './pages/profile-page/profile-page';
 import { SettingsPageComponent } from './pages/settings-page/settings-page';
+import { ChatPageComponent } from './pages/chat-page/chat-page';
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'timeline' },
@@ -22,7 +23,10 @@ export const routes: Routes = [
   { path: 'dashboard/lfg', component: LfgDashboardPageComponent, canActivate: [authGuard] },
   { path: 'notifications', component: NotificationsPageComponent, canActivate: [authGuard] },
   { path: 'profile/:username', component: ProfilePageComponent, canActivate: [authGuard] },
+  { path: 'profiles/:username', component: ProfilePageComponent, canActivate: [authGuard] },
   { path: 'settings', component: SettingsPageComponent, canActivate: [authGuard] },
+  { path: 'chat', component: ChatPageComponent, canActivate: [authGuard] },
+  { path: 'chat/:id', component: ChatPageComponent, canActivate: [authGuard] },
   { path: 'discover', component: DiscoverPageComponent },
   { path: 'clubs/:slug/admin', component: ClubAdminPageComponent, canActivate: [authGuard, clubAdminGuard] },
   { path: 'clubs/:slug/posts/:id', component: PostDetailPageComponent, canActivate: [authGuard] },

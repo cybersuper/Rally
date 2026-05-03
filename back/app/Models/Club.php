@@ -31,4 +31,9 @@ class Club extends Model
     {
         return $this->belongsToMany(User::class)->withPivot(['role', 'nickname', 'show_streak'])->withTimestamps();
     }
+
+    public function channels()
+    {
+        return $this->hasMany(ClubChannel::class);
+    }
 }

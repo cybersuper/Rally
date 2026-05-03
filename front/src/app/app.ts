@@ -1,26 +1,41 @@
-import { Component, OnInit, effect, inject, signal } from '@angular/core';
-import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Component, OnInit, OnDestroy, effect, inject, signal } from '@angular/core';
+import { Router, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from './auth';
 import { ClubDiscoveryComponent } from './components/club-discovery/club-discovery';
+import { ClubChatOverlayComponent } from './components/club-chat-overlay/club-chat-overlay';
 import { NotificationService } from './services/notification';
+import { ChatMessage, ChatService } from './services/chat';
+import { HotToastService } from '@ngxpert/hot-toast';
+import { NgZone } from '@angular/core';
+import Echo from 'laravel-echo';
+import Pusher from 'pusher-js';
+import { ClubChatOverlayState } from './services/club-chat-overlay';
+import { EchoBridge } from './services/echo-bridge';
 
 @Component({
   selector: 'app-root',
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, ClubDiscoveryComponent],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, ClubDiscoveryComponent, ClubChatOverlayComponent],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
-export class App implements OnInit {
+export class App implements OnInit, OnDestroy {
   readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly notificationService = inject(NotificationService);
+  private readonly toast = inject(HotToastService);
+  private readonly zone = inject(NgZone);
+  readonly chatService = inject(ChatService);
+  private readonly echoBridge = inject(EchoBridge);
+  readonly clubChatOverlay = inject(ClubChatOverlayState);
 
   user = this.authService.user;
 
   isBooting = signal(true);
   unreadNotifications = this.notificationService.unreadCount;
   notificationFlash = this.notificationService.notificationFlash;
+  private chatEcho: Echo<'reverb'> | null = null;
+  private chatUserId: number | null = null;
 
   constructor() {
     effect(() => {
@@ -28,6 +43,7 @@ export class App implements OnInit {
 
       if (user?.id) {
         this.notificationService.initRealtime();
+        this.initChatRealtime();
       }
     });
   }
@@ -40,6 +56,7 @@ export class App implements OnInit {
         next: () => {
           this.loadUnreadNotifications();
           this.notificationService.initRealtime();
+          this.initChatRealtime();
           this.isBooting.set(false);
         },
         error: () => {
@@ -48,6 +65,8 @@ export class App implements OnInit {
           this.authService.user.set(null);
           this.notificationService.clearUnread();
           this.notificationService.disconnectRealtime();
+          this.disconnectChatRealtime();
+          this.chatService.clearUnread();
           this.isBooting.set(false);
           this.router.navigateByUrl('/login');
         },
@@ -64,6 +83,8 @@ export class App implements OnInit {
       next: () => {
         this.notificationService.clearUnread();
         this.notificationService.disconnectRealtime();
+        this.disconnectChatRealtime();
+        this.chatService.clearUnread();
         this.router.navigateByUrl('/login');
       },
       error: () => {
@@ -72,6 +93,8 @@ export class App implements OnInit {
           this.authService.user.set(null);
           this.notificationService.clearUnread();
           this.notificationService.disconnectRealtime();
+          this.disconnectChatRealtime();
+          this.chatService.clearUnread();
           this.router.navigateByUrl('/login');
       },
     });
@@ -86,6 +109,52 @@ export class App implements OnInit {
       next: () => {},
       error: () => this.notificationService.clearUnread(),
     });
+  }
+
+private initChatRealtime(): void {
+    const user = this.authService.user();
+    const token = this.authService.token();
+    if (!user?.id || !token) return;
+
+    (window as any).Pusher = Pusher;
+
+    // Create the instance
+    const echoInstance = new Echo({
+      broadcaster: 'reverb',
+      key: 'nnemvhtajzjjh3bj1dqh',
+      wsHost: 'localhost',
+      wsPort: 8080,
+      forceTLS: false,
+      enabledTransports: ['ws', 'wss'],
+      authEndpoint: '/api/broadcasting/auth',
+      auth: {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    });
+
+    // CRITICAL: Attach it to the window object
+    (window as any).Echo = echoInstance; 
+    
+    this.chatEcho = echoInstance;
+    console.log('✅ Echo is now global and connected');
+}
+
+  ngOnDestroy(): void {
+    this.notificationService.disconnectRealtime();
+    this.disconnectChatRealtime();
+  }
+
+  private disconnectChatRealtime(): void {
+    if (this.chatEcho && this.chatUserId) {
+      this.chatEcho.leave(`user.${this.chatUserId}`);
+      this.chatEcho.disconnect();
+    }
+
+    this.chatEcho = null;
+    this.chatUserId = null;
+    this.echoBridge.set(null);
   }
 
 }

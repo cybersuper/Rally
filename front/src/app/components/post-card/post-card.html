@@ -11,7 +11,9 @@
     </div>
 
     <header class="relative z-10 mb-4 flex items-start gap-3 pr-16">
-      <div
+      <a
+        [routerLink]="['/profiles', post().user.username]"
+        (click)="stop($event)"
         class="grid h-12 w-12 shrink-0 place-items-center rounded-2xl text-sm font-black text-black shadow-lg"
         [style.background]="post().club.accent_color"
         [style.boxShadow]="'0 14px 28px ' + post().club.accent_color + '22'"
@@ -21,13 +23,17 @@
         } @else {
           {{ initials(post().author_name || post().user.club_nickname || post().user.name) }}
         }
-      </div>
+      </a>
 
       <div class="min-w-0 flex-1">
         <div class="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-          <h3 class="truncate text-base font-black text-white">
+          <a
+            class="truncate text-base font-black text-white hover:underline"
+            [routerLink]="['/profiles', post().user.username]"
+            (click)="stop($event)"
+          >
             {{ post().author_name || post().user.club_nickname || post().user.name }}
-          </h3>
+          </a>
 
           <span
             class="h-1.5 w-1.5 rounded-full"

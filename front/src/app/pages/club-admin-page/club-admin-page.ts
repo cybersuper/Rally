@@ -28,7 +28,8 @@ export class ClubAdminPageComponent implements OnInit {
   category = signal('');
   visibility = signal<'public' | 'private'>('public');
   accentColor = signal('#ef4444');
-  coverImageUrl = signal('');
+  coverPreview = signal<string | null>(null);
+  private coverFile: File | null = null;
 
   ngOnInit(): void {
     this.load();
@@ -51,7 +52,7 @@ export class ClubAdminPageComponent implements OnInit {
         this.category.set(club.category ?? '');
         this.visibility.set(club.visibility === 'private' ? 'private' : 'public');
         this.accentColor.set(safeHexColor(club.accent_color ?? club.theme_color));
-        this.coverImageUrl.set(club.cover_image_url ?? '');
+        this.coverPreview.set(club.cover_image_url ?? null);
         this.isLoading.set(false);
       },
       error: () => {
@@ -77,15 +78,16 @@ export class ClubAdminPageComponent implements OnInit {
     this.error.set(null);
     this.saved.set(false);
 
+    const payload = new FormData();
+    payload.append('name', name);
+    payload.append('description', this.description().trim());
+    payload.append('category', this.category().trim());
+    payload.append('visibility', this.visibility());
+    payload.append('accent_color', this.accentColor().trim());
+    if (this.coverFile) payload.append('cover_image', this.coverFile);
+
     this.clubService
-      .updateClub(club.slug, {
-        name,
-        description: this.description().trim() || null,
-        category: this.category().trim() || null,
-        visibility: this.visibility(),
-        accent_color: this.accentColor().trim(),
-        cover_image_url: this.coverImageUrl().trim() || null,
-      })
+      .updateClubForm(club.slug, payload)
       .subscribe({
         next: response => {
           this.club.set(response.club);
@@ -111,5 +113,12 @@ export class ClubAdminPageComponent implements OnInit {
           this.error.set('Could not save club settings.');
         },
       });
+  }
+
+  setCoverImage(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+    this.coverFile = file;
+    if (file) this.coverPreview.set(URL.createObjectURL(file));
   }
 }

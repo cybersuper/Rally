@@ -8,10 +8,13 @@ import { NotificationService } from './services/notification';
 import { ChatMessage, ChatService } from './services/chat';
 import { HotToastService } from '@ngxpert/hot-toast';
 import { NgZone } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
 import { ClubChatOverlayState } from './services/club-chat-overlay';
 import { EchoBridge } from './services/echo-bridge';
+import { PaginatedPosts, Post } from './types/post';
+import { safeHexColor } from './utils/color';
 
 @Component({
   selector: 'app-root',
@@ -25,6 +28,7 @@ export class App implements OnInit, OnDestroy {
   private readonly notificationService = inject(NotificationService);
   private readonly toast = inject(HotToastService);
   private readonly zone = inject(NgZone);
+  private readonly http = inject(HttpClient);
   readonly chatService = inject(ChatService);
   private readonly echoBridge = inject(EchoBridge);
   readonly clubChatOverlay = inject(ClubChatOverlayState);
@@ -34,6 +38,7 @@ export class App implements OnInit, OnDestroy {
   isBooting = signal(true);
   unreadNotifications = this.notificationService.unreadCount;
   notificationFlash = this.notificationService.notificationFlash;
+  liveGroups = signal<Post[]>([]);
   private chatEcho: Echo<'reverb'> | null = null;
   private chatUserId: number | null = null;
   private hasLoadedConversations = false;
@@ -94,6 +99,7 @@ export class App implements OnInit, OnDestroy {
       if (user?.id) {
         this.notificationService.initRealtime();
         this.chatService.loadConversations();
+        this.loadLiveGroups();
         this.initChatRealtime();
       }
     });
@@ -108,6 +114,7 @@ export class App implements OnInit, OnDestroy {
         next: () => {
           this.loadUnreadNotifications();
           this.chatService.loadConversations();
+          this.loadLiveGroups();
           this.notificationService.initRealtime();
           this.initChatRealtime();
           this.isBooting.set(false);
@@ -174,6 +181,26 @@ export class App implements OnInit, OnDestroy {
     this.notificationService.getUnreadCount().subscribe({
       next: () => {},
       error: () => this.notificationService.clearUnread(),
+    });
+  }
+
+  loadLiveGroups(): void {
+    this.http.get<PaginatedPosts>('/api/timeline', { params: { sort: 'date' } }).subscribe({
+      next: response => {
+        this.liveGroups.set(
+          response.data
+            .filter(post => post.type === 'lfg' && String(post.metadata?.['status'] ?? 'open') !== 'full')
+            .slice(0, 4)
+            .map(post => ({
+              ...post,
+              club: {
+                ...post.club,
+                accent_color: safeHexColor(post.club?.accent_color ?? post.club?.theme_color),
+              },
+            }))
+        );
+      },
+      error: () => this.liveGroups.set([]),
     });
   }
 

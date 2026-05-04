@@ -9,6 +9,19 @@ export interface RallyUser {
   profile_photo_path?: string | null;
 }
 
+export interface FeaturedPostComment {
+  id: number;
+  post_id: number;
+  user_id: number;
+  parent_id: number | null;
+  content: string;
+  helpful_count: number;
+  is_best_answer: boolean;
+  created_at?: string;
+  updated_at?: string;
+  user: RallyUser | null;
+}
+
 export interface Club {
   id: number;
   name: string;
@@ -18,6 +31,7 @@ export interface Club {
   accent_color: string | null;
   theme_color?: string | null;
   sticker_type: string | null;
+  sticker_image_url?: string | null;
   membership_role?: 'OWNER' | 'MODERATOR' | 'MEMBER' | string | null;
 }
 
@@ -33,6 +47,7 @@ export interface Post {
   updated_at: string;
   user: RallyUser;
   club: Club;
+  featured_comment?: FeaturedPostComment | null;
   comments_count?: number;
   top_level_comments_count?: number;
   total_comments_count?: number;

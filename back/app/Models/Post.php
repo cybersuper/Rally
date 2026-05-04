@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Post extends Model
 {
@@ -18,6 +19,14 @@ class Post extends Model
     protected $casts = [
         'metadata' => 'array',
     ];
+
+    public function featuredComment(): HasOne
+    {
+        return $this->hasOne(Comment::class)
+            ->where('is_best_answer', true)
+            ->orderByDesc('helpful_count')
+            ->orderByDesc('id');
+    }
 
     public static function normalizeLfgMetadata(array $metadata, ?int $filledOverride = null): array
     {

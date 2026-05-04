@@ -22,7 +22,8 @@ class TimelineController extends Controller
             ->whereIn('club_id', $clubIds)
             ->with([
                 'user:id,name,email,username,profile_photo_path',
-                'club:id,name,slug,accent_color,sticker_type',
+                'club:id,name,slug,accent_color,sticker_type,sticker_image_url',
+                'featuredComment.user:id,name,email,username,profile_photo_path',
             ])
             ->withCount([
                 'comments as total_comments_count',

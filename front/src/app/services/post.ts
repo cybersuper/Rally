@@ -56,6 +56,7 @@ export interface PostComment {
   content: string;
   helpful_count: number;
   is_best_answer: boolean;
+  is_helpful?: boolean;
   likes_count: number;
   liked_by_me: boolean | number;
   created_at?: string;
@@ -64,6 +65,9 @@ export interface PostComment {
     id: number;
     name: string;
     email: string;
+    username?: string;
+    profile_photo_path?: string | null;
+    club_nickname?: string | null;
   } | null;
   replies?: PostComment[];
 }
@@ -155,6 +159,14 @@ export class PostService {
       content,
       parent_id: parentId,
     });
+  }
+
+  updateComment(commentId: number, content: string) {
+    return this.http.patch<{ comment: PostComment }>(`/api/comments/${commentId}`, { content });
+  }
+
+  markCommentHelpful(commentId: number, helpful: boolean) {
+    return this.http.patch<{ comment: PostComment }>(`/api/comments/${commentId}/helpful`, { helpful });
   }
 
   deleteComment(commentId: number) {

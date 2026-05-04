@@ -13,6 +13,7 @@ export interface DiscoverClub {
   accent_color: string;
   theme_color?: string | null;
   sticker_type: string | null;
+  sticker_image_url?: string | null;
   cover_image_url?: string | null;
   members_count: number;
   is_member: boolean;

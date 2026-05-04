@@ -20,7 +20,8 @@ class PostController extends Controller
 
         $post->load([
             'user:id,name,email,username,profile_photo_path',
-            'club:id,name,slug,accent_color,sticker_type',
+            'club:id,name,slug,accent_color,sticker_type,sticker_image_url',
+            'featuredComment.user:id,name,email,username,profile_photo_path',
         ])->loadCount([
             'comments as total_comments_count',
             'comments as top_level_comments_count' => fn ($query) => $query->whereNull('parent_id'),
@@ -90,7 +91,8 @@ class PostController extends Controller
 
         $post->load([
                 'user:id,name,email,username,profile_photo_path',
-                'club:id,name,slug,accent_color,sticker_type',
+                'club:id,name,slug,accent_color,sticker_type,sticker_image_url',
+                'featuredComment.user:id,name,email,username,profile_photo_path',
             ])->loadCount([
                 'comments as total_comments_count',
                 'comments as top_level_comments_count' => fn ($query) => $query->whereNull('parent_id'),

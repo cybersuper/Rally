@@ -95,6 +95,25 @@
             />
           </div>
         </label>
+
+        <label class="block sm:col-span-2">
+          <span class="mb-1.5 block text-xs font-black uppercase tracking-wide text-zinc-500">Post sticker image</span>
+          <div class="rounded-2xl border border-white/10 bg-black/30 p-4">
+            <div class="mb-3 flex items-center gap-4">
+              @if (stickerPreview()) {
+                <img class="h-20 w-20 object-contain" [src]="stickerPreview()" alt="Sticker preview" />
+              }
+              <p class="text-xs font-semibold text-zinc-500">PNG encouraged for transparent slapped-on stickers.</p>
+            </div>
+            <input
+              class="w-full text-sm text-zinc-300 file:mr-3 file:rounded-full file:border-0 file:bg-red-400 file:px-4 file:py-2 file:text-xs file:font-black file:text-black"
+              type="file"
+              name="sticker_image"
+              accept="image/png,image/webp,image/jpeg"
+              (change)="setStickerImage($event)"
+            />
+          </div>
+        </label>
       </div>
 
       <div class="flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-black/20 p-4">

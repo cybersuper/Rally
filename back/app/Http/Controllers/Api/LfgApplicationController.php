@@ -35,7 +35,7 @@ class LfgApplicationController extends Controller
             ->where('type', 'lfg')
             ->with([
                 'user:id,name,username',
-                'club:id,name,slug,accent_color,sticker_type',
+                'club:id,name,slug,accent_color,sticker_type,sticker_image_url',
                 'lfgApplications' => fn ($query) => $query
                     ->with('user:id,name,username')
                     ->latest(),

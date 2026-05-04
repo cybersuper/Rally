@@ -20,6 +20,7 @@ class Club extends Model
         'accent_color',
         'sticker_type',
         'cover_image_url',
+        'sticker_image_url',
     ];
 
     public function posts()

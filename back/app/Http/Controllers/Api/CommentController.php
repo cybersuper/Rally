@@ -8,6 +8,7 @@ use App\Models\Comment;
 use App\Models\Post;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class CommentController extends Controller
@@ -19,7 +20,7 @@ class CommentController extends Controller
         if ($request->boolean('preview')) {
             $comments = $post->comments()
                 ->whereNull('parent_id')
-                ->with('user:id,name,email')
+                ->with('user:id,name,email,username,profile_photo_path')
                 ->withCount('likes')
                 ->withExists([
                     'likes as liked_by_me' => fn ($query) => $query->where('user_id', $request->user()->id),
@@ -29,12 +30,12 @@ class CommentController extends Controller
                 ->get();
 
             return response()->json([
-                'comments' => $comments->map(fn (Comment $comment) => $this->serializeComment($comment)),
+                'comments' => $comments->map(fn (Comment $comment) => $this->serializeComment($comment, $post->club_id)),
             ]);
         }
 
         $comments = $post->comments()
-            ->with('user:id,name,email')
+            ->with('user:id,name,email,username,profile_photo_path')
             ->withCount('likes')
             ->withExists([
                 'likes as liked_by_me' => fn ($query) => $query->where('user_id', $request->user()->id),
@@ -46,7 +47,7 @@ class CommentController extends Controller
             ->get();
 
         return response()->json([
-            'comments' => $this->buildTree($comments),
+            'comments' => $this->buildTree($comments, $post->club_id),
         ]);
     }
 
@@ -75,7 +76,8 @@ class CommentController extends Controller
 
         return response()->json([
             'comment' => $this->serializeComment(
-                $comment->load('user:id,name,email')->loadCount('likes')
+                $comment->load('user:id,name,email,username,profile_photo_path')->loadCount('likes'),
+                $post->club_id
             ),
         ], 201);
     }
@@ -98,6 +100,71 @@ class CommentController extends Controller
 
         return response()->json([
             'message' => 'Comment deleted.',
+        ]);
+    }
+
+    public function update(Request $request, Comment $comment): JsonResponse
+    {
+        abort_unless($comment->user_id === $request->user()->id, 403, 'Not allowed.');
+        abort_if((bool) $comment->is_best_answer || (int) $comment->helpful_count > 0, 422, 'Helpful replies cannot be edited.');
+
+        $validated = $request->validate([
+            'content' => ['required', 'string', 'max:1500'],
+        ]);
+
+        $comment->forceFill(['content' => $validated['content']])->save();
+
+        return response()->json([
+            'comment' => $this->serializeComment(
+                $comment->load('user:id,name,email,username,profile_photo_path')->loadCount('likes'),
+                $comment->post?->club_id
+            ),
+        ]);
+    }
+
+    public function helpful(Request $request, Comment $comment): JsonResponse
+    {
+        $post = $comment->post()->firstOrFail();
+
+        abort_unless($post->user_id === $request->user()->id, 403, 'Only the post author can mark helpful.');
+
+        $validated = $request->validate([
+            'helpful' => ['required', 'boolean'],
+        ]);
+
+        DB::transaction(function () use ($validated, $comment, $post) {
+            $helpful = (bool) $validated['helpful'];
+
+            if ($helpful) {
+                Comment::query()
+                    ->where('post_id', $post->id)
+                    ->where('id', '!=', $comment->id)
+                    ->where('is_best_answer', true)
+                    ->update([
+                        'is_best_answer' => false,
+                        'helpful_count' => 0,
+                    ]);
+            }
+
+            $comment->forceFill([
+                'is_best_answer' => $helpful,
+                'helpful_count' => $helpful ? max(1, (int) $comment->helpful_count) : 0,
+            ])->save();
+
+            if ($post->type === 'question') {
+                $metadata = $post->metadata ?? [];
+                $metadata['best_answer_pinned'] = $helpful;
+                $metadata['helpful_count'] = $helpful ? 1 : 0;
+                $post->metadata = $metadata;
+                $post->save();
+            }
+        });
+
+        return response()->json([
+            'comment' => $this->serializeComment(
+                $comment->fresh()->load('user:id,name,email,username,profile_photo_path')->loadCount('likes'),
+                $post->club_id
+            ),
         ]);
     }
 
@@ -124,7 +191,7 @@ class CommentController extends Controller
         ], true);
     }
 
-    private function buildTree($comments): array
+    private function buildTree($comments, int $clubId): array
     {
         $children = [];
 
@@ -133,9 +200,9 @@ class CommentController extends Controller
             $children[$parentId][] = $comment;
         }
 
-        $makeBranch = function (int $parentId) use (&$makeBranch, $children): array {
-            return array_map(function (Comment $comment) use (&$makeBranch) {
-                $serialized = $this->serializeComment($comment);
+        $makeBranch = function (int $parentId) use (&$makeBranch, $children, $clubId): array {
+            return array_map(function (Comment $comment) use (&$makeBranch, $clubId) {
+                $serialized = $this->serializeComment($comment, $clubId);
                 $serialized['replies'] = $makeBranch($comment->id);
 
                 return $serialized;
@@ -145,8 +212,17 @@ class CommentController extends Controller
         return $makeBranch(0);
     }
 
-    private function serializeComment(Comment $comment): array
+    private function serializeComment(Comment $comment, ?int $clubId = null): array
     {
+        $nickname = null;
+
+        if ($clubId && $comment->user_id) {
+            $nickname = DB::table('club_user')
+                ->where('club_id', $clubId)
+                ->where('user_id', $comment->user_id)
+                ->value('nickname');
+        }
+
         return [
             'id' => $comment->id,
             'post_id' => $comment->post_id,
@@ -155,6 +231,7 @@ class CommentController extends Controller
             'content' => $comment->content,
             'helpful_count' => $comment->helpful_count,
             'is_best_answer' => $comment->is_best_answer,
+            'is_helpful' => (bool) $comment->is_best_answer || (int) $comment->helpful_count > 0,
             'likes_count' => (int) ($comment->likes_count ?? 0),
             'liked_by_me' => (bool) ($comment->liked_by_me ?? false),
             'created_at' => $comment->created_at,
@@ -163,7 +240,10 @@ class CommentController extends Controller
                 ? [
                     'id' => $comment->user->id,
                     'name' => $comment->user->name,
+                    'username' => $comment->user->username,
                     'email' => $comment->user->email,
+                    'profile_photo_path' => $comment->user->profile_photo_path,
+                    'club_nickname' => $nickname,
                 ]
                 : null,
             'replies' => $comment->relationLoaded('replies') ? $comment->replies : [],

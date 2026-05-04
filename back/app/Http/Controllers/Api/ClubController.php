@@ -107,10 +107,15 @@ class ClubController extends Controller
             'accent_color' => ['required', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'cover_image_url' => ['nullable', 'url', 'max:1000'],
             'cover_image' => ['nullable', 'image', 'max:8192'],
+            'sticker_image' => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp', 'max:4096'],
         ]);
 
         if ($request->hasFile('cover_image')) {
             $validated['cover_image_url'] = $this->uploadImage($request->file('cover_image'), 'club-covers');
+        }
+
+        if ($request->hasFile('sticker_image')) {
+            $validated['sticker_image_url'] = $this->uploadImage($request->file('sticker_image'), 'club-stickers');
         }
 
         $club->fill([
@@ -122,6 +127,9 @@ class ClubController extends Controller
             'cover_image_url' => array_key_exists('cover_image_url', $validated)
                 ? $validated['cover_image_url']
                 : $club->cover_image_url,
+            'sticker_image_url' => array_key_exists('sticker_image_url', $validated)
+                ? $validated['sticker_image_url']
+                : $club->sticker_image_url,
         ]);
 
         $club->save();
@@ -170,7 +178,8 @@ class ClubController extends Controller
             ->where('club_id', $club->id)
             ->with([
                 'user:id,name,email,username,profile_photo_path',
-                'club:id,name,slug,accent_color,sticker_type',
+                'club:id,name,slug,accent_color,sticker_type,sticker_image_url',
+                'featuredComment.user:id,name,email,username,profile_photo_path',
             ])
             ->withCount([
                 'comments as total_comments_count',
@@ -279,6 +288,7 @@ class ClubController extends Controller
             'accent_color' => $club->accent_color,
             'sticker_type' => $club->sticker_type,
             'cover_image_url' => $club->cover_image_url,
+            'sticker_image_url' => $club->sticker_image_url,
             'members_count' => $membersCount,
             'is_member' => $role !== null,
             'membership_role' => $role,

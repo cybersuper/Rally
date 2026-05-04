@@ -29,7 +29,9 @@ export class ClubAdminPageComponent implements OnInit {
   visibility = signal<'public' | 'private'>('public');
   accentColor = signal('#ef4444');
   coverPreview = signal<string | null>(null);
+  stickerPreview = signal<string | null>(null);
   private coverFile: File | null = null;
+  private stickerFile: File | null = null;
 
   ngOnInit(): void {
     this.load();
@@ -53,6 +55,7 @@ export class ClubAdminPageComponent implements OnInit {
         this.visibility.set(club.visibility === 'private' ? 'private' : 'public');
         this.accentColor.set(safeHexColor(club.accent_color ?? club.theme_color));
         this.coverPreview.set(club.cover_image_url ?? null);
+        this.stickerPreview.set(club.sticker_image_url ?? null);
         this.isLoading.set(false);
       },
       error: () => {
@@ -85,6 +88,7 @@ export class ClubAdminPageComponent implements OnInit {
     payload.append('visibility', this.visibility());
     payload.append('accent_color', this.accentColor().trim());
     if (this.coverFile) payload.append('cover_image', this.coverFile);
+    if (this.stickerFile) payload.append('sticker_image', this.stickerFile);
 
     this.clubService
       .updateClubForm(club.slug, payload)
@@ -120,5 +124,12 @@ export class ClubAdminPageComponent implements OnInit {
     const file = input.files?.[0] ?? null;
     this.coverFile = file;
     if (file) this.coverPreview.set(URL.createObjectURL(file));
+  }
+
+  setStickerImage(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+    this.stickerFile = file;
+    if (file) this.stickerPreview.set(URL.createObjectURL(file));
   }
 }

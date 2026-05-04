@@ -120,6 +120,23 @@ export class ComposerComponent {
     }));
   }
 
+  optionList(field: ApplicationFieldForm): string[] {
+    return this.parseOptions(field.optionsText);
+  }
+
+  addOption(field: ApplicationFieldForm, value: string): void {
+    const option = value.trim();
+    if (!option) return;
+
+    const next = [...this.optionList(field), option];
+    this.updateApplicationField(field.id, { optionsText: next.join('\n') });
+  }
+
+  removeOption(field: ApplicationFieldForm, option: string): void {
+    const next = this.optionList(field).filter(item => item !== option);
+    this.updateApplicationField(field.id, { optionsText: next.join('\n') });
+  }
+
   needsOptions(field: ApplicationFieldForm): boolean {
     return field.type === 'select' || field.type === 'checkbox';
   }

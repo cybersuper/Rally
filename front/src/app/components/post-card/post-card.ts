@@ -53,6 +53,7 @@ export class PostCard {
   deleteError = signal<string | null>(null);
   isDeletingPost = signal(false);
   isDeleted = signal(false);
+  isPostMenuOpen = signal(false);
   flatComments = computed(() => this.flattenComments(this.comments()));
 
   openThread(): void {
@@ -83,6 +84,72 @@ export class PostCard {
   canDeleteComment(comment: PostComment): boolean {
     const userId = this.authService.user()?.id;
     return !!userId && (comment.user_id === userId || this.canModerateClub());
+  }
+
+  canEditComment(comment: PostComment): boolean {
+    return Number(comment.user_id) === Number(this.authService.user()?.id) && !this.isHelpfulComment(comment);
+  }
+
+  isPostOwner(): boolean {
+    return Number(this.post().user_id) === Number(this.authService.user()?.id);
+  }
+
+  isHelpfulComment(comment: PostComment): boolean {
+    return !!comment.is_helpful || !!comment.is_best_answer || Number(comment.likes_count ?? 0) > 10;
+  }
+
+  parentUserName(item: { comment: PostComment; depth: number }): string | null {
+    if (!item.comment.parent_id) return null;
+    return this.flatComments().find(entry => entry.comment.id === item.comment.parent_id)?.comment.user?.name ?? null;
+  }
+
+  replyDisplayName(comment: PostComment): string {
+    return comment.user?.club_nickname || comment.user?.name || 'Member';
+  }
+
+  replyUsername(comment: PostComment): string | null {
+    return comment.user?.username ?? null;
+  }
+
+  replyAvatar(comment: PostComment): string | null {
+    return comment.user?.profile_photo_path ?? null;
+  }
+
+  togglePostMenu(event: Event): void {
+    this.stop(event);
+    this.isPostMenuOpen.update(value => !value);
+  }
+
+  editComment(comment: PostComment, event: Event): void {
+    this.stop(event);
+    if (!this.canEditComment(comment)) return;
+    const next = window.prompt('Edit reply', comment.content)?.trim();
+    if (!next || next === comment.content) return;
+
+    this.postService.updateComment(comment.id, next).subscribe({
+      next: response => {
+        this.comments.update(items => this.updateComment(items, comment.id, () => response.comment));
+      },
+      error: err => {
+        console.error('Comment edit failed', err);
+        this.commentError.set('Could not edit reply.');
+      },
+    });
+  }
+
+  toggleHelpful(comment: PostComment, event: Event): void {
+    this.stop(event);
+    if (!this.isPostOwner()) return;
+
+    this.postService.markCommentHelpful(comment.id, !this.isHelpfulComment(comment)).subscribe({
+      next: response => {
+        this.comments.update(items => this.updateComment(items, comment.id, () => response.comment));
+      },
+      error: err => {
+        console.error('Helpful toggle failed', err);
+        this.commentError.set('Could not update helpful reply.');
+      },
+    });
   }
 
   openManage(): void {
@@ -207,6 +274,7 @@ export class PostCard {
   stickerClass(): string {
     const type = this.post().type;
 
+    if (this.post().club.sticker_image_url) return 'rally-sticker post-sticker';
     if (type === 'lfg') return 'rally-sticker rally-sticker-d20';
     if (type === 'question') return 'rally-sticker rally-sticker-question';
     if (type === 'log') return 'rally-sticker rally-sticker-fire';
@@ -434,6 +502,28 @@ export class PostCard {
     });
   }
 
+  toggleCommentLike(comment: PostComment, event?: Event): void {
+    event?.stopPropagation();
+
+    const request$ = comment.liked_by_me
+      ? this.postService.unlikeComment(comment.id)
+      : this.postService.likeComment(comment.id);
+
+    request$.subscribe({
+      next: response => {
+        this.comments.update(items => this.updateComment(items, comment.id, current => ({
+          ...current,
+          liked_by_me: response.liked,
+          likes_count: response.likes_count,
+        })));
+      },
+      error: err => {
+        console.error('Comment like failed', err);
+        this.commentError.set('Could not like reply.');
+      },
+    });
+  }
+
   deletePost(event?: Event): void {
     event?.stopPropagation();
     if (this.isDeletingPost() || !this.canDeletePost()) return;
@@ -586,5 +676,20 @@ export class PostCard {
       { comment, depth },
       ...this.flattenComments(comment.replies ?? [], depth + 1),
     ]);
+  }
+
+  private updateComment(
+    comments: PostComment[],
+    commentId: number,
+    update: (comment: PostComment) => PostComment
+  ): PostComment[] {
+    return comments.map(comment => {
+      if (comment.id === commentId) return update(comment);
+
+      return {
+        ...comment,
+        replies: this.updateComment(comment.replies ?? [], commentId, update),
+      };
+    });
   }
 }

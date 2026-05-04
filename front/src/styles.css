@@ -62,6 +62,12 @@ body.light-theme .text-zinc-600 {
   color: #5f6872 !important;
 }
 
+body.light-theme .text-zinc-100\/95,
+body.light-theme .text-zinc-200,
+body.light-theme .text-zinc-300 {
+  color: #1a1a1a !important;
+}
+
 body.light-theme .bg-black\/20,
 body.light-theme .bg-black\/30 {
   background-color: rgba(24, 24, 27, 0.05) !important;
@@ -117,20 +123,27 @@ body.light-theme .rally-card {
 
 .rally-sticker {
   position: absolute;
-  right: 1rem;
-  top: 1rem;
+  right: 0.65rem;
+  top: -0.95rem;
   z-index: 20;
   display: grid;
   place-items: center;
-  width: 3.75rem;
-  height: 3.75rem;
+  width: 5rem;
+  height: 5rem;
   border: 7px solid white;
   background: #ffffff;
   color: #111;
   box-shadow:
     0 16px 24px rgba(0, 0, 0, 0.32),
     0 0 0 1px rgba(0, 0, 0, 0.04);
-  transform: rotate(5deg);
+  transform: rotate(12deg);
+  filter: drop-shadow(3px 3px 0 rgba(0, 0, 0, 0.2));
+}
+
+.post-sticker {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .rally-sticker::after {
@@ -261,6 +274,23 @@ body.light-theme .bubble:not(.bg-red-400) {
   margin-bottom: 16px;
   display: flex;
   flex-direction: column;
+}
+
+.featured-reply {
+  border: 2px solid var(--club-accent) !important;
+  box-shadow: 0 0 15px color-mix(in srgb, var(--club-accent) 55%, transparent);
+}
+
+.feeling-sticker {
+  display: inline-block;
+  width: fit-content;
+  transform: rotate(-3deg);
+  padding: 4px 12px;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  font-weight: 950;
+  color: #0b0b0e;
+  background: linear-gradient(90deg, #ff8c00, #ff4500);
+  box-shadow: 3px 3px 0 #000;
 }
 
 .rally-hot-toast {

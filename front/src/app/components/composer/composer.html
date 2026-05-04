@@ -69,7 +69,9 @@
             </div>
 
             <label class="block">
-              <span class="mb-1.5 block text-xs font-black uppercase tracking-wide text-zinc-500">Title</span>
+              <span class="mb-1.5 block text-xs font-black uppercase tracking-wide text-zinc-500">
+                @if (isType('question')) { Ask your question... } @else { Title }
+              </span>
               <input
                 class="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-white/20"
                 type="text"
@@ -82,7 +84,9 @@
             </label>
 
             <label class="block">
-              <span class="mb-1.5 block text-xs font-black uppercase tracking-wide text-zinc-500">Content</span>
+              <span class="mb-1.5 block text-xs font-black uppercase tracking-wide text-zinc-500">
+                @if (isType('question')) { Provide context... } @else { Content }
+              </span>
               <textarea
                 class="min-h-[120px] w-full resize-none rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm leading-6 text-white outline-none placeholder:text-zinc-600 focus:border-white/20"
                 name="content"
@@ -158,16 +162,15 @@
                       @for (field of form().application_fields; track field.id) {
                         <div class="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
                           <div class="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_150px_auto]">
-                            <label class="block">
+                            <label class="block sm:col-span-1" [class.sm:col-span-3]="isType('lfg')">
                               <span class="mb-1.5 block text-xs font-black uppercase tracking-wide text-zinc-500">Question</span>
-                              <input
-                                class="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-white/20"
-                                type="text"
+                              <textarea
+                                class="min-h-[46px] w-full resize-y overflow-hidden rounded-xl border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-white/20"
                                 [name]="'application_label_' + field.id"
                                 [ngModel]="field.label"
                                 (ngModelChange)="updateApplicationField(field.id, { label: $event })"
                                 placeholder="What character do you play?"
-                              />
+                              ></textarea>
                             </label>
 
                             <label class="block">
@@ -208,16 +211,26 @@
                           </div>
 
                           @if (needsOptions(field)) {
-                            <label class="mt-3 block">
+                            <div class="mt-3 block">
                               <span class="mb-1.5 block text-xs font-black uppercase tracking-wide text-zinc-500">Options</span>
-                              <textarea
-                                class="min-h-[86px] w-full resize-none rounded-xl border border-white/10 bg-black/30 px-3 py-2.5 text-sm leading-6 text-white outline-none placeholder:text-zinc-600 focus:border-white/20"
-                                [name]="'application_options_' + field.id"
-                                [ngModel]="field.optionsText"
-                                (ngModelChange)="updateApplicationField(field.id, { optionsText: $event })"
-                                placeholder="Gold&#10;Platinum&#10;Diamond"
-                              ></textarea>
-                            </label>
+                              <div class="space-y-2">
+                                @for (option of optionList(field); track option) {
+                                  <div class="flex items-center justify-between gap-2 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm font-semibold text-zinc-200">
+                                    <span>{{ option }}</span>
+                                    <button type="button" class="text-xs font-black text-zinc-500 hover:text-white" (click)="removeOption(field, option)">X</button>
+                                  </div>
+                                }
+                                <div class="flex gap-2">
+                                  <input
+                                    class="min-w-0 flex-1 rounded-xl border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-white/20"
+                                    #optionInput
+                                    placeholder="Add option"
+                                    (keydown.enter)="addOption(field, optionInput.value); optionInput.value = ''; $event.preventDefault()"
+                                  />
+                                  <button type="button" class="rounded-xl border border-white/10 px-3 py-2 text-xs font-black text-zinc-200 hover:bg-white/5" (click)="addOption(field, optionInput.value); optionInput.value = ''">Add Option</button>
+                                </div>
+                              </div>
+                            </div>
                           } @else if (field.type === 'boolean') {
                             <div class="mt-3 grid gap-3 sm:grid-cols-2">
                               <label class="block">

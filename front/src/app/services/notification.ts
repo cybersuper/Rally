@@ -180,7 +180,7 @@ export class NotificationService {
   private messageFor(notification: RallyNotification): string {
     const actor = notification.data?.actor_name ?? 'Someone';
 
-    if (notification.type === 'like') return `${actor} boosted your post!`;
+    if (notification.type === 'like') return `${actor} liked your post!`;
     if (notification.type === 'comment') return `${actor} replied on ${notification.data?.post_title ?? 'your post'}`;
     if (notification.type === 'lfg_app') return `${actor} applied to your group!`;
 

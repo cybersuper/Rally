@@ -106,17 +106,6 @@
       <app-composer [open]="isComposerOpen()" [defaultClubId]="club()?.id" (close)="closeComposer()"></app-composer>
     }
 
-    @if (club()?.is_member) {
-      <button
-        type="button"
-        class="absolute bottom-6 right-6 z-[1000] rounded-2xl border border-white/10 px-5 py-3 text-sm font-black text-black shadow-2xl"
-        [style.background]="club()?.accent_color"
-        (click)="openComposer()"
-      >
-        + New Post
-      </button>
-    }
-
     @if (isIdentityOpen()) {
       <div class="fixed inset-0 z-50 grid place-items-center p-4">
         <div class="absolute inset-0 bg-black/70" (click)="closeIdentity()"></div>

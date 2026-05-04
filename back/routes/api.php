@@ -101,6 +101,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/posts/{post}/comments', [CommentController::class, 'index']);
     Route::post('/posts/{post}/comments', [CommentController::class, 'store']);
+    Route::patch('/comments/{comment}', [CommentController::class, 'update']);
+    Route::patch('/comments/{comment}/helpful', [CommentController::class, 'helpful']);
     Route::delete('/comments/{comment}', [CommentController::class, 'destroy']);
     Route::post('/comments/{comment}/likes', [CommentLikeController::class, 'store']);
     Route::delete('/comments/{comment}/likes', [CommentLikeController::class, 'destroy']);

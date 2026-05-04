@@ -5,7 +5,7 @@ export class ClubChatOverlayState {
   isOpen = signal(false);
   slug = signal<string>('');
   loungeId = signal<number | null>(null);
-  currentClub = signal<{ id: number; slug: string; name: string } | null>(null);
+  currentClub = signal<{ id: number; slug: string; name: string; accent_color?: string | null; is_member?: boolean } | null>(null);
 
   open(slug: string, loungeId: number | null = null): void {
     this.slug.set(slug);
@@ -20,7 +20,7 @@ export class ClubChatOverlayState {
     document.body.style.overflow = '';
   }
 
-  setCurrentClub(club: { id: number; slug: string; name: string } | null): void {
+  setCurrentClub(club: { id: number; slug: string; name: string; accent_color?: string | null; is_member?: boolean } | null): void {
     this.currentClub.set(club);
   }
 }

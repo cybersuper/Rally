@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { PostCard } from '../../components/post-card/post-card';
 import { ComposerComponent } from '../../components/composer/composer';
 import { AuthService } from '../../auth';
@@ -43,6 +43,7 @@ interface ClubDetail {
 })
 export class ClubDetailPageComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly http = inject(HttpClient);
   private readonly clubService = inject(ClubService);
   private readonly authService = inject(AuthService);
@@ -67,6 +68,18 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
     this.route.paramMap.subscribe(() => {
       this.load();
     });
+
+    this.route.queryParamMap.subscribe(params => {
+      if (params.get('compose') === '1') {
+        this.openComposer();
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: { compose: null },
+          queryParamsHandling: 'merge',
+          replaceUrl: true,
+        });
+      }
+    });
   }
 
   private slug(): string {
@@ -84,7 +97,13 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
       next: response => {
         const club = this.normalizeClub(response.club);
         this.club.set(club);
-        this.chatOverlay.setCurrentClub({ id: club.id, slug: club.slug, name: club.name });
+        this.chatOverlay.setCurrentClub({
+          id: club.id,
+          slug: club.slug,
+          name: club.name,
+          accent_color: club.accent_color,
+          is_member: club.is_member,
+        });
         this.chatService.syncLoungeUnreadCounts(club.channels ?? []);
 
         this.http

@@ -124,30 +124,34 @@
           @if (user()?.clubs?.length) {
             <div class="space-y-2 text-sm font-semibold text-zinc-300">
               @for (club of user()?.clubs; track club.id) {
-                <div class="flex items-center gap-1 rounded-xl hover:bg-white/5">
-                  <a
-                    class="flex min-w-0 flex-1 items-center gap-2 px-2 py-2"
-                    [routerLink]="['/clubs', club.slug]"
-                  >
-                    <span
-                      class="h-3 w-3 shrink-0 rounded-full"
-                      [style.background]="'radial-gradient(circle at 30% 30%, #ffffffcc, transparent 34%), linear-gradient(135deg, ' + club.accent_color + ', #22d3ee)'"
-                    ></span>
-                    <span class="truncate">{{ club.name }}</span>
-                    @if (hasClubActivity(club.id)) {
-                      <span class="ml-auto h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-red-500 shadow-lg shadow-red-500/50"></span>
-                    }
-                  </a>
-
-                  @if (canManageClub(club)) {
+                <div
+                  class="relative overflow-hidden rounded-2xl border border-white/10"
+                  [style.backgroundImage]="(club.cover_image_url ? 'linear-gradient(90deg, ' + club.accent_color + '33 0%, transparent 100%), url(' + club.cover_image_url + ')' : 'linear-gradient(90deg, ' + club.accent_color + '33 0%, transparent 100%)')"
+                  style="background-size: cover; background-position: center;"
+                >
+                  <div class="absolute inset-0 bg-[var(--rally-panel)]/80"></div>
+                  <div class="relative flex items-center gap-1 rounded-2xl hover:bg-white/5">
                     <a
-                      class="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-zinc-500 hover:bg-white/10 hover:text-white"
-                      [routerLink]="['/clubs', club.slug, 'admin']"
-                      aria-label="Club settings"
+                      class="flex min-w-0 flex-1 items-center gap-2 px-2 py-2"
+                      [routerLink]="['/clubs', club.slug]"
                     >
-                      &#9881;
+                      <span class="h-2.5 w-2.5 shrink-0 rounded-full" [style.background]="club.accent_color"></span>
+                      <span class="truncate">{{ club.name }}</span>
+                      @if (hasClubActivity(club.id)) {
+                        <span class="ml-auto h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-red-500 shadow-lg shadow-red-500/50"></span>
+                      }
                     </a>
-                  }
+
+                    @if (canManageClub(club)) {
+                      <a
+                        class="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-zinc-500 hover:bg-white/10 hover:text-white"
+                        [routerLink]="['/clubs', club.slug, 'admin']"
+                        aria-label="Club settings"
+                      >
+                        &#9881;
+                      </a>
+                    }
+                  </div>
                 </div>
               }
             </div>
@@ -170,27 +174,44 @@
       }
     </aside>
 
-    <section class="rally-scrollbar min-h-0 min-w-0 overflow-y-auto">
+    <section class="rally-scrollbar relative min-h-0 min-w-0 overflow-y-auto">
       <router-outlet />
-    </section>
 
-    @if (clubChatOverlay.currentClub(); as currentClub) {
-      @if (!clubChatOverlay.isOpen()) {
-        <button
-          type="button"
-          class="absolute bottom-5 right-5 z-[1000] rounded-2xl border border-red-400/60 bg-black/60 px-5 py-3 text-sm font-black text-red-200 shadow-2xl shadow-red-500/20 backdrop-blur hover:bg-black/70"
-          (click)="openCurrentClubChat()"
-        >
-          <span class="mr-2 inline-grid h-8 w-8 place-items-center rounded-xl bg-red-400 text-sm font-black text-black">R</span>
-          Rooms
-          @if (currentClubUnreadCount() > 0) {
-            <span class="absolute -right-2 -top-2 grid min-h-6 min-w-6 place-items-center rounded-full bg-red-500 px-1 text-[0.65rem] font-black text-white shadow-lg shadow-red-500/40">
-              {{ badgeCount(currentClubUnreadCount()) }}
-            </span>
-          }
-        </button>
-      }
-    }
+      <div class="pointer-events-none sticky bottom-8 z-[1000]">
+        <div class="flex justify-end pr-2 -mr-2">
+          <div class="pointer-events-auto flex flex-col items-end gap-3">
+            @if (clubChatOverlay.currentClub(); as currentClub) {
+              @if (currentClub.is_member) {
+                <button
+                  type="button"
+                  class="rounded-2xl border border-white/10 px-5 py-3 text-sm font-black text-black shadow-2xl"
+                  [style.background]="currentClub.accent_color"
+                  (click)="openCurrentClubComposer()"
+                >
+                  + New Post
+                </button>
+              }
+
+              @if (!clubChatOverlay.isOpen()) {
+                <button
+                  type="button"
+                  class="relative rounded-2xl border border-red-400/60 bg-black/60 px-5 py-3 text-sm font-black text-red-200 shadow-2xl shadow-red-500/20 backdrop-blur hover:bg-black/70"
+                  (click)="openCurrentClubChat()"
+                >
+                  <span class="mr-2 inline-grid h-8 w-8 place-items-center rounded-xl bg-red-400 text-sm font-black text-black">R</span>
+                  Rooms
+                  @if (currentClubUnreadCount() > 0) {
+                    <span class="absolute -right-2 -top-2 grid min-h-6 min-w-6 place-items-center rounded-full bg-red-500 px-1 text-[0.65rem] font-black text-white shadow-lg shadow-red-500/40">
+                      {{ badgeCount(currentClubUnreadCount()) }}
+                    </span>
+                  }
+                </button>
+              }
+            }
+          </div>
+        </div>
+      </div>
+    </section>
 
     @if (clubChatOverlay.isOpen()) {
       <div class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/45 px-4 backdrop-blur-sm" (click)="clubChatOverlay.close()">

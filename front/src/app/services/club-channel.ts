@@ -27,6 +27,14 @@ export class ClubChannelService {
   private clubChannel: string | null = null;
   private typingHandlers = new Set<(name: string, typing: boolean) => void>();
 
+  locallyClearUnread(id: number): void {
+    const channelId = Number(id);
+    if (!channelId) return;
+    this.channels.update(items =>
+      items.map(item => (Number(item.id) === channelId ? { ...item, unread_count: 0 } : item))
+    );
+  }
+
   load(slug: string) {
     return this.http.get<{ channels: ClubChannel[] }>(`/api/clubs/${slug}/channels`);
   }
@@ -58,6 +66,8 @@ export class ClubChannelService {
 
   open(slug: string, channel: ClubChannel): void {
     this.activeChannel.set(channel);
+    this.locallyClearUnread(channel.id);
+    this.chatService.locallyClearUnread(channel.id);
     this.http.get<{ messages: ChatMessage[] }>(`/api/clubs/${slug}/channels/${channel.id}/messages`).subscribe({
       next: response => {
         this.messages.set([...response.messages].reverse());
@@ -137,6 +147,10 @@ export class ClubChannelService {
       this.zone.run(() => {
         if (payload?.message) {
           this.chatService.receiveLoungeMessage(payload.message);
+          if (Number(payload.message.channel_id) === Number(this.activeChannel()?.id)) {
+            this.locallyClearUnread(payload.message.channel_id!);
+            this.chatService.locallyClearUnread(payload.message.channel_id!);
+          }
           if (payload.message.channel_id === this.activeChannel()?.id) this.receive(payload.message);
         }
       });

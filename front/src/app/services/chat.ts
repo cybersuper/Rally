@@ -65,6 +65,15 @@ export class ChatService {
 
   private activeChannel: string | null = null;
 
+  locallyClearUnread(id: number): void {
+    const roomId = Number(id);
+    if (!roomId) return;
+    this.loungeUnreadCounts.update(current => ({
+      ...current,
+      [roomId]: 0,
+    }));
+  }
+
   constructor() {
     effect(() => {
       this.totalUnreadCountSubject.next(this.totalUnreadCount());
@@ -188,8 +197,16 @@ export class ChatService {
     const clubId = Number(message.club_id);
     if (!roomId) return;
 
-    if (Number(this.activeLoungeId()) === Number(roomId)) {
-      this.markLoungeRead(roomId);
+    const isActive = Number(this.activeLoungeId()) === Number(roomId);
+    const isFocused = typeof document !== 'undefined' && typeof document.hasFocus === 'function' && document.hasFocus();
+
+    if (isActive && isFocused) {
+      this.locallyClearUnread(roomId);
+      this.http.post<{ lounge_id: number; unread_count: number }>(`/api/lounges/${roomId}/read`, {})
+        .subscribe({
+          next: response => this.locallyClearUnread(response.lounge_id),
+          error: err => console.error('Lounge read failed', err),
+        });
       return;
     }
 
@@ -224,10 +241,7 @@ export class ChatService {
   }
 
   markLoungeRead(roomId: number): void {
-    this.loungeUnreadCounts.update(current => ({
-      ...current,
-      [Number(roomId)]: 0,
-    }));
+    this.locallyClearUnread(roomId);
   }
 
   markRoomAsRead(roomId: number): void {

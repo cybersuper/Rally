@@ -99,17 +99,6 @@
         @for (post of posts(); track post.id) {
           <app-post-card [post]="post" />
         }
-
-        @if (club()?.is_member) {
-          <button
-            type="button"
-            class="sticky bottom-5 z-[1000] ml-auto rounded-2xl border border-white/10 px-5 py-3 text-sm font-black text-black shadow-2xl"
-            [style.background]="club()?.accent_color"
-            (click)="openComposer()"
-          >
-            + New Post
-          </button>
-        }
       </div>
     }
 

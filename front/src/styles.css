@@ -212,13 +212,13 @@ body.light-theme .rally-card {
 }
 
 .bubble {
-  display: block;
-  width: fit-content;
-  min-width: 50px;
-  max-width: min(70%, 500px);
+  display: inline-block;
+  width: auto;
+  max-width: 75%;
   line-height: 1.4;
-  overflow-wrap: break-word;
-  word-break: break-word;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  text-align: left;
   border: 1px solid rgba(255, 255, 255, 0.05);
 }
 

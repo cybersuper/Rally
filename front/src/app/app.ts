@@ -76,6 +76,16 @@ export class App implements OnInit, OnDestroy {
     if (club) this.clubChatOverlay.open(club.slug);
   }
 
+  openCurrentClubComposer(): void {
+    const club = this.clubChatOverlay.currentClub();
+    if (!club?.slug) return;
+    if (club.is_member === false) return;
+    this.router.navigate(['/clubs', club.slug], {
+      queryParams: { compose: 1 },
+      queryParamsHandling: 'merge',
+    });
+  }
+
   constructor() {
     effect(() => {
       const user = this.authService.user();

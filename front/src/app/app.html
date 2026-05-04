@@ -1,15 +1,15 @@
-<main class="rally-scrollbar min-h-screen bg-[var(--rally-bg)] text-white">
+<main class="h-screen overflow-hidden bg-[var(--rally-bg)] text-white">
   <div
-    class="mx-auto grid min-h-screen w-full max-w-[1500px] grid-cols-1 gap-4 px-3 py-3 sm:px-4"
-    [class.lg:grid-cols-[240px_minmax(0,720px)_280px]]="authService.isLoggedIn()"
-    [class.xl:grid-cols-[260px_minmax(0,760px)_300px]]="authService.isLoggedIn()"
+    class="mx-auto grid h-screen min-h-0 w-full max-w-[1600px] grid-cols-1 gap-3 overflow-hidden px-2 py-2"
+    [class.lg:grid-cols-[240px_minmax(0,900px)_260px]]="authService.isLoggedIn()"
+    [class.xl:grid-cols-[260px_minmax(0,960px)_280px]]="authService.isLoggedIn()"
     [class.lg:grid-cols-[minmax(0,720px)]]="!authService.isLoggedIn()"
     [class.xl:grid-cols-[minmax(0,760px)]]="!authService.isLoggedIn()"
     [class.max-w-[980px]]="!authService.isLoggedIn()"
   >
     <!-- Left Sidebar -->
     <aside
-      class="hidden h-screen flex-col overflow-y-auto rounded-3xl border border-white/10 bg-[#121216]/90 p-4 shadow-2xl rally-scrollbar lg:sticky lg:top-0"
+      class="rally-scrollbar hidden h-full min-h-0 flex-col overflow-y-auto rounded-3xl border border-white/10 bg-[#121216]/90 p-4 shadow-2xl lg:sticky lg:top-0"
       [class.lg:flex]="authService.isLoggedIn()"
     >
       <div class="mb-7 flex items-center gap-3">
@@ -24,8 +24,17 @@
           <p class="text-sm text-zinc-500">Club feed</p>
         </div>
 
+        <button
+          type="button"
+          class="ml-auto grid h-10 w-10 place-items-center rounded-2xl border border-white/10 text-sm font-black text-zinc-300 hover:bg-white/5"
+          aria-label="Toggle theme"
+          (click)="toggleTheme()"
+        >
+          @if (isLightMode()) { D } @else { L }
+        </button>
+
         <a
-          class="relative ml-auto grid h-10 w-10 place-items-center rounded-2xl border border-white/10 text-sm font-black text-zinc-300 hover:bg-white/5"
+          class="relative grid h-10 w-10 place-items-center rounded-2xl border border-white/10 text-sm font-black text-zinc-300 hover:bg-white/5"
           [class.rally-bell-pulse]="notificationFlash()"
           aria-label="Notifications"
           routerLink="/notifications"
@@ -120,7 +129,10 @@
                     class="flex min-w-0 flex-1 items-center gap-2 px-2 py-2"
                     [routerLink]="['/clubs', club.slug]"
                   >
-                    <span class="h-2.5 w-2.5 rounded-full" [style.background]="club.accent_color"></span>
+                    <span
+                      class="h-3 w-3 shrink-0 rounded-full"
+                      [style.background]="'radial-gradient(circle at 30% 30%, #ffffffcc, transparent 34%), linear-gradient(135deg, ' + club.accent_color + ', #22d3ee)'"
+                    ></span>
                     <span class="truncate">{{ club.name }}</span>
                     @if (hasClubActivity(club.id)) {
                       <span class="ml-auto h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-red-500 shadow-lg shadow-red-500/50"></span>
@@ -158,7 +170,7 @@
       }
     </aside>
 
-    <section class="min-w-0">
+    <section class="rally-scrollbar min-h-0 min-w-0 overflow-y-auto">
       <router-outlet />
     </section>
 
@@ -167,11 +179,11 @@
         <button
           type="button"
           class="!fixed z-[1000] rounded-2xl border border-red-400/60 bg-black/60 px-5 py-3 text-sm font-black text-red-200 shadow-2xl shadow-red-500/20 backdrop-blur hover:bg-black/70"
-          style="position: fixed !important; bottom: 30px; left: max(18px, calc((100vw - 1500px) / 2 + 260px));"
+          style="position: fixed !important; bottom: 30px; right: 30px;"
           (click)="openCurrentClubChat()"
         >
           <span class="mr-2 inline-grid h-8 w-8 place-items-center rounded-xl bg-red-400 text-sm font-black text-black">R</span>
-          Chat
+          Rooms
           @if (currentClubUnreadCount() > 0) {
             <span class="absolute -right-2 -top-2 grid min-h-6 min-w-6 place-items-center rounded-full bg-red-500 px-1 text-[0.65rem] font-black text-white shadow-lg shadow-red-500/40">
               {{ badgeCount(currentClubUnreadCount()) }}
@@ -193,7 +205,7 @@
 
     <!-- Right Sidebar -->
     <aside
-      class="hidden h-screen flex-col overflow-y-auto rounded-3xl border border-white/10 bg-[#121216]/90 p-4 shadow-2xl rally-scrollbar lg:sticky lg:top-0"
+      class="rally-scrollbar hidden h-full min-h-0 flex-col overflow-y-auto rounded-3xl border border-white/10 bg-[#121216]/90 p-4 shadow-2xl lg:sticky lg:top-0"
       [class.lg:flex]="authService.isLoggedIn()"
     >
       <div class="mb-6 flex items-center justify-between">

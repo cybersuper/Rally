@@ -2,6 +2,7 @@
 
 :root {
   color-scheme: dark;
+  --base-font-size: 16px;
 
   --rally-bg: #09090b;
   --rally-panel: #121216;
@@ -15,12 +16,55 @@
 
 html,
 body {
+  font-size: var(--base-font-size);
   min-height: 100%;
   background:
     radial-gradient(circle at 20% 0%, rgba(103, 232, 249, 0.08), transparent 32rem),
     radial-gradient(circle at 80% 10%, rgba(244, 114, 182, 0.08), transparent 30rem),
     var(--rally-bg);
   color: var(--rally-text);
+}
+
+body.light-theme {
+  color-scheme: light;
+  --rally-bg: #f8f9fa;
+  --rally-panel: #fffdfa;
+  --rally-card: #fffdfa;
+  --rally-card-soft: #eef1f4;
+  --rally-border: rgba(17, 24, 39, 0.1);
+  --rally-border-strong: rgba(17, 24, 39, 0.2);
+  --rally-text: #212529;
+  --rally-muted: #5f6872;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(103, 232, 249, 0.12), transparent 32rem),
+    radial-gradient(circle at 80% 10%, rgba(255, 68, 68, 0.08), transparent 30rem),
+    var(--rally-bg);
+}
+
+body.light-theme .bg-\[\#121216\]\/90,
+body.light-theme .bg-\[\#121216\],
+body.light-theme .bg-\[\#0e0e12\]\/95,
+body.light-theme .bg-\[\#18181d\] {
+  background-color: rgba(255, 253, 250, 0.94) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+}
+
+body.light-theme .text-white,
+body.light-theme .text-zinc-100,
+body.light-theme .text-zinc-200,
+body.light-theme .text-zinc-300 {
+  color: #18181b !important;
+}
+
+body.light-theme .text-zinc-400,
+body.light-theme .text-zinc-500,
+body.light-theme .text-zinc-600 {
+  color: #5f6872 !important;
+}
+
+body.light-theme .bg-black\/20,
+body.light-theme .bg-black\/30 {
+  background-color: rgba(24, 24, 27, 0.05) !important;
 }
 
 body {
@@ -43,8 +87,12 @@ body {
     linear-gradient(145deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.015)),
     var(--rally-card);
   box-shadow:
-    0 22px 60px rgba(0, 0, 0, 0.28),
+    0 4px 20px rgba(255, 255, 255, 0.03),
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+body.light-theme .rally-card {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 }
 
 .rally-card::before {
@@ -70,7 +118,7 @@ body {
 .rally-sticker {
   position: absolute;
   right: 1rem;
-  top: -1rem;
+  top: 1rem;
   z-index: 20;
   display: grid;
   place-items: center;
@@ -144,8 +192,47 @@ body {
 }
 
 .rally-scrollbar {
+  scrollbar-gutter: stable both-edges;
+  scrollbar-width: none;
+}
+
+.rally-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.rally-scrollbar:hover {
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+}
+
+.rally-scrollbar:hover::-webkit-scrollbar {
+  display: block;
+  width: 0.45rem;
+  height: 0.45rem;
+}
+
+.rally-scrollbar:hover::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.bubble {
+  display: inline-block;
+  max-width: min(70%, 500px);
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+body.light-theme .bubble:not(.bg-red-400) {
+  background: #e9ecef !important;
+  color: #212529 !important;
+}
+
+.message-group {
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
 }
 
 .rally-hot-toast {

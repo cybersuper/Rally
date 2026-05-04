@@ -55,6 +55,16 @@ export class App implements OnInit, OnDestroy {
     return count > 99 ? '99+' : String(count);
   }
 
+  isLightMode(): boolean {
+    return document.body.classList.contains('light-theme');
+  }
+
+  toggleTheme(): void {
+    const enabled = !this.isLightMode();
+    localStorage.setItem('rally_theme', enabled ? 'light' : 'dark');
+    document.body.classList.toggle('light-theme', enabled);
+  }
+
   openCurrentClubChat(): void {
     const club = this.clubChatOverlay.currentClub();
     if (club) this.clubChatOverlay.open(club.slug);
@@ -73,6 +83,7 @@ export class App implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.applyDisplaySettings();
     const existingToken = localStorage.getItem('rally_token');
 
     if (existingToken) {
@@ -233,6 +244,12 @@ private initChatRealtime(): void {
     this.chatEcho = null;
     this.chatUserId = null;
     this.echoBridge.set(null);
+  }
+
+  private applyDisplaySettings(): void {
+    const textSize = Number(localStorage.getItem('rally_text_size') ?? 16);
+    document.documentElement.style.setProperty('--base-font-size', `${Math.min(20, Math.max(14, textSize))}px`);
+    document.body.classList.toggle('light-theme', localStorage.getItem('rally_theme') === 'light');
   }
 
 }

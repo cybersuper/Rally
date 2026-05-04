@@ -21,7 +21,7 @@
   </section>
 
   <section class="rounded-3xl border border-white/10 bg-[#121216]/90 p-5">
-    <h2 class="text-xl font-black">Password</h2>
+    <h2 class="text-xl font-black">Account Security</h2>
     <div class="mt-4 grid gap-3">
       <input class="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none" type="password" placeholder="Current password" [value]="currentPassword()" (input)="currentPassword.set($any($event.target).value)" />
       <input class="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none" type="password" placeholder="New password" [value]="password()" (input)="password.set($any($event.target).value)" />
@@ -35,6 +35,30 @@
     <label class="mt-4 flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-black/20 p-4">
       <span class="text-sm font-bold text-zinc-300">Private profile</span>
       <input type="checkbox" [checked]="privateProfile()" (change)="privateProfile.set($any($event.target).checked); savePrivacy()" />
+    </label>
+  </section>
+
+  <section class="rounded-3xl border border-white/10 bg-[#121216]/90 p-5">
+    <h2 class="text-xl font-black">Interface / Accessibility</h2>
+    <label class="mt-4 block rounded-2xl border border-white/10 bg-black/20 p-4">
+      <div class="mb-3 flex items-center justify-between gap-4">
+        <span class="text-sm font-bold text-zinc-300">Text size</span>
+        <span class="text-xs font-black text-zinc-500">{{ textSize() }}px</span>
+      </div>
+      <input
+        class="w-full accent-red-400"
+        type="range"
+        min="14"
+        max="20"
+        step="1"
+        [value]="textSize()"
+        (input)="setTextSize($any($event.target).value)"
+      />
+    </label>
+
+    <label class="mt-4 flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-black/20 p-4">
+      <span class="text-sm font-bold text-zinc-300">Light mode</span>
+      <input type="checkbox" [checked]="lightMode()" (change)="setLightMode($any($event.target).checked)" />
     </label>
   </section>
 

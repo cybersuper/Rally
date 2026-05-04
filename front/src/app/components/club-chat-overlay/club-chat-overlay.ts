@@ -43,7 +43,7 @@ export class ClubChatOverlayComponent implements OnChanges, AfterViewInit, OnDes
   typingUsers = signal<Set<string>>(new Set());
   isCreatingLounge = signal(false);
   newLoungeName = signal('');
-  newLoungeCategory = signal('Text Lounges');
+  newLoungeCategory = signal('Text Rooms');
   isPinnedOpen = signal(false);
   contextMenu = signal<MessageMenu | null>(null);
   replyTarget = signal<ChatMessage | null>(null);
@@ -67,7 +67,7 @@ export class ClubChatOverlayComponent implements OnChanges, AfterViewInit, OnDes
       if (!id || this.lastMarkedLoungeId === id) return;
 
       this.lastMarkedLoungeId = id;
-      console.log('Lounge marked as read:', id);
+      console.log('Room marked as read:', id);
       this.chatService.markRoomAsRead(id);
     });
   }
@@ -115,7 +115,7 @@ export class ClubChatOverlayComponent implements OnChanges, AfterViewInit, OnDes
     const groups = new Map<string, ClubChannel[]>();
 
     for (const channel of this.channelService.channels()) {
-      const category = channel.category?.trim() || (channel.type === 'announcement' ? 'Announcements' : 'Text Lounges');
+      const category = channel.category?.trim() || (channel.type === 'announcement' ? 'Announcements' : 'Text Rooms');
       groups.set(category, [...(groups.get(category) ?? []), channel]);
     }
 
@@ -136,6 +136,36 @@ export class ClubChatOverlayComponent implements OnChanges, AfterViewInit, OnDes
 
   pinnedMessages(): ChatMessage[] {
     return this.orderedMessages().filter(message => message.is_pinned);
+  }
+
+  isMine(message: ChatMessage): boolean {
+    return Number(message.sender_id) === Number(this.authService.user()?.id);
+  }
+
+  isGrouped(message: ChatMessage, index: number): boolean {
+    const previous = this.orderedMessages()[index + 1];
+    if (!previous) return false;
+    if (Number(previous.sender_id) !== Number(message.sender_id)) return false;
+
+    const currentTime = new Date(message.created_at).getTime();
+    const previousTime = new Date(previous.created_at).getTime();
+
+    return Math.abs(currentTime - previousTime) <= 120000;
+  }
+
+  isGroupEnd(message: ChatMessage, index: number): boolean {
+    const next = this.orderedMessages()[index - 1];
+    if (!next) return true;
+    if (Number(next.sender_id) !== Number(message.sender_id)) return true;
+
+    const currentTime = new Date(message.created_at).getTime();
+    const nextTime = new Date(next.created_at).getTime();
+
+    return Math.abs(currentTime - nextTime) > 120000;
+  }
+
+  initials(name: string): string {
+    return name.split(' ').filter(Boolean).map(part => part[0]).join('').slice(0, 2).toUpperCase();
   }
 
   canAdmin(): boolean {
@@ -249,14 +279,14 @@ export class ClubChatOverlayComponent implements OnChanges, AfterViewInit, OnDes
     const name = this.newLoungeName().trim();
     if (!name || !this.canCreateLounge()) return;
 
-    this.channelService.createRoom(this.slug, name, this.newLoungeCategory().trim() || 'Text Lounges').subscribe({
+    this.channelService.createRoom(this.slug, name, this.newLoungeCategory().trim() || 'Text Rooms').subscribe({
       next: response => {
         this.channelService.channels.update(items => [...items, response.channel]);
         this.newLoungeName.set('');
         this.isCreatingLounge.set(false);
         this.select(response.channel);
       },
-      error: err => console.error('Lounge create failed', err),
+      error: err => console.error('Room create failed', err),
     });
   }
 

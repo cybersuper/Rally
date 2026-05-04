@@ -40,6 +40,12 @@ export class ComposerComponent {
   private readonly timelineService = inject(TimelineService);
 
   private _open = false;
+  private _defaultClubId: number | null = null;
+
+  @Input()
+  set defaultClubId(value: number | null | undefined) {
+    this._defaultClubId = value ? Number(value) : null;
+  }
 
   @Input({ required: true })
   set open(value: boolean) {
@@ -212,7 +218,7 @@ export class ComposerComponent {
     const clubs = this.clubs();
 
     this.form.set({
-      club_id: clubs.length ? clubs[0].id : null,
+      club_id: this._defaultClubId ?? (clubs.length ? clubs[0].id : null),
       type: 'standard',
       title: '',
       content: '',

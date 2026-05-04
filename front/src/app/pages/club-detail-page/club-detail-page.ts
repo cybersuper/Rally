@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { PostCard } from '../../components/post-card/post-card';
+import { ComposerComponent } from '../../components/composer/composer';
 import { AuthService } from '../../auth';
 import { ClubService } from '../../services/club';
 import { HttpClient } from '@angular/common/http';
@@ -37,7 +38,7 @@ interface ClubDetail {
 
 @Component({
   selector: 'app-club-detail-page',
-  imports: [CommonModule, RouterLink, PostCard],
+  imports: [CommonModule, RouterLink, PostCard, ComposerComponent],
   templateUrl: './club-detail-page.html',
 })
 export class ClubDetailPageComponent implements OnInit, OnDestroy {
@@ -60,6 +61,7 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
   identityError = signal<string | null>(null);
   identityNickname = signal('');
   identityShowStreak = signal(true);
+  isComposerOpen = signal(false);
 
   ngOnInit(): void {
     this.route.paramMap.subscribe(() => {
@@ -214,6 +216,16 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
         this.isSavingIdentity.set(false);
       },
     });
+  }
+
+  openComposer(): void {
+    if (!this.club()?.is_member) return;
+    this.isComposerOpen.set(true);
+  }
+
+  closeComposer(): void {
+    this.isComposerOpen.set(false);
+    this.load();
   }
 
   private normalizeClub(club: ClubDetail): ClubDetail {

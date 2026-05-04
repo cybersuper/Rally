@@ -12,8 +12,6 @@ import { clubAdminGuard } from './guards/club-admin.guard';
 import { PostDetailPageComponent } from './pages/post-detail-page/post-detail-page';
 import { NotificationsPageComponent } from './pages/notifications-page/notifications-page';
 import { ProfilePageComponent } from './pages/profile-page/profile-page';
-import { SettingsPageComponent } from './pages/settings-page/settings-page';
-import { ChatPageComponent } from './pages/chat-page/chat-page';
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'timeline' },
@@ -24,9 +22,9 @@ export const routes: Routes = [
   { path: 'notifications', component: NotificationsPageComponent, canActivate: [authGuard] },
   { path: 'profile/:username', component: ProfilePageComponent, canActivate: [authGuard] },
   { path: 'profiles/:username', component: ProfilePageComponent, canActivate: [authGuard] },
-  { path: 'settings', component: SettingsPageComponent, canActivate: [authGuard] },
-  { path: 'chat', component: ChatPageComponent, canActivate: [authGuard] },
-  { path: 'chat/:id', component: ChatPageComponent, canActivate: [authGuard] },
+  { path: 'settings', loadComponent: () => import('./pages/settings-page/settings-page').then(m => m.SettingsPageComponent), canActivate: [authGuard] },
+  { path: 'chat', loadComponent: () => import('./pages/chat-page/chat-page').then(m => m.ChatPageComponent), canActivate: [authGuard] },
+  { path: 'chat/:id', loadComponent: () => import('./pages/chat-page/chat-page').then(m => m.ChatPageComponent), canActivate: [authGuard] },
   { path: 'discover', component: DiscoverPageComponent },
   { path: 'clubs/:slug/admin', component: ClubAdminPageComponent, canActivate: [authGuard, clubAdminGuard] },
   { path: 'clubs/:slug/posts/:id', component: PostDetailPageComponent, canActivate: [authGuard] },

@@ -1,6 +1,6 @@
 @if (!isDeleted()) {
   <article
-    class="rally-card cursor-pointer rounded-3xl p-4 transition duration-200 sm:p-5"
+    class="rally-card mb-6 cursor-pointer rounded-3xl p-4 transition duration-200 sm:p-5"
     [style.--club-accent]="post().club.accent_color"
     (click)="openThread()"
   >
@@ -62,7 +62,7 @@
       </span>
     </header>
 
-    <section class="relative z-10 pr-2">
+    <section class="relative z-10 rounded-2xl bg-black/10 p-6 pr-8">
       <h2 class="mb-2 text-lg font-black tracking-tight text-white">
         <a class="hover:underline" [routerLink]="['/clubs', post().club.slug, 'posts', post().id]">
       {{ post().title }}

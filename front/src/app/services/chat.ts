@@ -89,6 +89,10 @@ export class ChatService {
     return this.http.post<{ conversation: Conversation }>('/api/conversations', payload);
   }
 
+  updateConversation(conversationId: number, payload: FormData) {
+    return this.http.patch<{ conversation: Conversation }>(`/api/conversations/${conversationId}`, payload);
+  }
+
   searchMessages(query: string) {
     return this.http.get<{ messages: ChatMessage[] }>('/api/messages/search', {
       params: { q: query },
@@ -103,6 +107,7 @@ export class ChatService {
   }
 
   openConversation(conversation: Conversation): void {
+    this.markRead(conversation.id);
     this.http.get<{ conversation: Conversation; messages: ChatMessage[] }>(`/api/conversations/${conversation.id}`)
       .subscribe({
         next: response => {
@@ -116,6 +121,7 @@ export class ChatService {
   }
 
   openConversationById(id: number): void {
+    this.markRead(id);
     this.http.get<{ conversation: Conversation; messages: ChatMessage[] }>(`/api/conversations/${id}`)
       .subscribe({
         next: response => {

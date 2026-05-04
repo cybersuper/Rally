@@ -33,7 +33,12 @@ export class ChatPageComponent implements OnInit, OnDestroy, AfterViewChecked {
   selectedGroupUserIds = signal<number[]>([]);
   groupError = signal<string | null>(null);
   isCreatingGroup = signal(false);
+  isEditGroupOpen = signal(false);
+  editGroupName = signal('');
+  editGroupError = signal<string | null>(null);
+  isSavingGroup = signal(false);
   private groupPhoto: File | null = null;
+  private editGroupPhoto: File | null = null;
   typingUsers = signal<Set<string>>(new Set());
   private lastMessageCount = 0;
   private typingTimeouts = new Map<string, ReturnType<typeof setTimeout>>();
@@ -140,7 +145,7 @@ export class ChatPageComponent implements OnInit, OnDestroy, AfterViewChecked {
 
   resultContext(message: ChatMessage): string {
     if (message.conversation_id) return 'DM';
-    const room = (message.room_name ?? 'lounge').replace(/^#\s*/, '');
+    const room = (message.room_name ?? 'room').replace(/^#\s*/, '');
     return `${message.club_name ?? 'Club'} / #${room}`;
   }
 
@@ -157,6 +162,32 @@ export class ChatPageComponent implements OnInit, OnDestroy, AfterViewChecked {
     const previousTime = new Date(previous.created_at).getTime();
 
     return Math.abs(currentTime - previousTime) <= 120000;
+  }
+
+  isGroupEnd(message: ChatMessage, index: number): boolean {
+    const next = this.orderedMessages()[index - 1];
+    if (!next) return true;
+    if (Number(next.sender_id) !== Number(message.sender_id)) return true;
+
+    const currentTime = new Date(message.created_at).getTime();
+    const nextTime = new Date(next.created_at).getTime();
+
+    return Math.abs(currentTime - nextTime) > 120000;
+  }
+
+  conversationPreview(conversation: Conversation): string {
+    const message = conversation.latest_message;
+    if (!message) return 'No messages yet.';
+
+    if (conversation.is_group && message.sender?.name) {
+      return `${message.sender.name}: ${message.body}`;
+    }
+
+    return message.body;
+  }
+
+  canEditGroup(conversation: Conversation): boolean {
+    return !!conversation.is_group && Number(conversation.leader_id) === Number(this.authService.user()?.id);
   }
 
   onDraftInput(value: string): void {
@@ -321,6 +352,52 @@ export class ChatPageComponent implements OnInit, OnDestroy, AfterViewChecked {
       error: err => {
         console.error('Meeting plan failed', err);
         this.meetingError.set('Could not plan meeting.');
+      },
+    });
+  }
+
+  openEditGroup(): void {
+    const conversation = this.chat.activeConversation();
+    if (!conversation || !this.canEditGroup(conversation)) return;
+
+    this.editGroupName.set(conversation.title);
+    this.editGroupError.set(null);
+    this.editGroupPhoto = null;
+    this.isEditGroupOpen.set(true);
+  }
+
+  closeEditGroup(): void {
+    if (this.isSavingGroup()) return;
+    this.isEditGroupOpen.set(false);
+  }
+
+  setEditGroupPhoto(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.editGroupPhoto = input.files?.[0] ?? null;
+  }
+
+  saveGroupEdit(): void {
+    const conversation = this.chat.activeConversation();
+    if (!conversation) return;
+
+    const payload = new FormData();
+    payload.set('title', this.editGroupName().trim() || conversation.title);
+    if (this.editGroupPhoto) payload.set('group_photo', this.editGroupPhoto);
+
+    this.isSavingGroup.set(true);
+    this.chat.updateConversation(conversation.id, payload).subscribe({
+      next: response => {
+        this.chat.activeConversation.set(response.conversation);
+        this.chat.conversations.update(items =>
+          items.map(item => item.id === response.conversation.id ? { ...item, ...response.conversation } : item)
+        );
+        this.isSavingGroup.set(false);
+        this.isEditGroupOpen.set(false);
+      },
+      error: err => {
+        console.error('Group edit failed', err);
+        this.editGroupError.set('Could not update group.');
+        this.isSavingGroup.set(false);
       },
     });
   }

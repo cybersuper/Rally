@@ -22,6 +22,13 @@ export class SettingsPageComponent {
   status = signal<string | null>(null);
   error = signal<string | null>(null);
   isSaving = signal(false);
+  textSize = signal(Number(localStorage.getItem('rally_text_size') ?? 16));
+  lightMode = signal(localStorage.getItem('rally_theme') === 'light');
+
+  constructor() {
+    this.applyTextSize(this.textSize());
+    this.applyTheme(this.lightMode());
+  }
 
   saveUsername(): void {
     this.mutate(
@@ -70,6 +77,27 @@ export class SettingsPageComponent {
       this.authService.user.set(null);
       this.router.navigateByUrl('/login');
     });
+  }
+
+  setTextSize(value: number): void {
+    const next = Math.min(20, Math.max(14, Number(value) || 16));
+    this.textSize.set(next);
+    localStorage.setItem('rally_text_size', String(next));
+    this.applyTextSize(next);
+  }
+
+  setLightMode(enabled: boolean): void {
+    this.lightMode.set(enabled);
+    localStorage.setItem('rally_theme', enabled ? 'light' : 'dark');
+    this.applyTheme(enabled);
+  }
+
+  private applyTextSize(size: number): void {
+    document.documentElement.style.setProperty('--base-font-size', `${size}px`);
+  }
+
+  private applyTheme(enabled: boolean): void {
+    document.body.classList.toggle('light-theme', enabled);
   }
 
   private mutate(request$: any, next: (response: any) => void): void {

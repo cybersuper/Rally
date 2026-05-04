@@ -11,12 +11,19 @@
         </h1>
       </div>
 
-      <div class="flex rounded-2xl border border-white/10 bg-black/20 p-1 text-xs font-bold text-zinc-400">
-        <button type="button" class="rounded-xl bg-white/10 px-3 py-2 text-white">All</button>
-        <button type="button" class="rounded-xl px-3 py-2 hover:text-white">Questions</button>
-        <button type="button" class="rounded-xl px-3 py-2 hover:text-white">Logs</button>
-        <button type="button" class="rounded-xl px-3 py-2 hover:text-white">LFG</button>
-      </div>
+      <label class="flex items-center gap-2 rounded-2xl border border-white/10 bg-black/20 px-3 py-2 text-xs font-bold text-zinc-400">
+        <span>Sort By</span>
+        <select
+          class="rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-white outline-none"
+          [value]="sortBy()"
+          (change)="sortBy.set($any($event.target).value)"
+        >
+          <option value="date">Date</option>
+          <option value="popularity">Popularity</option>
+          <option value="replies">Replies</option>
+          <option value="type">Type</option>
+        </select>
+      </label>
     </div>
 
     <div class="mt-5 flex items-center gap-3">
@@ -55,8 +62,8 @@
       {{ error() }}
     </div>
   } @else {
-    <div class="space-y-5 pb-8">
-      @for (post of posts(); track post.id) {
+    <div class="pb-8">
+      @for (post of sortedPosts(); track post.id) {
         <app-post-card [post]="post" />
       }
     </div>

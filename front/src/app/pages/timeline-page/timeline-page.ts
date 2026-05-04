@@ -3,6 +3,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { ComposerComponent } from '../../components/composer/composer';
 import { PostCard } from '../../components/post-card/post-card';
 import { TimelineService } from '../../services/timeline';
+import { Post } from '../../types/post';
 
 @Component({
   selector: 'app-timeline-page',
@@ -17,6 +18,7 @@ export class TimelinePageComponent implements OnInit {
   error = signal<string | null>(null);
 
   isComposerOpen = signal(false);
+  sortBy = signal<'date' | 'popularity' | 'replies' | 'type'>('date');
 
   ngOnInit(): void {
     this.load();
@@ -45,5 +47,22 @@ export class TimelinePageComponent implements OnInit {
 
   closeComposer(): void {
     this.isComposerOpen.set(false);
+  }
+
+  sortedPosts(): Post[] {
+    const posts = [...this.posts()];
+
+    switch (this.sortBy()) {
+      case 'popularity':
+        return posts.sort((a, b) => Number(b.likes_count ?? 0) - Number(a.likes_count ?? 0));
+      case 'replies':
+        return posts.sort((a, b) =>
+          Number(b.total_comments_count ?? b.comments_count ?? 0) - Number(a.total_comments_count ?? a.comments_count ?? 0)
+        );
+      case 'type':
+        return posts.sort((a, b) => a.type.localeCompare(b.type));
+      default:
+        return posts.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    }
   }
 }

@@ -191,6 +191,36 @@ class ConversationController extends Controller
         ]);
     }
 
+    public function update(Request $request, Conversation $conversation): JsonResponse
+    {
+        $this->abortUnlessParticipant($request, $conversation);
+
+        abort_unless($conversation->leader_id === $request->user()->id, 403, 'Only the group leader can edit this chat.');
+
+        $validated = $request->validate([
+            'title' => ['required', 'string', 'max:120'],
+            'group_photo' => ['nullable', 'image', 'max:4096'],
+        ]);
+
+        $payload = ['title' => $validated['title']];
+
+        if ($request->hasFile('group_photo')) {
+            $payload['photo_path'] = $this->uploadImage($request->file('group_photo'), 'group-chats');
+        }
+
+        $conversation->forceFill($payload)->save();
+
+        return response()->json([
+            'conversation' => $this->serializeConversation(
+                $conversation->fresh()->load([
+                    'users:id,name,username,profile_photo_path',
+                    'messages' => fn ($query) => $query->with('sender:id,name,username,profile_photo_path')->latest()->limit(1),
+                ]),
+                $request->user()->id
+            ),
+        ]);
+    }
+
     public function createParty(Request $request, Post $post): JsonResponse
     {
         abort_unless($post->type === 'lfg' && $post->user_id === $request->user()->id, 403, 'Not allowed.');

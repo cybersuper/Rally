@@ -49,11 +49,11 @@ export class ClubChannelService {
     });
   }
 
-  create(slug: string, name: string, type: 'text' | 'announcement', category = 'Text Lounges') {
+  create(slug: string, name: string, type: 'text' | 'announcement', category = 'Text Rooms') {
     return this.http.post<{ channel: ClubChannel }>(`/api/clubs/${slug}/channels`, { name, type, category });
   }
 
-  createRoom(slug: string, name: string, category = 'Text Lounges', type: 'text' | 'announcement' = 'text') {
+  createRoom(slug: string, name: string, category = 'Text Rooms', type: 'text' | 'announcement' = 'text') {
     return this.http.post<{ channel: ClubChannel }>(`/api/clubs/${slug}/rooms`, { name, category, type });
   }
 

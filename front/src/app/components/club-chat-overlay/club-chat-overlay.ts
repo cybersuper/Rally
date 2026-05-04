@@ -16,6 +16,7 @@ import {
 import { AuthService } from '../../auth';
 import { ClubChannel, ClubChannelService } from '../../services/club-channel';
 import { ChatMessage, ChatService } from '../../services/chat';
+import { ClubChatOverlayState } from '../../services/club-chat-overlay';
 
 interface MessageMenu {
   message: ChatMessage;
@@ -35,6 +36,7 @@ export class ClubChatOverlayComponent implements OnChanges, AfterViewInit, OnDes
   readonly channelService = inject(ClubChannelService);
   readonly chatService = inject(ChatService);
   readonly authService = inject(AuthService);
+  private readonly overlayState = inject(ClubChatOverlayState);
 
   draft = signal('');
   selectedChannel = signal<ClubChannel | null>(null);
@@ -77,7 +79,7 @@ export class ClubChatOverlayComponent implements OnChanges, AfterViewInit, OnDes
   ngOnChanges(): void {
     if (!this.slug) return;
 
-    this.channelService.loadInto(this.slug);
+    this.channelService.loadInto(this.slug, this.overlayState.loungeId());
     this.setupTyping();
 
     const active = this.channelService.activeChannel();

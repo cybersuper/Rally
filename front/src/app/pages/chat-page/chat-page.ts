@@ -1,8 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { AfterViewChecked, Component, ElementRef, OnDestroy, OnInit, ViewChild, inject, signal } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../auth';
-import { ChatService, Conversation } from '../../services/chat';
+import { ChatMessage, ChatService, Conversation } from '../../services/chat';
+import { ClubChatOverlayState } from '../../services/club-chat-overlay';
 
 @Component({
   selector: 'app-chat-page',
@@ -13,8 +14,14 @@ export class ChatPageComponent implements OnInit, OnDestroy, AfterViewChecked {
   readonly chat = inject(ChatService);
   readonly authService = inject(AuthService);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly clubChatOverlay = inject(ClubChatOverlayState);
   @ViewChild('messageScroller') private messageScroller?: ElementRef<HTMLElement>;
   draft = signal('');
+  searchQuery = signal('');
+  searchResults = signal<ChatMessage[]>([]);
+  isSearching = signal(false);
+  searchError = signal<string | null>(null);
   typingUsers = signal<Set<string>>(new Set());
   private lastMessageCount = 0;
   private typingTimeouts = new Map<string, ReturnType<typeof setTimeout>>();
@@ -62,6 +69,51 @@ export class ChatPageComponent implements OnInit, OnDestroy, AfterViewChecked {
   open(conversation: Conversation): void {
     this.chat.openConversation(conversation);
     this.setupTyping(conversation.id);
+  }
+
+  search(): void {
+    const query = this.searchQuery().trim();
+    this.searchError.set(null);
+
+    if (!query) {
+      this.searchResults.set([]);
+      return;
+    }
+
+    this.isSearching.set(true);
+    this.chat.searchMessages(query).subscribe({
+      next: response => {
+        this.searchResults.set(response.messages);
+        this.isSearching.set(false);
+      },
+      error: err => {
+        console.error('Message search failed', err);
+        this.searchError.set('Search failed.');
+        this.isSearching.set(false);
+      },
+    });
+  }
+
+  openSearchResult(message: ChatMessage): void {
+    if (message.conversation_id) {
+      this.searchResults.set([]);
+      this.router.navigate(['/chat', message.conversation_id]);
+      return;
+    }
+
+    if (message.club_slug && (message.room_id || message.channel_id)) {
+      const loungeId = Number(message.room_id ?? message.channel_id);
+      this.searchResults.set([]);
+      this.router.navigate(['/clubs', message.club_slug]).then(() => {
+        this.clubChatOverlay.open(message.club_slug!, loungeId);
+      });
+    }
+  }
+
+  resultContext(message: ChatMessage): string {
+    if (message.conversation_id) return 'DM';
+    const room = (message.room_name ?? 'lounge').replace(/^#\s*/, '');
+    return `${message.club_name ?? 'Club'} / #${room}`;
   }
 
   onDraftInput(value: string): void {

@@ -73,6 +73,12 @@ export class ChatService {
     return this.http.post<{ conversation: Conversation }>('/api/conversations', { user_id: userId });
   }
 
+  searchMessages(query: string) {
+    return this.http.get<{ messages: ChatMessage[] }>('/api/messages/search', {
+      params: { q: query },
+    });
+  }
+
   loadConversations(): void {
     this.getConversations().subscribe({
       next: response => this.conversations.set(response.conversations),

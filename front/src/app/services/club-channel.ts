@@ -32,11 +32,17 @@ export class ClubChannelService {
     return this.http.get<{ channels: ClubChannel[] }>(`/api/clubs/${slug}/channels`);
   }
 
-  loadInto(slug: string): void {
+  loadInto(slug: string, preferredChannelId: number | null = null): void {
     this.load(slug).subscribe({
       next: response => {
         this.channels.set(response.channels);
         this.chatService.syncLoungeUnreadCounts(response.channels);
+        const preferred = response.channels.find(channel => Number(channel.id) === Number(preferredChannelId));
+        if (preferred) {
+          this.open(slug, preferred);
+          return;
+        }
+
         if (!this.activeChannel() && response.channels[0]) this.open(slug, response.channels[0]);
       },
       error: err => console.error('Channels load failed', err),

@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, NgZone, computed, effect, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { HotToastService } from '@ngxpert/hot-toast';
 import { BehaviorSubject, tap } from 'rxjs';
 
 export interface ChatUser {
@@ -51,6 +52,7 @@ export class ChatService {
   private readonly http = inject(HttpClient);
   private readonly zone = inject(NgZone);
   private readonly router = inject(Router);
+  private readonly toast = inject(HotToastService);
 
   conversations = signal<Conversation[]>([]);
   messages = signal<ChatMessage[]>([]);
@@ -78,6 +80,24 @@ export class ChatService {
       ...current,
       [roomId]: 0,
     }));
+  }
+
+  incrementLoungeUnread(id: number): void {
+    const roomId = Number(id);
+    if (!roomId) return;
+    this.loungeUnreadCounts.update(counts => {
+      const current = Number(counts[roomId] ?? 0);
+      return {
+        ...counts,
+        [roomId]: current + 1,
+      };
+    });
+  }
+
+  showNewMessage(senderName: string, content: string): void {
+    const name = (senderName || 'Someone').trim() || 'Someone';
+    const body = (content || 'New message').trim() || 'New message';
+    this.toast.success(`${name}: ${body}`, { className: 'rally-hot-toast' });
   }
 
   constructor() {
@@ -269,6 +289,26 @@ export class ChatService {
   }
 
   receiveIncoming(message: ChatMessage): void {
+    const isClubMessage = !!(message.channel_id ?? message.room_id);
+
+    if (isClubMessage) {
+      const roomId = Number(message.room_id ?? message.channel_id);
+      if (!roomId) return;
+
+      const isOnClubPage = this.router.url.includes('/clubs/');
+      const isViewingThisLounge = String(roomId) === String(this.activeLoungeId());
+
+      if (isOnClubPage && isViewingThisLounge) {
+        this.locallyClearUnread(roomId);
+      } else {
+        this.incrementLoungeUnread(roomId);
+        this.showNewMessage(message.sender?.name ?? 'Someone', message.body ?? '');
+      }
+
+      this.receiveLoungeMessage(message);
+      return;
+    }
+
     this.receiveMessage(message);
   }
 
@@ -315,6 +355,9 @@ export class ChatService {
         this.messages.update(current =>
           current.some(item => Number(item.id) === Number(message.id)) ? current : [...current, message]
         );
+      } else {
+        const senderName = message.sender?.name ?? 'Someone';
+        this.showNewMessage(senderName, message.body ?? '');
       }
 
       this.conversations.update(items => {

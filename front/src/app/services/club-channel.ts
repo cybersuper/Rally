@@ -163,6 +163,8 @@ export class ClubChannelService {
           const isOnClubPage = this.router.url.includes('/clubs/');
           const isViewingThisLounge = incomingId && incomingId === activeId;
 
+          console.log('Club Message Received. Inactive? ', !isViewingThisLounge);
+
           if (!isOnClubPage || (incomingId && !isViewingThisLounge)) {
             this.channels.update(items =>
               items.map(item =>
@@ -171,7 +173,11 @@ export class ClubChannelService {
                   : item
               )
             );
+            if (incomingId) {
+              this.chatService.incrementLoungeUnread(Number(incomingId));
+            }
             this.chatService.receiveLoungeMessage(msg);
+            this.chatService.showNewMessage(msg.sender?.name ?? 'Someone', msg.body ?? '');
             return;
           }
 

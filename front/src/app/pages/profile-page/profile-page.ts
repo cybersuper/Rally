@@ -45,6 +45,9 @@ export class ProfilePageComponent implements OnInit {
   private coverFile: File | null = null;
 
   displayName = computed(() => this.profile()?.name || 'Rally member');
+  isOwnProfile = computed(() =>
+    Number(this.profile()?.id) === Number(this.authService.user()?.id)
+  );
 
   ngOnInit(): void {
     this.route.paramMap.subscribe(params => {
@@ -95,7 +98,7 @@ export class ProfilePageComponent implements OnInit {
 
   openEditor(): void {
     const user = this.profile();
-    if (!user?.is_owner) return;
+    if (!user || !this.isOwnProfile()) return;
 
     this.editForm.set({
       name: user.name,
@@ -208,7 +211,7 @@ export class ProfilePageComponent implements OnInit {
 
   messageUser(): void {
     const user = this.profile();
-    if (!user || user.is_owner) return;
+    if (!user || this.isOwnProfile()) return;
 
     this.chatService.startConversation(user.id).subscribe({
       next: response => this.router.navigate(['/chat', response.conversation.id]),

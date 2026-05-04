@@ -131,6 +131,32 @@ class ConversationController extends Controller
         ]);
     }
 
+    public function search(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'q' => ['required', 'string', 'max:2000'],
+        ]);
+
+        $contentIndex = Message::blindIndex($validated['q']);
+        $user = $request->user();
+
+        $messages = Message::query()
+            ->with(['sender:id,name,username,profile_photo_path', 'channel.club:id,name,slug'])
+            ->where('content_index', $contentIndex)
+            ->where(function ($query) use ($user) {
+                $query->whereHas('conversation.users', fn ($query) => $query->where('users.id', $user->id))
+                    ->orWhereHas('channel.club.users', fn ($query) => $query->where('users.id', $user->id));
+            })
+            ->latest()
+            ->limit(50)
+            ->get();
+
+        return response()->json([
+            'messages' => $messages->map(fn (Message $message) => $this->serializeMessage($message)),
+        ]);
+    }
+
+
     private function abortUnlessParticipant(Request $request, Conversation $conversation): void
     {
         abort_unless(
@@ -165,6 +191,8 @@ class ConversationController extends Controller
         return [
             'id' => $message->id,
             'conversation_id' => $message->conversation_id,
+            'channel_id' => $message->channel_id,
+            'room_id' => $message->room_id ?? $message->channel_id,
             'sender_id' => $message->sender_id,
             'body' => $message->body,
             'read_at' => $message->read_at,

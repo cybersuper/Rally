@@ -42,4 +42,6 @@ return [
         'api_secret' => env('CLOUDINARY_API_SECRET'),
     ],
 
+    'message_search_key' => env('SEARCH_KEY'),
+
 ];

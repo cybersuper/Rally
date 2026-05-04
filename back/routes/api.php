@@ -61,6 +61,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/settings/privacy', [SettingsController::class, 'updatePrivacy']);
     Route::delete('/settings/account', [SettingsController::class, 'deactivate']);
     Route::get('/conversations', [ConversationController::class, 'index']);
+    Route::get('/messages/search', [ConversationController::class, 'search']);
     Route::post('/conversations', [ConversationController::class, 'start']);
     Route::get('/conversations/{conversation}', [ConversationController::class, 'show']);
     Route::post('/conversations/{conversation}/messages', [ConversationController::class, 'store']);

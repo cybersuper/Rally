@@ -96,10 +96,14 @@ export class ChatService {
     });
   }
 
-  showNewMessage(senderName: string, content: string): void {
+  showNewMessage(senderName: string, content: string, avatar?: string | null): void {
     const name = (senderName || 'Someone').trim() || 'Someone';
     const body = (content || 'New message').trim() || 'New message';
-    this.toast.success(`${name}: ${body}`, { className: 'rally-hot-toast' });
+    this.toast.show(`${name}: ${body}`, {
+      icon: name.slice(0, 1).toUpperCase(),
+      className: 'rally-hot-toast rally-message-toast',
+      style: avatar ? { '--rally-toast-avatar': `url(${avatar})` } as any : undefined,
+    });
   }
 
   constructor() {
@@ -305,7 +309,7 @@ export class ChatService {
         this.newLoungeMessage$.next(message);
       } else {
         this.incrementLoungeUnread(roomId);
-        this.showNewMessage(message.sender?.name ?? 'Someone', message.body ?? '');
+        this.showNewMessage(message.sender?.name ?? 'Someone', message.body ?? '', message.sender?.profile_photo_path);
       }
 
       this.receiveLoungeMessage(message);
@@ -360,7 +364,7 @@ export class ChatService {
         );
       } else {
         const senderName = message.sender?.name ?? 'Someone';
-        this.showNewMessage(senderName, message.body ?? '');
+        this.showNewMessage(senderName, message.body ?? '', message.sender?.profile_photo_path);
       }
 
       this.conversations.update(items => {
@@ -394,6 +398,12 @@ export class ChatService {
   }
 
   markAsRead(conversationId: number) {
+    this.conversations.update(items =>
+      items.map(item =>
+        Number(item.id) === Number(conversationId) ? { ...item, unread_count: 0 } : item
+      )
+    );
+
     return this.http
       .post<{ conversation_id: number; unread_count: number }>(`/api/conversations/${conversationId}/read`, {})
       .pipe(

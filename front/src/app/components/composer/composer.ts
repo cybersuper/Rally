@@ -124,11 +124,13 @@ export class ComposerComponent {
     return field.type === 'select' || field.type === 'checkbox';
   }
 
-  onBackdropClick(): void {
-    this.requestClose();
+  onBackdropClick(event?: Event): void {
+    this.requestClose(event);
   }
 
-  requestClose(): void {
+  requestClose(event?: Event): void {
+    event?.preventDefault();
+    event?.stopPropagation();
     if (this.isSubmitting()) return;
     this.error.set(null);
     this.close.emit();

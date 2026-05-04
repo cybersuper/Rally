@@ -68,7 +68,9 @@
             <article
               class="rounded-2xl border border-white/10 bg-black/20 p-4"
               [id]="'comment-' + item.comment.id"
-              [style.margin-left.rem]="item.depth * 1.5"
+              [class.pl-6]="item.depth > 0"
+              [class.border-l-2]="item.depth > 0"
+              [class.border-white/10]="item.depth > 0"
             >
               <div class="flex items-start justify-between gap-3">
                 <div class="min-w-0">

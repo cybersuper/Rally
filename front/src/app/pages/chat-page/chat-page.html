@@ -143,7 +143,8 @@
             }
             <div
               class="bubble flex-grow-0 rounded-[16px] border border-white/[0.05] text-sm font-semibold leading-[1.4] [overflow-wrap:anywhere]"
-              [class.self-end]="isMine(message)"
+              [class.ml-auto]="isMine(message)"
+              [class.mr-auto]="!isMine(message)"
               [class.rounded-br-md]="!isGrouped(message, index) && isMine(message)"
               [class.rounded-bl-md]="!isGrouped(message, index) && !isMine(message)"
               [class.bg-red-400]="isMine(message)"

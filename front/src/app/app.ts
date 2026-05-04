@@ -69,6 +69,7 @@ export class App implements OnInit, OnDestroy {
     const enabled = !this.isLightMode();
     localStorage.setItem('rally_theme', enabled ? 'light' : 'dark');
     document.body.classList.toggle('light-theme', enabled);
+    document.body.dataset['theme'] = enabled ? 'light' : 'dark';
   }
 
   openCurrentClubChat(): void {
@@ -247,7 +248,9 @@ export class App implements OnInit, OnDestroy {
   private applyDisplaySettings(): void {
     const textSize = Number(localStorage.getItem('rally_text_size') ?? 16);
     document.documentElement.style.setProperty('--base-font-size', `${Math.min(20, Math.max(14, textSize))}px`);
-    document.body.classList.toggle('light-theme', localStorage.getItem('rally_theme') === 'light');
+    const isLight = localStorage.getItem('rally_theme') === 'light';
+    document.body.classList.toggle('light-theme', isLight);
+    document.body.dataset['theme'] = isLight ? 'light' : 'dark';
   }
 
 }

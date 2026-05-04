@@ -192,9 +192,9 @@ body.light-theme .rally-card {
 }
 
 .rally-scrollbar {
-  padding-right: 6px;
+  overflow-y: overlay;
   scrollbar-width: thin;
-  scrollbar-color: rgba(0, 0, 0, 0.1) transparent;
+  scrollbar-color: rgba(255, 255, 255, 0.16) transparent;
 }
 
 .rally-scrollbar::-webkit-scrollbar {
@@ -207,14 +207,15 @@ body.light-theme .rally-card {
 }
 
 .rally-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.16);
   border-radius: 10px;
 }
 
 .bubble {
   display: block;
   width: fit-content;
-  max-width: 75%;
+  min-width: 40px;
+  max-width: min(70%, 500px);
   padding: 8px 12px;
   word-break: normal;
   overflow-wrap: break-word;
@@ -247,6 +248,15 @@ body.light-theme .bubble:not(.bg-red-400) {
   color: #212529 !important;
 }
 
+[data-theme='light'] {
+  color: #1a1a1a;
+}
+
+[data-theme='light'] .rally-card,
+[data-theme='light'] .border-white\/10 {
+  border-color: rgba(0, 0, 0, 0.1) !important;
+}
+
 .message-group {
   margin-bottom: 16px;
   display: flex;
@@ -275,4 +285,8 @@ body.light-theme .bubble:not(.bg-red-400) {
   color: #0b0b0e;
   font-size: 0.8rem;
   font-weight: 950;
+}
+
+.rally-message-toast {
+  min-width: min(92vw, 320px) !important;
 }

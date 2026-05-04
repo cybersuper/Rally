@@ -192,7 +192,7 @@ export class ClubChannelService {
               this.chatService.incrementLoungeUnread(Number(incomingId));
             }
             this.chatService.receiveLoungeMessage(msg);
-            this.chatService.showNewMessage(msg.sender?.name ?? 'Someone', msg.body ?? '');
+            this.chatService.showNewMessage(msg.sender?.name ?? 'Someone', msg.body ?? '', msg.sender?.profile_photo_path);
             return;
           }
 

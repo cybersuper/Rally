@@ -98,6 +98,7 @@ export class SettingsPageComponent {
 
   private applyTheme(enabled: boolean): void {
     document.body.classList.toggle('light-theme', enabled);
+    document.body.dataset['theme'] = enabled ? 'light' : 'dark';
   }
 
   private mutate(request$: any, next: (response: any) => void): void {

@@ -1,4 +1,4 @@
-<section class="min-w-0 space-y-4">
+<section class="relative min-w-0 space-y-4">
   @if (isLoading()) {
     <div class="rounded-3xl border border-white/10 bg-[#121216]/90 p-6 text-zinc-400 shadow-2xl">
       Loading club...
@@ -104,6 +104,17 @@
 
     @if (isComposerOpen()) {
       <app-composer [open]="isComposerOpen()" [defaultClubId]="club()?.id" (close)="closeComposer()"></app-composer>
+    }
+
+    @if (club()?.is_member) {
+      <button
+        type="button"
+        class="absolute bottom-6 right-6 z-[1000] rounded-2xl border border-white/10 px-5 py-3 text-sm font-black text-black shadow-2xl"
+        [style.background]="club()?.accent_color"
+        (click)="openComposer()"
+      >
+        + New Post
+      </button>
     }
 
     @if (isIdentityOpen()) {

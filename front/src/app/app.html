@@ -177,9 +177,8 @@
     <section class="rally-scrollbar relative min-h-0 min-w-0 overflow-y-auto">
       <router-outlet />
 
-      <div class="pointer-events-none sticky bottom-8 z-[1000]">
-        <div class="float-right">
-          <div class="pointer-events-auto flex flex-col items-end gap-3">
+      <div class="fab-container">
+        <div class="flex flex-col items-end gap-3">
             @if (clubChatOverlay.currentClub(); as currentClub) {
               @if (currentClub.is_member) {
                 <button
@@ -208,7 +207,6 @@
                 </button>
               }
             }
-          </div>
         </div>
       </div>
     </section>

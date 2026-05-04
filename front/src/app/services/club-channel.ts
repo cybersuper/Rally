@@ -35,6 +35,13 @@ export class ClubChannelService {
     );
   }
 
+  markAsReadLocal(id: number): void {
+    this.channels.update(channels =>
+      channels.map(c => (String(c.id) === String(id) ? { ...c, unread_count: 0 } : c))
+    );
+    this.chatService.locallyClearUnread(id);
+  }
+
   load(slug: string) {
     return this.http.get<{ channels: ClubChannel[] }>(`/api/clubs/${slug}/channels`);
   }
@@ -66,8 +73,7 @@ export class ClubChannelService {
 
   open(slug: string, channel: ClubChannel): void {
     this.activeChannel.set(channel);
-    this.locallyClearUnread(channel.id);
-    this.chatService.locallyClearUnread(channel.id);
+    this.markAsReadLocal(channel.id);
     this.http.get<{ messages: ChatMessage[] }>(`/api/clubs/${slug}/channels/${channel.id}/messages`).subscribe({
       next: response => {
         this.messages.set([...response.messages].reverse());
@@ -165,7 +171,7 @@ export class ClubChannelService {
           }
 
           if (incomingId) {
-            this.locallyClearUnread(Number(incomingId));
+            this.markAsReadLocal(Number(incomingId));
             this.chatService.markRoomAsRead(Number(incomingId));
           }
 

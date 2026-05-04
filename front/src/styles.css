@@ -227,6 +227,21 @@ body.light-theme .rally-card {
   padding-left: 1rem;
 }
 
+.fab-container {
+  position: sticky;
+  bottom: 2rem;
+  margin-top: -10rem;
+  z-index: 99;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  pointer-events: none;
+}
+
+.fab-container button {
+  pointer-events: auto;
+}
+
 body.light-theme .bubble:not(.bg-red-400) {
   background: #e9ecef !important;
   color: #212529 !important;

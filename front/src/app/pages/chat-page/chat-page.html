@@ -127,7 +127,7 @@
       <div #messageScroller class="rally-scrollbar flex min-h-0 flex-1 flex-col-reverse overflow-y-auto px-3 py-4">
         @for (message of orderedMessages(); track message.id; let index = $index) {
           <div class="message-group flex flex-col" [class.items-end]="isMine(message)" [class.items-start]="!isMine(message)" [style.margin-bottom.px]="isGrouped(message, index) ? 4 : 16">
-            <div class="flex items-end gap-2" [class.justify-end]="isMine(message)">
+            <div class="flex items-end gap-2 w-full" [class.justify-end]="isMine(message)">
             @if (!isMine(message)) {
               @if (!isGrouped(message, index)) {
                 <div class="grid h-8 w-8 shrink-0 place-items-center overflow-hidden rounded-full bg-white/10 text-[0.65rem] font-black text-zinc-200">
@@ -142,7 +142,8 @@
               }
             }
             <div
-              class="bubble max-w-[70%] rounded-[16px] border border-white/[0.05] px-3 py-2 text-sm font-semibold leading-[1.4] [overflow-wrap:anywhere] [word-break:break-word]"
+              class="bubble flex-grow-0 rounded-[16px] border border-white/[0.05] text-sm font-semibold leading-[1.4] [overflow-wrap:anywhere]"
+              [class.self-end]="isMine(message)"
               [class.rounded-br-md]="!isGrouped(message, index) && isMine(message)"
               [class.rounded-bl-md]="!isGrouped(message, index) && !isMine(message)"
               [class.bg-red-400]="isMine(message)"

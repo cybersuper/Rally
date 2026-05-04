@@ -125,8 +125,9 @@
             <div class="space-y-2 text-sm font-semibold text-zinc-300">
               @for (club of user()?.clubs; track club.id) {
                 <div
-                  class="relative overflow-hidden rounded-2xl border border-white/10"
-                  [style.backgroundImage]="(club.cover_image_url ? 'linear-gradient(90deg, ' + club.accent_color + '33 0%, transparent 100%), url(' + club.cover_image_url + ')' : 'linear-gradient(90deg, ' + club.accent_color + '33 0%, transparent 100%)')"
+                  class="joined-club-card relative overflow-hidden rounded-2xl"
+                  [style.--club-accent-50]="club.accent_color + '66'"
+                  [style.backgroundImage]="(club.cover_image_url ? 'linear-gradient(90deg, var(--club-accent-50) 0%, transparent 100%), url(' + club.cover_image_url + ')' : 'linear-gradient(90deg, var(--club-accent-50) 0%, transparent 100%)')"
                   style="background-size: cover; background-position: center;"
                 >
                   <div class="absolute inset-0 bg-[var(--rally-panel)]/80"></div>
@@ -135,7 +136,6 @@
                       class="flex min-w-0 flex-1 items-center gap-2 px-2 py-2"
                       [routerLink]="['/clubs', club.slug]"
                     >
-                      <span class="h-2.5 w-2.5 shrink-0 rounded-full" [style.background]="club.accent_color"></span>
                       <span class="truncate">{{ club.name }}</span>
                       @if (hasClubActivity(club.id)) {
                         <span class="ml-auto h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-red-500 shadow-lg shadow-red-500/50"></span>
@@ -178,7 +178,7 @@
       <router-outlet />
 
       <div class="pointer-events-none sticky bottom-8 z-[1000]">
-        <div class="flex justify-end pr-2 -mr-2">
+        <div class="float-right">
           <div class="pointer-events-auto flex flex-col items-end gap-3">
             @if (clubChatOverlay.currentClub(); as currentClub) {
               @if (currentClub.is_member) {

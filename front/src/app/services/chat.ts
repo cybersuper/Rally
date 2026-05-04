@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, NgZone, computed, effect, inject, signal } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, tap } from 'rxjs';
 
 export interface ChatUser {
   id: number;
@@ -63,6 +63,10 @@ export class ChatService {
   private readonly totalUnreadCountSubject = new BehaviorSubject<number>(0);
   readonly totalUnreadCount$ = this.totalUnreadCountSubject.asObservable();
 
+  private readonly activeConversationIdSubject = new BehaviorSubject<number | null>(null);
+  readonly activeConversationId$ = this.activeConversationIdSubject.asObservable();
+  private activeConversationId: number | null = null;
+
   private activeChannel: string | null = null;
 
   locallyClearUnread(id: number): void {
@@ -77,6 +81,14 @@ export class ChatService {
   constructor() {
     effect(() => {
       this.totalUnreadCountSubject.next(this.totalUnreadCount());
+    });
+
+    effect(() => {
+      this.activeConversationIdSubject.next(this.activeConversation()?.id ?? null);
+    });
+
+    this.activeConversationId$.subscribe(id => {
+      this.activeConversationId = id;
     });
   }
 
@@ -116,28 +128,28 @@ export class ChatService {
   }
 
   openConversation(conversation: Conversation): void {
-    this.markRead(conversation.id);
+    this.markAsRead(conversation.id).subscribe();
     this.http.get<{ conversation: Conversation; messages: ChatMessage[] }>(`/api/conversations/${conversation.id}`)
       .subscribe({
         next: response => {
           this.activeConversation.set(response.conversation);
           this.messages.set(response.messages);
           this.subscribe(response.conversation.id);
-          this.markRead(response.conversation.id);
+          this.markAsRead(response.conversation.id).subscribe();
         },
         error: err => console.error('Conversation load failed', err),
       });
   }
 
   openConversationById(id: number): void {
-    this.markRead(id);
+    this.markAsRead(id).subscribe();
     this.http.get<{ conversation: Conversation; messages: ChatMessage[] }>(`/api/conversations/${id}`)
       .subscribe({
         next: response => {
           this.activeConversation.set(response.conversation);
           this.messages.set(response.messages);
           this.subscribe(response.conversation.id);
-          this.markRead(response.conversation.id);
+          this.markAsRead(response.conversation.id).subscribe();
         },
         error: err => console.error('Conversation load failed', err),
       });
@@ -275,6 +287,12 @@ export class ChatService {
     this.activeChannel = channelName;
     echo.private(channelName).listen('.MessageSent', (payload: { message: ChatMessage }) => {
       console.log('Event Captured!', payload);
+
+      const incomingConversationId = Number(payload.message?.conversation_id);
+      if (incomingConversationId && incomingConversationId === Number(this.activeConversationId)) {
+        this.markAsRead(incomingConversationId).subscribe();
+      }
+
       this.receiveMessage(payload.message);
     });
 
@@ -324,17 +342,20 @@ export class ChatService {
     });
   }
 
-  private markRead(conversationId: number): void {
-    this.http.post<{ conversation_id: number; unread_count: number }>(`/api/conversations/${conversationId}/read`, {})
-      .subscribe({
-        next: () => {
-          this.conversations.update(items =>
-            items.map(item =>
-              Number(item.id) === Number(conversationId) ? { ...item, unread_count: 0 } : item
-            )
-          );
-        },
-        error: () => {},
-      });
+  markAsRead(conversationId: number) {
+    return this.http
+      .post<{ conversation_id: number; unread_count: number }>(`/api/conversations/${conversationId}/read`, {})
+      .pipe(
+        tap({
+          next: () => {
+            this.conversations.update(items =>
+              items.map(item =>
+                Number(item.id) === Number(conversationId) ? { ...item, unread_count: 0 } : item
+              )
+            );
+          },
+          error: () => {},
+        })
+      );
   }
 }

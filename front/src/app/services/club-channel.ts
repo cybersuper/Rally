@@ -146,12 +146,30 @@ export class ClubChannelService {
     presence.listen('.MessageSent', (payload: { message: ChatMessage }) => {
       this.zone.run(() => {
         if (payload?.message) {
-          this.chatService.receiveLoungeMessage(payload.message);
-          if (Number(payload.message.channel_id) === Number(this.activeChannel()?.id)) {
-            this.locallyClearUnread(payload.message.channel_id!);
-            this.chatService.locallyClearUnread(payload.message.channel_id!);
+          const msg = payload.message;
+          const incomingId = String(msg.channel_id ?? msg.room_id ?? '');
+          const activeId = String(this.activeChannel()?.id ?? '');
+
+          console.log('Incoming:', incomingId, 'Active:', activeId);
+
+          if (incomingId && incomingId !== activeId) {
+            this.channels.update(items =>
+              items.map(item =>
+                String(item.id) === incomingId
+                  ? { ...item, unread_count: Number(item.unread_count ?? 0) + 1 }
+                  : item
+              )
+            );
+            this.chatService.receiveLoungeMessage(msg);
+            return;
           }
-          if (payload.message.channel_id === this.activeChannel()?.id) this.receive(payload.message);
+
+          if (incomingId) {
+            this.locallyClearUnread(Number(incomingId));
+            this.chatService.markRoomAsRead(Number(incomingId));
+          }
+
+          this.receive(msg);
         }
       });
     }).listenForWhisper('typing', (payload: { name?: string; typing?: boolean } | null) => {

@@ -31,6 +31,12 @@ export interface ChatMessage {
 export interface Conversation {
   id: number;
   title: string;
+  photo_path?: string | null;
+  party_post_id?: number | null;
+  leader_id?: number | null;
+  is_group?: boolean;
+  next_meeting_at?: string | null;
+  meeting_label?: string | null;
   participants: ChatUser[];
   latest_message: ChatMessage | null;
   unread_count: number;
@@ -69,8 +75,18 @@ export class ChatService {
     return this.http.get<{ conversations: Conversation[] }>('/api/conversations');
   }
 
+  getChatUsers(query = '') {
+    return this.http.get<{ users: ChatUser[] }>('/api/chat-users', {
+      params: query ? { q: query } : {},
+    });
+  }
+
   startConversation(userId: number) {
     return this.http.post<{ conversation: Conversation }>('/api/conversations', { user_id: userId });
+  }
+
+  createGroupConversation(payload: FormData) {
+    return this.http.post<{ conversation: Conversation }>('/api/conversations', payload);
   }
 
   searchMessages(query: string) {
@@ -121,6 +137,13 @@ export class ChatService {
         next: response => this.receiveMessage(response.message),
         error: err => console.error('Message send failed', err),
       });
+  }
+
+  planMeeting(conversationId: number, nextMeetingAt: string, meetingLabel: string) {
+    return this.http.patch<{ conversation: Conversation; message: ChatMessage }>(
+      `/api/conversations/${conversationId}/meeting`,
+      { next_meeting_at: nextMeetingAt, meeting_label: meetingLabel }
+    );
   }
 
   disconnect(): void {

@@ -148,6 +148,8 @@ export class PostCard {
     required?: boolean;
     type?: string;
     options?: string[];
+    true_label?: string;
+    false_label?: string;
   }> {
     const raw = this.metadataValue<any[]>('application_fields', []);
 
@@ -161,6 +163,8 @@ export class PostCard {
           required: !!field.required,
           type: field.type ? String(field.type) : 'text',
           options: Array.isArray(field.options) ? field.options.map((option: any) => String(option)) : [],
+          true_label: field.true_label ? String(field.true_label) : 'Yes',
+          false_label: field.false_label ? String(field.false_label) : 'No',
         }))
         .filter(field => field.key.trim().length > 0);
     }
@@ -454,10 +458,23 @@ export class PostCard {
   }
 
   applicationAnswerEntries(application: LfgApplication): Array<{ key: string; value: string }> {
+    const fields = this.lfgApplicationFields();
+    const fieldMap = new Map(fields.map(field => [field.key, field]));
+
     return Object.entries(application.answers ?? {}).map(([key, value]) => ({
-      key,
-      value: typeof value === 'string' ? value : JSON.stringify(value),
+      key: fieldMap.get(key)?.label ?? key,
+      value: this.formatApplicationAnswer(fieldMap.get(key), value),
     }));
+  }
+
+  private formatApplicationAnswer(field: ReturnType<PostCard['lfgApplicationFields']>[number] | undefined, value: any): string {
+    if (field?.type === 'boolean') {
+      return value ? (field.true_label ?? 'Yes') : (field.false_label ?? 'No');
+    }
+
+    if (Array.isArray(value)) return value.join(', ');
+
+    return typeof value === 'string' ? value : JSON.stringify(value);
   }
 
   flattenedPreview(): Array<{ comment: PostComment; depth: number }> {

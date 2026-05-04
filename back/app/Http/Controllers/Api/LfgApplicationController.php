@@ -19,7 +19,7 @@ class LfgApplicationController extends Controller
 
         $applications = LfgApplication::query()
             ->where('post_id', $post->id)
-            ->with(['user:id,name,email'])
+            ->with(['user:id,name,username'])
             ->latest()
             ->get();
 
@@ -34,10 +34,10 @@ class LfgApplicationController extends Controller
             ->where('user_id', $request->user()->id)
             ->where('type', 'lfg')
             ->with([
-                'user:id,name,email',
+                'user:id,name,username',
                 'club:id,name,slug,accent_color,sticker_type',
                 'lfgApplications' => fn ($query) => $query
-                    ->with('user:id,name,email')
+                    ->with('user:id,name,username')
                     ->latest(),
             ])
             ->withCount('lfgApplications')
@@ -62,7 +62,7 @@ class LfgApplicationController extends Controller
 
         if ($application->status === $validated['status']) {
             return response()->json([
-                'application' => $this->serializeApplication($application->load('user:id,name,email')),
+                'application' => $this->serializeApplication($application->load('user:id,name,username')),
                 'post' => $this->serializePostSummary($post),
             ]);
         }
@@ -104,7 +104,7 @@ class LfgApplicationController extends Controller
             $post->save();
 
             return [
-                $application->fresh()->load('user:id,name,email'),
+                $application->fresh()->load('user:id,name,username'),
                 $post->fresh(),
             ];
         });
@@ -112,6 +112,7 @@ class LfgApplicationController extends Controller
         return response()->json([
             'application' => $this->serializeApplication($updated),
             'post' => $this->serializePostSummary($updatedPost),
+            'seats_filled' => (int) (($updatedPost->metadata ?? [])['spots_remaining'] ?? 1) === 0,
         ]);
     }
 
@@ -156,7 +157,7 @@ class LfgApplicationController extends Controller
 
         return response()->json([
             'message' => 'Application sent.',
-            'application' => $this->serializeApplication($application->load('user:id,name,email')),
+            'application' => $this->serializeApplication($application->load('user:id,name,username')),
         ], 201);
     }
 
@@ -206,7 +207,7 @@ class LfgApplicationController extends Controller
                 ? [
                     'id' => $application->user->id,
                     'name' => $application->user->name,
-                    'email' => $application->user->email,
+                    'username' => $application->user->username,
                 ]
                 : null,
         ];
@@ -236,6 +237,7 @@ class LfgApplicationController extends Controller
         return [
             'id' => $post->id,
             'metadata' => Post::normalizeLfgMetadata($post->metadata ?? []),
+            'seats_filled' => (int) (Post::normalizeLfgMetadata($post->metadata ?? [])['spots_remaining'] ?? 1) === 0,
         ];
     }
 }

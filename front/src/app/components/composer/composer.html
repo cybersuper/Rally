@@ -218,6 +218,29 @@
                                 placeholder="Gold&#10;Platinum&#10;Diamond"
                               ></textarea>
                             </label>
+                          } @else if (field.type === 'boolean') {
+                            <div class="mt-3 grid gap-3 sm:grid-cols-2">
+                              <label class="block">
+                                <span class="mb-1.5 block text-xs font-black uppercase tracking-wide text-zinc-500">True Label</span>
+                                <input
+                                  class="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-white outline-none"
+                                  [name]="'application_true_' + field.id"
+                                  [ngModel]="field.trueLabel"
+                                  (ngModelChange)="updateApplicationField(field.id, { trueLabel: $event })"
+                                  placeholder="Yes"
+                                />
+                              </label>
+                              <label class="block">
+                                <span class="mb-1.5 block text-xs font-black uppercase tracking-wide text-zinc-500">False Label</span>
+                                <input
+                                  class="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-white outline-none"
+                                  [name]="'application_false_' + field.id"
+                                  [ngModel]="field.falseLabel"
+                                  (ngModelChange)="updateApplicationField(field.id, { falseLabel: $event })"
+                                  placeholder="No"
+                                />
+                              </label>
+                            </div>
                           }
                         </div>
                       }

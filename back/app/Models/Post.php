@@ -82,7 +82,12 @@ class Post extends Model
                 $definition['options'] = array_values(array_filter(array_map(
                     fn ($option) => mb_substr(trim((string) $option), 0, 80),
                     $options
-                )));
+                ))); 
+            }
+
+            if ($type === 'boolean') {
+                $definition['true_label'] = mb_substr(trim((string) ($field['true_label'] ?? 'Yes')) ?: 'Yes', 0, 40);
+                $definition['false_label'] = mb_substr(trim((string) ($field['false_label'] ?? 'No')) ?: 'No', 0, 40);
             }
 
             $normalized[] = $definition;

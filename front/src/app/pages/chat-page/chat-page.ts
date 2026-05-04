@@ -22,6 +22,18 @@ export class ChatPageComponent implements OnInit, OnDestroy, AfterViewChecked {
   searchResults = signal<ChatMessage[]>([]);
   isSearching = signal(false);
   searchError = signal<string | null>(null);
+  isPlanningMeeting = signal(false);
+  meetingLabel = signal('Next session');
+  meetingAt = signal('');
+  meetingError = signal<string | null>(null);
+  isGroupModalOpen = signal(false);
+  groupName = signal('Group Chat');
+  groupUserQuery = signal('');
+  groupUsers = signal<any[]>([]);
+  selectedGroupUserIds = signal<number[]>([]);
+  groupError = signal<string | null>(null);
+  isCreatingGroup = signal(false);
+  private groupPhoto: File | null = null;
   typingUsers = signal<Set<string>>(new Set());
   private lastMessageCount = 0;
   private typingTimeouts = new Map<string, ReturnType<typeof setTimeout>>();
@@ -71,6 +83,22 @@ export class ChatPageComponent implements OnInit, OnDestroy, AfterViewChecked {
     this.setupTyping(conversation.id);
   }
 
+  conversationPhoto(conversation: Conversation): string | null {
+    if (conversation.photo_path) return conversation.photo_path;
+    const me = this.authService.user()?.id;
+    return conversation.participants.find(user => Number(user.id) !== Number(me))?.profile_photo_path ?? null;
+  }
+
+  conversationInitials(conversation: Conversation): string {
+    return this.initials(this.conversationAvatarLabel(conversation));
+  }
+
+  conversationAvatarLabel(conversation: Conversation): string {
+    if (conversation.photo_path) return conversation.title;
+    const me = this.authService.user()?.id;
+    return conversation.participants.find(user => Number(user.id) !== Number(me))?.name ?? conversation.title;
+  }
+
   search(): void {
     const query = this.searchQuery().trim();
     this.searchError.set(null);
@@ -116,6 +144,21 @@ export class ChatPageComponent implements OnInit, OnDestroy, AfterViewChecked {
     return `${message.club_name ?? 'Club'} / #${room}`;
   }
 
+  isMine(message: ChatMessage): boolean {
+    return Number(message.sender_id) === Number(this.authService.user()?.id);
+  }
+
+  isGrouped(message: ChatMessage, index: number): boolean {
+    const previous = this.orderedMessages()[index + 1];
+    if (!previous) return false;
+    if (Number(previous.sender_id) !== Number(message.sender_id)) return false;
+
+    const currentTime = new Date(message.created_at).getTime();
+    const previousTime = new Date(previous.created_at).getTime();
+
+    return Math.abs(currentTime - previousTime) <= 120000;
+  }
+
   onDraftInput(value: string): void {
     this.draft.set(value);
     if (value.length === 0) {
@@ -153,6 +196,20 @@ export class ChatPageComponent implements OnInit, OnDestroy, AfterViewChecked {
       }
 
       this.addTypingUser(name);
+    });
+
+    echo.private(`conversations.${conversationId}`).listen('.MeetingPlanned', (payload: { conversation?: Conversation; message?: ChatMessage }) => {
+      if (payload.conversation) {
+        this.chat.activeConversation.update(current =>
+          current && current.id === payload.conversation!.id ? { ...current, ...payload.conversation } : current
+        );
+      }
+
+      if (payload.message) {
+        this.chat.messages.update(items =>
+          items.some(item => item.id === payload.message!.id) ? items : [...items, payload.message!]
+        );
+      }
     });
   }
 
@@ -233,6 +290,109 @@ export class ChatPageComponent implements OnInit, OnDestroy, AfterViewChecked {
     this.chat.sendMessage(body);
     this.whisperStopTyping();
     this.draft.set('');
+  }
+
+  openMeetingPlanner(): void {
+    const conversation = this.chat.activeConversation();
+    if (!conversation?.is_group) return;
+
+    this.meetingLabel.set(conversation.meeting_label ?? 'Next session');
+    this.meetingAt.set(conversation.next_meeting_at ? conversation.next_meeting_at.slice(0, 16) : '');
+    this.meetingError.set(null);
+    this.isPlanningMeeting.set(true);
+  }
+
+  closeMeetingPlanner(): void {
+    this.isPlanningMeeting.set(false);
+  }
+
+  saveMeeting(): void {
+    const conversation = this.chat.activeConversation();
+    if (!conversation || !this.meetingAt()) return;
+
+    this.chat.planMeeting(conversation.id, this.meetingAt(), this.meetingLabel()).subscribe({
+      next: response => {
+        this.chat.activeConversation.set(response.conversation);
+        this.chat.messages.update(items =>
+          items.some(item => item.id === response.message.id) ? items : [...items, response.message]
+        );
+        this.isPlanningMeeting.set(false);
+      },
+      error: err => {
+        console.error('Meeting plan failed', err);
+        this.meetingError.set('Could not plan meeting.');
+      },
+    });
+  }
+
+  openGroupModal(): void {
+    this.groupName.set('Group Chat');
+    this.selectedGroupUserIds.set([]);
+    this.groupError.set(null);
+    this.groupPhoto = null;
+    this.isGroupModalOpen.set(true);
+    this.loadGroupUsers();
+  }
+
+  closeGroupModal(): void {
+    if (this.isCreatingGroup()) return;
+    this.isGroupModalOpen.set(false);
+  }
+
+  loadGroupUsers(): void {
+    this.chat.getChatUsers(this.groupUserQuery()).subscribe({
+      next: response => this.groupUsers.set(response.users),
+      error: err => {
+        console.error('User search failed', err);
+        this.groupError.set('Could not load users.');
+      },
+    });
+  }
+
+  toggleGroupUser(userId: number, checked: boolean): void {
+    this.selectedGroupUserIds.update(ids =>
+      checked
+        ? Array.from(new Set([...ids, userId]))
+        : ids.filter(id => id !== userId)
+    );
+  }
+
+  isGroupUserSelected(userId: number): boolean {
+    return this.selectedGroupUserIds().includes(userId);
+  }
+
+  setGroupPhoto(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.groupPhoto = input.files?.[0] ?? null;
+  }
+
+  createGroup(): void {
+    const ids = this.selectedGroupUserIds();
+    if (!ids.length) {
+      this.groupError.set('Pick people.');
+      return;
+    }
+
+    const payload = new FormData();
+    payload.set('title', this.groupName().trim() || 'Group Chat');
+    ids.forEach(id => payload.append('participant_ids[]', String(id)));
+    if (this.groupPhoto) payload.set('group_photo', this.groupPhoto);
+
+    this.isCreatingGroup.set(true);
+    this.groupError.set(null);
+    this.chat.createGroupConversation(payload).subscribe({
+      next: response => {
+        this.chat.conversations.update(items => [response.conversation, ...items]);
+        this.isCreatingGroup.set(false);
+        this.isGroupModalOpen.set(false);
+        this.open(response.conversation);
+      },
+      error: err => {
+        console.error('Group create failed', err);
+        this.groupError.set('Could not create group.');
+        this.isCreatingGroup.set(false);
+      },
+    });
   }
 
   initials(name: string): string {

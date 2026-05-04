@@ -61,11 +61,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/settings/privacy', [SettingsController::class, 'updatePrivacy']);
     Route::delete('/settings/account', [SettingsController::class, 'deactivate']);
     Route::get('/conversations', [ConversationController::class, 'index']);
+    Route::get('/chat-users', [ConversationController::class, 'users']);
     Route::get('/messages/search', [ConversationController::class, 'search']);
     Route::post('/conversations', [ConversationController::class, 'start']);
     Route::get('/conversations/{conversation}', [ConversationController::class, 'show']);
     Route::post('/conversations/{conversation}/messages', [ConversationController::class, 'store']);
     Route::post('/conversations/{conversation}/read', [ConversationController::class, 'markRead']);
+    Route::patch('/conversations/{conversation}/meeting', [ConversationController::class, 'planMeeting']);
+    Route::post('/posts/{post}/party-conversation', [ConversationController::class, 'createParty']);
     Route::get('/clubs/{club:slug}', [ClubController::class, 'show']);
     Route::patch('/clubs/{club:slug}', [ClubController::class, 'update']);
     Route::post('/clubs/{club:slug}', [ClubController::class, 'update']);

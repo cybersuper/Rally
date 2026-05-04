@@ -25,6 +25,8 @@ interface ApplicationFieldForm {
   type: ApplicationFieldType;
   required: boolean;
   optionsText: string;
+  trueLabel: string;
+  falseLabel: string;
 }
 
 @Component({
@@ -89,6 +91,8 @@ export class ComposerComponent {
           type: 'text',
           required: false,
           optionsText: '',
+          trueLabel: 'Yes',
+          falseLabel: 'No',
         },
       ],
     }));
@@ -242,6 +246,11 @@ export class ComposerComponent {
 
       if (this.needsOptions(field)) {
         definition['options'] = this.parseOptions(field.optionsText);
+      }
+
+      if (field.type === 'boolean') {
+        definition['true_label'] = field.trueLabel.trim() || 'Yes';
+        definition['false_label'] = field.falseLabel.trim() || 'No';
       }
 
       return definition;

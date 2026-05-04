@@ -27,7 +27,7 @@ export interface LfgApplication {
   user: {
     id: number;
     name: string;
-    email: string;
+    username: string;
   } | null;
 }
 
@@ -36,6 +36,15 @@ export interface LfgApplicationActionResponse {
   post: {
     id: number;
     metadata: Record<string, any>;
+    seats_filled?: boolean;
+  };
+  seats_filled?: boolean;
+}
+
+export interface PartyConversationResponse {
+  conversation: {
+    id: number;
+    title: string;
   };
 }
 
@@ -135,6 +144,10 @@ export class PostService {
     return this.http.get<{ comments: PostComment[] }>(`/api/posts/${postId}/comments`, {
       params: preview ? { preview: '1' } : {},
     });
+  }
+
+  createPartyConversation(postId: number, payload: FormData) {
+    return this.http.post<PartyConversationResponse>(`/api/posts/${postId}/party-conversation`, payload);
   }
 
   addComment(postId: number, content: string, parentId: number | null = null) {

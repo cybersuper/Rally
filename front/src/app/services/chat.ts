@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, NgZone, computed, effect, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { HotToastService } from '@ngxpert/hot-toast';
-import { BehaviorSubject, tap } from 'rxjs';
+import { BehaviorSubject, Subject, tap } from 'rxjs';
 
 export interface ChatUser {
   id: number;
@@ -53,6 +53,8 @@ export class ChatService {
   private readonly zone = inject(NgZone);
   private readonly router = inject(Router);
   private readonly toast = inject(HotToastService);
+
+  readonly newLoungeMessage$ = new Subject<ChatMessage>();
 
   conversations = signal<Conversation[]>([]);
   messages = signal<ChatMessage[]>([]);
@@ -300,6 +302,7 @@ export class ChatService {
 
       if (isOnClubPage && isViewingThisLounge) {
         this.locallyClearUnread(roomId);
+        this.newLoungeMessage$.next(message);
       } else {
         this.incrementLoungeUnread(roomId);
         this.showNewMessage(message.sender?.name ?? 'Someone', message.body ?? '');

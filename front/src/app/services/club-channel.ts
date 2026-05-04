@@ -29,6 +29,21 @@ export class ClubChannelService {
   private clubChannel: string | null = null;
   private typingHandlers = new Set<(name: string, typing: boolean) => void>();
 
+  constructor() {
+    this.chatService.newLoungeMessage$.subscribe(message => {
+      const activeId = this.activeChannel()?.id;
+      const roomId = Number(message.room_id ?? message.channel_id);
+      if (!activeId || !roomId) return;
+      if (String(activeId) !== String(roomId)) return;
+
+      this.zone.run(() => {
+        this.messages.update(items =>
+          items.some(item => Number(item.id) === Number(message.id)) ? items : [message, ...items]
+        );
+      });
+    });
+  }
+
   locallyClearUnread(id: number): void {
     const channelId = Number(id);
     if (!channelId) return;

@@ -1,5 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, NgZone, computed, effect, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { BehaviorSubject, tap } from 'rxjs';
 
 export interface ChatUser {
@@ -49,6 +50,7 @@ export interface Conversation {
 export class ChatService {
   private readonly http = inject(HttpClient);
   private readonly zone = inject(NgZone);
+  private readonly router = inject(Router);
 
   conversations = signal<Conversation[]>([]);
   messages = signal<ChatMessage[]>([]);
@@ -289,7 +291,8 @@ export class ChatService {
       console.log('Event Captured!', payload);
 
       const incomingConversationId = Number(payload.message?.conversation_id);
-      if (incomingConversationId && incomingConversationId === Number(this.activeConversationId)) {
+      const isOnChatPage = this.router.url.includes('/chat');
+      if (isOnChatPage && String(incomingConversationId) === String(this.activeConversationId)) {
         this.markAsRead(incomingConversationId).subscribe();
       }
 
@@ -304,7 +307,9 @@ export class ChatService {
       if (!message.conversation_id) return;
 
       const active = this.activeConversation();
-      const isActiveConversation = active && Number(message.conversation_id) === Number(active.id);
+      const isOnChatPage = this.router.url.includes('/chat');
+      const isActiveConversation =
+        !!active && isOnChatPage && String(message.conversation_id) === String(active.id);
 
       if (isActiveConversation) {
         this.messages.update(current =>

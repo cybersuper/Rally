@@ -38,7 +38,7 @@
       @for (post of posts(); track post.id) {
         <article
           class="rounded-3xl border border-white/10 bg-[#121216]/90 p-5 shadow-2xl"
-          [style.--club-accent]="post.club.accent_color"
+          [style.--club-accent]="post.club.accent_color || '#7c3aed'"
         >
           <header class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div class="min-w-0">

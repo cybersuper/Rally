@@ -13,7 +13,7 @@
         <a
           class="group relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04] p-4 shadow-2xl transition hover:border-white/15 hover:bg-white/[0.055]"
           [routerLink]="['/clubs', club.slug]"
-          [style.--club-accent]="club.accent_color"
+          [style.--club-accent]="club.accent_color || '#7c3aed'"
         >
           <div class="relative -mx-4 -mt-4 mb-4 h-20 overflow-hidden">
             @if (club.cover_image_url) {

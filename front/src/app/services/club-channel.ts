@@ -1,5 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, NgZone, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { AuthService } from '../auth';
 import { ChatMessage, ChatService } from './chat';
 import { EchoBridge } from './echo-bridge';
@@ -20,6 +21,7 @@ export class ClubChannelService {
   private readonly chatService = inject(ChatService);
   private readonly zone = inject(NgZone);
   private readonly echoBridge = inject(EchoBridge);
+  private readonly router = inject(Router);
 
   channels = signal<ClubChannel[]>([]);
   activeChannel = signal<ClubChannel | null>(null);
@@ -158,7 +160,10 @@ export class ClubChannelService {
 
           console.log('Incoming:', incomingId, 'Active:', activeId);
 
-          if (incomingId && incomingId !== activeId) {
+          const isOnClubPage = this.router.url.includes('/clubs/');
+          const isViewingThisLounge = incomingId && incomingId === activeId;
+
+          if (!isOnClubPage || (incomingId && !isViewingThisLounge)) {
             this.channels.update(items =>
               items.map(item =>
                 String(item.id) === incomingId

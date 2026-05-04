@@ -10,7 +10,7 @@
   } @else {
     <header
       class="overflow-hidden rounded-3xl border border-white/10 bg-[#121216]/90 shadow-2xl"
-      [style.--club-accent]="club()?.accent_color"
+      [style.--club-accent]="club()?.accent_color || '#7c3aed'"
     >
       <div class="relative h-32">
         @if (club()?.cover_image_url) {

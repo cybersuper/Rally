@@ -1,7 +1,7 @@
 @if (!isDeleted()) {
   <article
     class="rally-card mb-6 cursor-pointer rounded-3xl p-4 transition duration-200 sm:p-5"
-    [style.--club-accent]="post().club.accent_color"
+    [style.--club-accent]="post().club.accent_color || '#7c3aed'"
     (click)="openThread()"
   >
     <div [class]="stickerClass()" aria-hidden="true">

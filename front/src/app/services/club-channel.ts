@@ -1,9 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, NgZone, inject, signal } from '@angular/core';
-import Echo from 'laravel-echo';
-import Pusher from 'pusher-js';
 import { AuthService } from '../auth';
 import { ChatMessage, ChatService } from './chat';
+import { EchoBridge } from './echo-bridge';
 
 export interface ClubChannel {
   id: number;
@@ -20,11 +19,11 @@ export class ClubChannelService {
   private readonly authService = inject(AuthService);
   private readonly chatService = inject(ChatService);
   private readonly zone = inject(NgZone);
+  private readonly echoBridge = inject(EchoBridge);
 
   channels = signal<ClubChannel[]>([]);
   activeChannel = signal<ClubChannel | null>(null);
   messages = signal<ChatMessage[]>([]);
-  private echo: Echo<'reverb'> | null = null;
   private clubChannel: string | null = null;
   private typingHandlers = new Set<(name: string, typing: boolean) => void>();
 
@@ -90,23 +89,24 @@ export class ClubChannelService {
   }
 
   disconnect(): void {
-    if (this.echo && this.clubChannel) {
-      this.echo.leave(this.clubChannel);
-      this.echo.disconnect();
+    const echo = this.echoBridge.get() ?? (window as any).Echo;
+    if (echo && this.clubChannel) {
+      echo.leave(this.clubChannel);
     }
-    this.echo = null;
     this.clubChannel = null;
     this.chatService.activeLoungeId.set(null);
   }
 
   whisperTyping(name: string): void {
-    if (!this.echo || !this.clubChannel || !name.trim()) return;
-    this.echo.join(this.clubChannel).whisper('typing', { name, typing: true });
+    const echo = this.echoBridge.get() ?? (window as any).Echo;
+    if (!echo || !this.clubChannel || !name.trim()) return;
+    echo.join(this.clubChannel).whisper('typing', { name, typing: true });
   }
 
   whisperStopTyping(name: string): void {
-    if (!this.echo || !this.clubChannel || !name.trim()) return;
-    this.echo.join(this.clubChannel).whisper('typing', { name, typing: false });
+    const echo = this.echoBridge.get() ?? (window as any).Echo;
+    if (!echo || !this.clubChannel || !name.trim()) return;
+    echo.join(this.clubChannel).whisper('typing', { name, typing: false });
   }
 
   onTyping(handler: (name: string, typing: boolean) => void): () => void {
@@ -118,26 +118,27 @@ export class ClubChannelService {
     const token = this.authService.token();
     if (!token) return;
     const name = `clubs.${channel.club_id}.rooms.${channel.id}`;
-    if (this.echo && this.clubChannel === name) return;
-    this.disconnect();
-    this.echo = new Echo({
-      broadcaster: 'reverb',
-      key: 'nnemvhtajzjjh3bj1dqh',
-      wsHost: '127.0.0.1',
-      wsPort: 8080,
-      wssPort: 8080,
-      forceTLS: false,
-      enabledTransports: ['ws'],
-      authEndpoint: '/broadcasting/auth',
-      bearerToken: token,
-      auth: { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' } },
-      Pusher,
-    });
+
+    const echo = this.echoBridge.get() ?? (window as any).Echo;
+    if (!echo) {
+      console.error('Real-time bridge not found. Refresh the page.');
+      return;
+    }
+
+    if (this.clubChannel === name) return;
+
+    if (this.clubChannel) {
+      echo.leave(this.clubChannel);
+    }
+
     this.clubChannel = name;
-    const presence = this.echo.join(name);
+    const presence = echo.join(name);
     presence.listen('.MessageSent', (payload: { message: ChatMessage }) => {
       this.zone.run(() => {
-        if (payload.message.channel_id === this.activeChannel()?.id) this.receive(payload.message);
+        if (payload?.message) {
+          this.chatService.receiveLoungeMessage(payload.message);
+          if (payload.message.channel_id === this.activeChannel()?.id) this.receive(payload.message);
+        }
       });
     }).listenForWhisper('typing', (payload: { name?: string; typing?: boolean } | null) => {
       const typingName = payload?.name?.trim();

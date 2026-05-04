@@ -24,11 +24,16 @@ export class TimelinePageComponent implements OnInit {
     this.load();
   }
 
+  changeSort(next: 'date' | 'popularity' | 'replies' | 'type'): void {
+    this.sortBy.set(next);
+    this.load();
+  }
+
   load(): void {
     this.isLoading.set(true);
     this.error.set(null);
 
-    this.timelineService.getTimeline().subscribe({
+    this.timelineService.getTimeline(this.sortBy()).subscribe({
       next: response => {
         this.timelineService.setPosts(response.data);
         this.isLoading.set(false);

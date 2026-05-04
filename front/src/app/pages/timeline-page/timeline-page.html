@@ -16,7 +16,7 @@
         <select
           class="rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-white outline-none"
           [value]="sortBy()"
-          (change)="sortBy.set($any($event.target).value)"
+          (change)="changeSort($any($event.target).value)"
         >
           <option value="date">Date</option>
           <option value="popularity">Popularity</option>

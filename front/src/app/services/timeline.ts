@@ -12,8 +12,10 @@ export class TimelineService {
 
   posts = signal<Post[]>([]);
 
-  getTimeline(): Observable<PaginatedPosts> {
-    return this.http.get<PaginatedPosts>('/api/timeline').pipe(
+  getTimeline(sort?: string): Observable<PaginatedPosts> {
+    return this.http.get<PaginatedPosts>('/api/timeline', {
+      params: sort ? { sort } : {},
+    }).pipe(
       map(response => ({
         ...response,
         data: this.normalizePosts(response.data),
@@ -30,8 +32,8 @@ export class TimelineService {
     );
   }
 
-  fetchTimeline(): Observable<PaginatedPosts> {
-    return this.getTimeline().pipe(
+  fetchTimeline(sort?: string): Observable<PaginatedPosts> {
+    return this.getTimeline(sort).pipe(
       tap(response => {
         this.setPosts(response.data);
       })

@@ -14,9 +14,11 @@ class TimelineController extends Controller
     {
         $user = $request->user();
 
+        $sort = (string) $request->query('sort', 'date');
+
         $clubIds = $user->clubs()->pluck('clubs.id');
 
-        $posts = Post::query()
+        $postsQuery = Post::query()
             ->whereIn('club_id', $clubIds)
             ->with([
                 'user:id,name,email,username,profile_photo_path',
@@ -30,9 +32,16 @@ class TimelineController extends Controller
             ])
             ->withExists([
                 'likes as liked_by_me' => fn ($query) => $query->where('user_id', $user->id),
-            ])
-            ->latest()
-            ->paginate(20);
+            ]);
+
+        match ($sort) {
+            'popularity' => $postsQuery->orderByDesc('likes_count')->latest(),
+            'replies' => $postsQuery->orderByDesc('total_comments_count')->latest(),
+            'type' => $postsQuery->orderBy('type')->latest(),
+            default => $postsQuery->latest(),
+        };
+
+        $posts = $postsQuery->paginate(20);
 
         PostPresenter::applyClubNicknames($posts);
 

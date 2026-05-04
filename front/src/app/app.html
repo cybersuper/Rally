@@ -1,6 +1,6 @@
 <main class="h-screen overflow-hidden bg-[var(--rally-bg)] text-white">
   <div
-    class="mx-auto grid h-screen min-h-0 w-full max-w-[1600px] grid-cols-1 gap-3 overflow-hidden px-2 py-2"
+    class="relative mx-auto grid h-screen min-h-0 w-full max-w-[1600px] grid-cols-1 gap-3 overflow-hidden px-2 py-2"
     [class.lg:grid-cols-[240px_minmax(0,900px)_260px]]="authService.isLoggedIn()"
     [class.xl:grid-cols-[260px_minmax(0,960px)_280px]]="authService.isLoggedIn()"
     [class.lg:grid-cols-[minmax(0,720px)]]="!authService.isLoggedIn()"
@@ -109,17 +109,17 @@
         >
           <span class="grid h-6 w-6 place-items-center rounded-lg border border-white/10 text-xs">C</span>
           Chat
-          @if ((totalUnreadCount$ | async) ?? 0; as count) {
+          @if (totalUnreadCount > 0) {
             <span class="ml-auto grid min-h-5 min-w-5 place-items-center rounded-full bg-red-500 px-1 text-[0.65rem] font-black text-white">
-              {{ count }}
+              {{ totalUnreadCount }}
             </span>
           }
         </a>
       </nav>
 
       @if (authService.isLoggedIn()) {
-        <div class="mt-8 border-t border-white/10 pt-5">
-          <p class="mb-3 text-xs font-black uppercase tracking-wider text-zinc-600">Joined</p>
+      <div class="mt-8 border-t border-white/10 pt-5">
+        <p class="mb-3 text-xs font-black uppercase tracking-wider text-zinc-600">Joined</p>
 
           @if (user()?.clubs?.length) {
             <div class="space-y-2 text-sm font-semibold text-zinc-300">
@@ -178,8 +178,7 @@
       @if (!clubChatOverlay.isOpen()) {
         <button
           type="button"
-          class="!fixed z-[1000] rounded-2xl border border-red-400/60 bg-black/60 px-5 py-3 text-sm font-black text-red-200 shadow-2xl shadow-red-500/20 backdrop-blur hover:bg-black/70"
-          style="position: fixed !important; bottom: 30px; right: 30px;"
+          class="absolute bottom-5 right-5 z-[1000] rounded-2xl border border-red-400/60 bg-black/60 px-5 py-3 text-sm font-black text-red-200 shadow-2xl shadow-red-500/20 backdrop-blur hover:bg-black/70"
           (click)="openCurrentClubChat()"
         >
           <span class="mr-2 inline-grid h-8 w-8 place-items-center rounded-xl bg-red-400 text-sm font-black text-black">R</span>

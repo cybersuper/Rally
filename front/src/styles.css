@@ -192,35 +192,33 @@ body.light-theme .rally-card {
 }
 
 .rally-scrollbar {
-  scrollbar-gutter: stable both-edges;
-  scrollbar-width: none;
+  padding-right: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.1) transparent;
 }
 
 .rally-scrollbar::-webkit-scrollbar {
-  display: none;
+  width: 6px;
+  height: 6px;
 }
 
-.rally-scrollbar:hover {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+.rally-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-.rally-scrollbar:hover::-webkit-scrollbar {
-  display: block;
-  width: 0.45rem;
-  height: 0.45rem;
-}
-
-.rally-scrollbar:hover::-webkit-scrollbar-thumb {
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.22);
+.rally-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
 }
 
 .bubble {
-  display: inline-block;
+  display: block;
+  width: fit-content;
+  min-width: 50px;
   max-width: min(70%, 500px);
   line-height: 1.4;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  word-break: break-word;
   border: 1px solid rgba(255, 255, 255, 0.05);
 }
 

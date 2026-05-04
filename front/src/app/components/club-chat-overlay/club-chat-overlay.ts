@@ -69,6 +69,10 @@ export class ClubChatOverlayComponent implements OnChanges, AfterViewInit, OnDes
       this.lastMarkedLoungeId = id;
       console.log('Room marked as read:', id);
       this.chatService.markRoomAsRead(id);
+
+      this.channelService.channels.update(items =>
+        items.map(item => (Number(item.id) === Number(id) ? { ...item, unread_count: 0 } : item))
+      );
     });
   }
 

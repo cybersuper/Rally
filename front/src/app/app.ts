@@ -36,8 +36,14 @@ export class App implements OnInit, OnDestroy {
   notificationFlash = this.notificationService.notificationFlash;
   private chatEcho: Echo<'reverb'> | null = null;
   private chatUserId: number | null = null;
+  private hasLoadedConversations = false;
 
-  totalUnreadCount$ = this.chatService.totalUnreadCount$;
+  get totalUnreadCount(): number {
+    return this.chatService.conversations().reduce(
+      (sum, conversation) => sum + Number(conversation.unread_count ?? 0),
+      0
+    );
+  }
 
   currentClubUnreadCount(): number {
     const club = this.clubChatOverlay.currentClub();
@@ -160,10 +166,16 @@ export class App implements OnInit, OnDestroy {
     });
   }
 
-private initChatRealtime(): void {
+  private initChatRealtime(): void {
     const user = this.authService.user();
     const token = this.authService.token();
     if (!user?.id || !token) return;
+
+    if (!this.hasLoadedConversations) {
+      this.hasLoadedConversations = true;
+      this.chatService.loadConversations();
+    }
+
     if (this.chatEcho && this.chatUserId === user.id) return;
 
     (window as any).Pusher = Pusher;
@@ -176,7 +188,7 @@ private initChatRealtime(): void {
       wsPort: 8080,
       forceTLS: false,
       enabledTransports: ['ws', 'wss'],
-      authEndpoint: 'http://localhost:8000/broadcasting/auth',
+      authEndpoint: '/broadcasting/auth',
       auth: {
         headers: {
           Authorization: `Bearer ${token}`
@@ -189,45 +201,20 @@ private initChatRealtime(): void {
     
     this.chatEcho = echoInstance;
     this.chatUserId = user.id;
-    this.chatEcho.private(`user.${user.id}`).listen('.MessageSent', (payload: { message: ChatMessage }) => {
+
+    const channel = this.chatEcho.private(`user.${user.id}`);
+    channel.listen('MessageSent', (payload: { message: ChatMessage }) => {
       this.zone.run(() => {
-        const message = payload.message;
-        if (message.sender_id === user.id) return;
-
-        if (message.room_id) {
-          const activeRoomId = this.chatService.activeLoungeId();
-          if (!this.clubChatOverlay.isOpen() || Number(activeRoomId) !== Number(message.room_id)) {
-            const clubName = message.club_name ?? 'Club';
-            const roomName = (message.room_name ?? 'lounge').replace(/^#\s*/, '');
-
-            if (!this.clubChatOverlay.isOpen()) {
-              this.toast.success(`New message in ${clubName} > #${roomName}`, {
-                icon: '#',
-                className: 'rally-hot-toast',
-              });
-            }
-
-            if (message.club_id) {
-              this.chatService.receiveLoungeMessage(message);
-            }
-          }
-          return;
-        }
-
-        if (!message.conversation_id) return;
-
-        this.chatService.receiveIncoming(message);
-
-        if (!this.router.url.startsWith('/chat')) {
-          this.toast.success(`${message.sender?.name ?? 'Someone'} sent a message`, {
-            icon: 'C',
-            className: 'rally-hot-toast',
-          });
-        }
+        if (payload?.message) this.chatService.receiveIncoming(payload.message);
+      });
+    });
+    channel.listen('.MessageSent', (payload: { message: ChatMessage }) => {
+      this.zone.run(() => {
+        if (payload?.message) this.chatService.receiveIncoming(payload.message);
       });
     });
 
-    console.log('Echo global connected');
+    console.log('✅ Echo is now global and connected');
 }
 
   ngOnDestroy(): void {
@@ -244,6 +231,7 @@ private initChatRealtime(): void {
     this.chatEcho = null;
     this.chatUserId = null;
     this.echoBridge.set(null);
+    (window as any).Echo = null;
   }
 
   private applyDisplaySettings(): void {

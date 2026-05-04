@@ -188,6 +188,11 @@ export class ChatService {
     const clubId = Number(message.club_id);
     if (!roomId) return;
 
+    if (Number(this.activeLoungeId()) === Number(roomId)) {
+      this.markLoungeRead(roomId);
+      return;
+    }
+
     if (clubId) {
       this.loungeClubIds.update(current => ({ ...current, [roomId]: clubId }));
     }

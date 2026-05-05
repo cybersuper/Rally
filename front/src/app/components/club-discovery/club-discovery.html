@@ -1,4 +1,38 @@
 <section class="space-y-3">
+  <div class="flex flex-col gap-3">
+    <input
+      class="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-white/20"
+      type="text"
+      [value]="searchQuery()"
+      (input)="updateSearch($any($event.target).value)"
+      placeholder="Search clubs"
+    />
+
+    @if (categories().length) {
+      <div class="flex gap-2 overflow-x-auto pb-1">
+        <button
+          type="button"
+          class="shrink-0 rounded-full border border-white/10 px-4 py-2 text-xs font-black transition"
+          [class.bg-white/10]="selectedCategoryId() === null"
+          (click)="selectCategory(null)"
+        >
+          All
+        </button>
+
+        @for (cat of categories(); track cat.id) {
+          <button
+            type="button"
+            class="shrink-0 rounded-full border border-white/10 px-4 py-2 text-xs font-black transition"
+            [class.bg-white/10]="selectedCategoryId() === cat.id"
+            (click)="selectCategory(cat.id)"
+          >
+            {{ cat.name }}
+          </button>
+        }
+      </div>
+    }
+  </div>
+
   @if (isLoading()) {
     <div class="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm text-zinc-400">
       Loading clubs...
@@ -8,8 +42,8 @@
       {{ error() }}
     </div>
   } @else {
-    <div class="grid grid-cols-1 gap-3">
-      @for (club of clubs(); track club.id) {
+    <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+      @for (club of filteredClubs(); track club.id) {
         <a
           class="group relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04] p-4 shadow-2xl transition hover:border-white/15 hover:bg-white/[0.055]"
           [routerLink]="['/clubs', club.slug]"
@@ -88,23 +122,32 @@
                   </button>
                 }
 
-                <button
-                  type="button"
-                  class="rounded-xl border border-white/10 px-3 py-2 text-xs font-black text-zinc-200 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-60"
-                  [style.borderColor]="club.accent_color + '55'"
-                  [disabled]="isUpdating(club.id) || isOwner(club)"
-                  (click)="$event.preventDefault(); $event.stopPropagation(); toggleMembership(club)"
-                >
-                  @if (isUpdating(club.id)) {
-                    ...
-                  } @else if (isOwner(club)) {
-                    Owner
-                  } @else if (club.is_member) {
-                    Leave
-                  } @else {
-                    Join
-                  }
-                </button>
+                @if (club.is_member) {
+                  <a
+                    class="rounded-xl border border-white/10 px-3 py-2 text-xs font-black text-zinc-200 hover:bg-white/5"
+                    [style.borderColor]="club.accent_color + '55'"
+                    [routerLink]="['/clubs', club.slug]"
+                    (click)="$event.stopPropagation()"
+                  >
+                    Enter
+                  </a>
+                } @else {
+                  <button
+                    type="button"
+                    class="rounded-xl border border-white/10 px-3 py-2 text-xs font-black text-zinc-200 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-60"
+                    [style.borderColor]="club.accent_color + '55'"
+                    [disabled]="isUpdating(club.id) || isOwner(club)"
+                    (click)="$event.preventDefault(); $event.stopPropagation(); toggleMembership(club)"
+                  >
+                    @if (isUpdating(club.id)) {
+                      ...
+                    } @else if (isOwner(club)) {
+                      Owner
+                    } @else {
+                      Join
+                    }
+                  </button>
+                }
               </div>
             }
           </div>

@@ -53,14 +53,17 @@
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <label class="block">
             <span class="mb-1.5 block text-xs font-black uppercase tracking-wide text-zinc-500">Category</span>
-            <input
-              class="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-white/20"
-              type="text"
-              name="category"
-              [ngModel]="category()"
-              (ngModelChange)="category.set($event)"
-              placeholder="Tabletop, Fitness, Art"
-            />
+            <select
+              class="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-white/20"
+              name="category_id"
+              [ngModel]="categoryId()"
+              (ngModelChange)="onCategoryIdChange($event)"
+            >
+              <option [ngValue]="null">None</option>
+              @for (cat of categories(); track cat.id) {
+                <option [value]="cat.id">{{ cat.name }}</option>
+              }
+            </select>
           </label>
 
           <label class="block">
@@ -115,7 +118,11 @@
             <span class="h-3 w-3 rounded-full" [style.background]="accentColor()"></span>
             <p class="truncate text-sm font-black">{{ name() || 'New club' }}</p>
             <span class="rounded-full bg-white/10 px-2 py-1 text-xs font-black text-zinc-400">
-              {{ category() || 'Category' }}
+              @if (categoryId()) {
+                {{ (categories().find(c => c.id === categoryId())?.name) || 'Category' }}
+              } @else {
+                Category
+              }
             </span>
           </div>
         </div>

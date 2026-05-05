@@ -3,12 +3,21 @@ import { HttpClient } from '@angular/common/http';
 import { map } from 'rxjs';
 import { safeHexColor } from '../utils/color';
 
+export interface Category {
+  id: number;
+  name: string;
+  slug: string;
+  icon_url: string | null;
+}
+
 export interface DiscoverClub {
   id: number;
   name: string;
   slug: string;
   description: string | null;
   category: string | null;
+  category_id?: number | null;
+  category_model?: Category | null;
   visibility: 'public' | 'private' | string;
   accent_color: string;
   theme_color?: string | null;
@@ -34,6 +43,7 @@ export interface CreateClubPayload {
   slug: string;
   description: string | null;
   category?: string | null;
+  category_id?: number | null;
   visibility?: 'public' | 'private';
   accent_color: string;
   cover_image_url?: string | null;
@@ -57,6 +67,10 @@ export interface UpdateClubPayload {
 })
 export class ClubService {
   private readonly http = inject(HttpClient);
+
+  getCategories() {
+    return this.http.get<{ categories: Category[] }>('/api/categories');
+  }
 
   getClubs() {
     return this.http.get<{ clubs: DiscoverClub[] }>('/api/clubs').pipe(

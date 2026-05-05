@@ -143,35 +143,28 @@
                     <p class="text-xs font-black uppercase tracking-wide text-zinc-500">
                       Application fields
                     </p>
-
-                    <button
-                      type="button"
-                      class="rounded-xl border border-white/10 px-3 py-2 text-xs font-black text-zinc-200 hover:bg-white/5"
-                      (click)="addApplicationField()"
-                    >
-                      Add question
-                    </button>
                   </div>
 
                   @if (!form().application_fields.length) {
                     <div class="text-sm font-semibold text-zinc-500">
                       Applicants will get the default message field.
                     </div>
-                  } @else {
-                    <div class="space-y-3">
-                      @for (field of form().application_fields; track field.id) {
-                        <div class="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
-                          <div class="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_150px_auto]">
-                            <label class="block sm:col-span-1" [class.sm:col-span-3]="isType('lfg')">
-                              <span class="mb-1.5 block text-xs font-black uppercase tracking-wide text-zinc-500">Question</span>
-                              <textarea
-                                class="min-h-[46px] w-full resize-y overflow-hidden rounded-xl border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-white/20"
-                                [name]="'application_label_' + field.id"
-                                [ngModel]="field.label"
-                                (ngModelChange)="updateApplicationField(field.id, { label: $event })"
-                                placeholder="What character do you play?"
-                              ></textarea>
-                            </label>
+                  }
+
+                  <div class="max-h-80 space-y-3 overflow-y-auto pr-1">
+                    @for (field of form().application_fields; track field.id) {
+                      <div class="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+                        <div class="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_150px_auto]">
+                          <label class="block sm:col-span-1" [class.sm:col-span-3]="isType('lfg')">
+                            <span class="mb-1.5 block text-xs font-black uppercase tracking-wide text-zinc-500">Question</span>
+                            <textarea
+                              class="min-h-[46px] w-full resize-y overflow-hidden rounded-xl border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-white/20"
+                              [name]="'application_label_' + field.id"
+                              [ngModel]="field.label"
+                              (ngModelChange)="updateApplicationField(field.id, { label: $event })"
+                              placeholder="What character do you play?"
+                            ></textarea>
+                          </label>
 
                             <label class="block">
                               <span class="mb-1.5 block text-xs font-black uppercase tracking-wide text-zinc-500">Type</span>
@@ -255,10 +248,17 @@
                               </label>
                             </div>
                           }
-                        </div>
-                      }
-                    </div>
-                  }
+                      </div>
+                    }
+
+                    <button
+                      type="button"
+                      class="w-full rounded-xl border border-white/10 px-3 py-2 text-xs font-black text-zinc-200 hover:bg-white/5"
+                      (click)="addApplicationField()"
+                    >
+                      Add question
+                    </button>
+                  </div>
                 </section>
               </div>
             }

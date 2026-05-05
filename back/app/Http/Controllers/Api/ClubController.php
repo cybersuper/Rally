@@ -23,6 +23,7 @@ class ClubController extends Controller
             'slug' => ['required', 'string', 'max:120', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/', 'unique:clubs,slug'],
             'description' => ['nullable', 'string', 'max:400'],
             'category' => ['nullable', 'string', 'max:80'],
+            'category_id' => ['nullable', 'integer', 'exists:categories,id'],
             'visibility' => ['nullable', Rule::in(['public', 'private'])],
             'accent_color' => ['required', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'cover_image_url' => ['nullable', 'url', 'max:1000'],
@@ -34,6 +35,7 @@ class ClubController extends Controller
                 'slug' => $validated['slug'],
                 'description' => $validated['description'] ?? null,
                 'category' => $validated['category'] ?? null,
+                'category_id' => $validated['category_id'] ?? null,
                 'visibility' => $validated['visibility'] ?? 'public',
                 'accent_color' => $validated['accent_color'],
                 'sticker_type' => 'sparkle',
@@ -52,9 +54,10 @@ class ClubController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $user = $request->user();
+        $user = auth('sanctum')->user();
 
         $clubs = Club::query()
+            ->with('categoryModel')
             ->withCount('users')
             ->orderBy('name')
             ->get();
@@ -85,6 +88,7 @@ class ClubController extends Controller
         $user = $request->user();
 
         $club->loadCount('users');
+        $club->load('categoryModel');
         $club->load(['channels' => fn ($query) => $query->orderBy('category')->orderBy('id')]);
         $role = $this->membershipRole($user, $club);
 
@@ -103,6 +107,7 @@ class ClubController extends Controller
             'name' => ['sometimes', 'required', 'string', 'max:80'],
             'description' => ['nullable', 'string', 'max:400'],
             'category' => ['nullable', 'string', 'max:80'],
+            'category_id' => ['nullable', 'integer', 'exists:categories,id'],
             'visibility' => ['required', Rule::in(['public', 'private'])],
             'accent_color' => ['required', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'cover_image_url' => ['nullable', 'url', 'max:1000'],
@@ -122,6 +127,9 @@ class ClubController extends Controller
             'name' => $validated['name'] ?? $club->name,
             'description' => $validated['description'] ?? null,
             'category' => $validated['category'] ?? null,
+            'category_id' => array_key_exists('category_id', $validated)
+                ? $validated['category_id']
+                : $club->category_id,
             'visibility' => $validated['visibility'],
             'accent_color' => $validated['accent_color'],
             'cover_image_url' => array_key_exists('cover_image_url', $validated)
@@ -284,6 +292,15 @@ class ClubController extends Controller
             'slug' => $club->slug,
             'description' => $club->description,
             'category' => $club->category,
+            'category_id' => $club->category_id,
+            'category_model' => $club->relationLoaded('categoryModel') && $club->categoryModel
+                ? [
+                    'id' => $club->categoryModel->id,
+                    'name' => $club->categoryModel->name,
+                    'slug' => $club->categoryModel->slug,
+                    'icon_url' => $club->categoryModel->icon_url,
+                ]
+                : null,
             'visibility' => $club->visibility ?? 'public',
             'accent_color' => $club->accent_color,
             'sticker_type' => $club->sticker_type,

@@ -1,6 +1,7 @@
 <?php
 
 use App\Console\Commands\SendPartyMeetingReminders;
+use App\Console\Commands\RallyPurge;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -20,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withCommands([
         SendPartyMeetingReminders::class,
+        RallyPurge::class,
     ])
     ->withSchedule(function (Schedule $schedule): void {
         $schedule->command('party:meeting-reminders')->everyMinute();

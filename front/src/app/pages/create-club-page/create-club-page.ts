@@ -3,7 +3,7 @@ import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../auth';
-import { ClubService } from '../../services/club';
+import { Category, ClubService } from '../../services/club';
 import { TimelineService } from '../../services/timeline';
 
 function slugify(value: string): string {
@@ -36,9 +36,28 @@ export class CreateClubPageComponent {
   slugTouched = signal(false);
   description = signal('');
   category = signal('');
+  categories = signal<Category[]>([]);
+  categoryId = signal<number | null>(null);
   visibility = signal<'public' | 'private'>('public');
   accentColor = signal('#22d3ee');
   coverImageUrl = signal('');
+
+  constructor() {
+    this.clubService.getCategories().subscribe({
+      next: response => this.categories.set(response.categories),
+      error: () => this.categories.set([]),
+    });
+  }
+
+  onCategoryIdChange(value: any): void {
+    if (value === null || value === undefined || value === '') {
+      this.categoryId.set(null);
+      return;
+    }
+
+    const parsed = Number(value);
+    this.categoryId.set(Number.isFinite(parsed) ? parsed : null);
+  }
 
   onNameChange(value: string): void {
     this.name.set(value);
@@ -60,6 +79,7 @@ export class CreateClubPageComponent {
     const slug = slugify(this.slug());
     const description = this.description().trim();
     const category = this.category().trim();
+    const categoryId = this.categoryId();
     const accentColor = this.accentColor().trim();
     const coverImageUrl = this.coverImageUrl().trim();
 
@@ -81,6 +101,7 @@ export class CreateClubPageComponent {
         slug,
         description: description.length ? description : null,
         category: category.length ? category : null,
+        category_id: categoryId,
         visibility: this.visibility(),
         accent_color: accentColor,
         cover_image_url: coverImageUrl.length ? coverImageUrl : null,

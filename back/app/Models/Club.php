@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Club extends Model
 {
@@ -16,12 +17,18 @@ class Club extends Model
         'slug',
         'description',
         'category',
+        'category_id',
         'visibility',
         'accent_color',
         'sticker_type',
         'cover_image_url',
         'sticker_image_url',
     ];
+
+    public function categoryModel(): BelongsTo
+    {
+        return $this->belongsTo(Category::class);
+    }
 
     public function posts()
     {

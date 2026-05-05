@@ -1,8 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../auth';
-import { ClubService, DiscoverClub } from '../../services/club';
+import { Category, ClubService, DiscoverClub } from '../../services/club';
 import { TimelineService } from '../../services/timeline';
 
 @Component({
@@ -19,13 +19,45 @@ export class ClubDiscoveryComponent implements OnInit {
   isGuest = signal(!this.authService.isLoggedIn());
 
   clubs = signal<DiscoverClub[]>([]);
+  categories = signal<Category[]>([]);
+  selectedCategoryId = signal<number | null>(null);
+  searchQuery = signal('');
+
+  filteredClubs = computed(() => {
+    const q = this.searchQuery().trim().toLowerCase();
+    const selected = this.selectedCategoryId();
+
+    return this.clubs().filter(club => {
+      if (selected && Number(club.category_id ?? 0) !== Number(selected)) return false;
+
+      if (!q) return true;
+      const haystack = `${club.name} ${club.description ?? ''}`.toLowerCase();
+      return haystack.includes(q);
+    });
+  });
   isLoading = signal(true);
   error = signal<string | null>(null);
   updatingClubIds = signal<Record<number, boolean>>({});
 
   ngOnInit(): void {
     this.isGuest.set(!this.authService.isLoggedIn());
+    this.loadCategories();
     this.load();
+  }
+
+  loadCategories(): void {
+    this.clubService.getCategories().subscribe({
+      next: response => this.categories.set(response.categories),
+      error: () => this.categories.set([]),
+    });
+  }
+
+  selectCategory(id: number | null): void {
+    this.selectedCategoryId.set(id);
+  }
+
+  updateSearch(value: string): void {
+    this.searchQuery.set(value);
   }
 
   load(): void {

@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Category;
 use App\Models\Club;
 use App\Models\Post;
 use App\Models\User;
@@ -12,73 +13,121 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        $jay = User::create([
+        $tabletop = Category::firstOrCreate(
+            ['slug' => 'tabletop'],
+            ['name' => 'Tabletop', 'icon_url' => null]
+        );
+
+        $art = Category::firstOrCreate(
+            ['slug' => 'art'],
+            ['name' => 'Art', 'icon_url' => null]
+        );
+
+        $fitness = Category::firstOrCreate(
+            ['slug' => 'fitness'],
+            ['name' => 'Fitness', 'icon_url' => null]
+        );
+
+        $games = Category::firstOrCreate(
+            ['slug' => 'games'],
+            ['name' => 'Games', 'icon_url' => null]
+        );
+
+        $jay = User::withTrashed()->firstOrNew(['email' => 'jay@example.com']);
+        if ($jay->trashed()) {
+            $jay->restore();
+        }
+        $jay->forceFill([
             'name' => 'Jay Carter',
-            'email' => 'jay@example.com',
+            'username' => 'jay',
             'password' => Hash::make('password'),
-        ]);
+        ])->save();
 
-        $theo = User::create([
+        $theo = User::withTrashed()->firstOrNew(['email' => 'theo@example.com']);
+        if ($theo->trashed()) {
+            $theo->restore();
+        }
+        $theo->forceFill([
             'name' => 'Theo Banks',
-            'email' => 'theo@example.com',
+            'username' => 'theo',
             'password' => Hash::make('password'),
-        ]);
+        ])->save();
 
-        $mina = User::create([
+        $mina = User::withTrashed()->firstOrNew(['email' => 'mina@example.com']);
+        if ($mina->trashed()) {
+            $mina->restore();
+        }
+        $mina->forceFill([
             'name' => 'Mina Okoye',
-            'email' => 'mina@example.com',
+            'username' => 'mina',
             'password' => Hash::make('password'),
-        ]);
+        ])->save();
 
-        $noor = User::create([
+        $noor = User::withTrashed()->firstOrNew(['email' => 'noor@example.com']);
+        if ($noor->trashed()) {
+            $noor->restore();
+        }
+        $noor->forceFill([
             'name' => 'Noor Ellis',
-            'email' => 'noor@example.com',
+            'username' => 'noor',
             'password' => Hash::make('password'),
-        ]);
+        ])->save();
 
-        $dnd = Club::create([
-            'name' => 'DnD Table',
-            'slug' => 'dnd-table',
-            'description' => 'One-shots, campaigns, dice chaos, and table talk.',
-            'category' => 'Tabletop',
-            'visibility' => 'public',
-            'accent_color' => '#facc15',
-            'sticker_type' => 'd20',
-            'cover_image_url' => 'https://images.unsplash.com/photo-1560972550-aba3456b5564?auto=format&fit=crop&w=1400&q=60',
-        ]);
+        $dnd = Club::updateOrCreate(
+            ['slug' => 'dnd-table'],
+            [
+                'name' => 'DnD Table',
+                'description' => 'One-shots, campaigns, dice chaos, and table talk.',
+                'category' => 'Tabletop',
+                'category_id' => $tabletop->id,
+                'visibility' => 'public',
+                'accent_color' => '#facc15',
+                'sticker_type' => 'd20',
+                'cover_image_url' => 'https://images.unsplash.com/photo-1560972550-aba3456b5564?auto=format&fit=crop&w=1400&q=60',
+            ]
+        );
 
-        $sketch = Club::create([
-            'name' => 'Sketchbook Club',
-            'slug' => 'sketchbook-club',
-            'description' => 'Daily drawing, art feedback, and sketch swaps.',
-            'category' => 'Art',
-            'visibility' => 'public',
-            'accent_color' => '#f472b6',
-            'sticker_type' => 'question',
-            'cover_image_url' => 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=1400&q=60',
-        ]);
+        $sketch = Club::updateOrCreate(
+            ['slug' => 'sketchbook-club'],
+            [
+                'name' => 'Sketchbook Club',
+                'description' => 'Daily drawing, art feedback, and sketch swaps.',
+                'category' => 'Art',
+                'category_id' => $art->id,
+                'visibility' => 'public',
+                'accent_color' => '#f472b6',
+                'sticker_type' => 'question',
+                'cover_image_url' => 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=1400&q=60',
+            ]
+        );
 
-        $motion = Club::create([
-            'name' => 'Daily Motion',
-            'slug' => 'daily-motion',
-            'description' => 'Fitness logs, mobility, running, and consistency.',
-            'category' => 'Fitness',
-            'visibility' => 'public',
-            'accent_color' => '#34d399',
-            'sticker_type' => 'fire',
-            'cover_image_url' => 'https://images.unsplash.com/photo-1517832207067-4db24a2ae47c?auto=format&fit=crop&w=1400&q=60',
-        ]);
+        $motion = Club::updateOrCreate(
+            ['slug' => 'daily-motion'],
+            [
+                'name' => 'Daily Motion',
+                'description' => 'Fitness logs, mobility, running, and consistency.',
+                'category' => 'Fitness',
+                'category_id' => $fitness->id,
+                'visibility' => 'public',
+                'accent_color' => '#34d399',
+                'sticker_type' => 'fire',
+                'cover_image_url' => 'https://images.unsplash.com/photo-1517832207067-4db24a2ae47c?auto=format&fit=crop&w=1400&q=60',
+            ]
+        );
 
-        $indie = Club::create([
-            'name' => 'Indie Queue',
-            'slug' => 'indie-queue',
-            'description' => 'Tiny game builds, devlogs, and pixel polish.',
-            'category' => 'Games',
-            'visibility' => 'private',
-            'accent_color' => '#60a5fa',
-            'sticker_type' => 'sparkle',
-            'cover_image_url' => 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1400&q=60',
-        ]);
+        $indie = Club::updateOrCreate(
+            ['slug' => 'indie-queue'],
+            [
+                'name' => 'Indie Queue',
+                'description' => 'Tiny game builds, devlogs, and pixel polish.',
+                'category' => 'Games',
+                'category_id' => $games->id,
+                'visibility' => 'private',
+                'accent_color' => '#60a5fa',
+                'sticker_type' => 'sparkle',
+                'cover_image_url' => 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1400&q=60',
+            ]
+        );
 
         $jay->clubs()->attach([
             $dnd->id => ['role' => Club::ROLE_MEMBER],

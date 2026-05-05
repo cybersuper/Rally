@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+.rally-input { @apply w-full rounded-2xl border border-white/5 bg-black/40 px-4 py-4 text-sm text-white outline-none ring-cyan-500/30 transition-all focus:border-cyan-500/50 focus:ring-4; }
+
 :root {
   color-scheme: dark;
   --base-font-size: 16px;

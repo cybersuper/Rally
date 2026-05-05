@@ -19,12 +19,14 @@ export class LoginPageComponent {
     }
   }
 
-  mode = signal<'signin' | 'signup'>('signin');
+mode = signal<'signin' | 'signup'>('signin');
   isSubmitting = signal(false);
   error = signal<string | null>(null);
 
+  // Form Signals
   name = signal('');
-  email = signal('');
+  username = signal(''); // New field
+  identifier = signal(''); // Used for Email OR Username in login
   password = signal('');
 
   setMode(mode: 'signin' | 'signup'): void {
@@ -34,61 +36,36 @@ export class LoginPageComponent {
 
   submit(): void {
     this.error.set(null);
+    const id = this.identifier().trim();
+    const pass = this.password();
 
-    const email = this.email().trim();
-    const password = this.password();
-    const name = this.name().trim();
-
-    if (!email) {
-      this.error.set('Enter your email.');
+    if (!id || !pass) {
+      this.error.set('Credentials are required.');
       return;
     }
 
-    if (!password) {
-      this.error.set('Enter your password.');
-      return;
-    }
-
-    if (this.mode() === 'signup' && !name) {
-      this.error.set('Enter a display name.');
+    if (this.mode() === 'signup' && (!this.name() || !this.username())) {
+      this.error.set('Please fill in all fields.');
       return;
     }
 
     this.isSubmitting.set(true);
 
-    const request$ =
-      this.mode() === 'signup'
-        ? this.authService.register(name, email, password)
-        : this.authService.login(email, password);
+    const request$ = this.mode() === 'signup'
+      ? this.authService.register(this.name(), id, pass, this.username()) // Ensure your service accepts username
+      : this.authService.login(id, pass); // Backend should handle id as email/username
 
     request$.subscribe({
       next: () => {
-        this.authService.me().subscribe({
-          next: () => {
-            this.isSubmitting.set(false);
-            this.router.navigateByUrl('/timeline');
-          },
-          error: () => {
-            this.isSubmitting.set(false);
-            this.router.navigateByUrl('/timeline');
-          },
+        this.authService.me().subscribe(() => {
+          this.isSubmitting.set(false);
+          this.router.navigateByUrl('/timeline');
         });
       },
-      error: err => {
+      error: (err) => {
         this.isSubmitting.set(false);
-
-        if (err?.status === 422) {
-          this.error.set('Check your details and try again.');
-          return;
-        }
-
-        if (err?.status === 401) {
-          this.error.set('Invalid credentials.');
-          return;
-        }
-
-        this.error.set('Could not sign in.');
-      },
+        this.error.set(err?.status === 401 ? 'Identity mismatch. Try again.' : 'Rally encountered an error.');
+      }
     });
   }
 }

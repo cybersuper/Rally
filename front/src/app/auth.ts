@@ -32,7 +32,7 @@ export class AuthService {
     );
   }
 
-  register(name: string, email: string, password: string) {
+  register(name: string, email: string, password: string, username:string) {
     return this.http
       .post<RegisterResponse>('/api/register', { name, email, password })
       .pipe(

@@ -8,19 +8,6 @@
       {{ error() }}
     </div>
   } @else if (post()) {
-    <header class="flex items-center justify-between gap-3 rounded-3xl border border-white/10 bg-[#121216]/90 p-4 shadow-2xl">
-      <div class="min-w-0">
-        <p class="text-xs font-black uppercase tracking-[0.2em] text-zinc-500">Thread</p>
-        <h1 class="truncate text-2xl font-black">{{ post()?.title }}</h1>
-      </div>
-
-      <a
-        class="rounded-2xl border border-white/10 px-4 py-3 text-sm font-black text-zinc-300 hover:bg-white/5"
-        [routerLink]="['/clubs', post()?.club?.slug]"
-      >
-        Club
-      </a>
-    </header>
 
     <app-post-card [post]="post()!" />
 

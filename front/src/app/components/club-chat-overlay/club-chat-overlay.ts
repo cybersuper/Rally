@@ -44,7 +44,7 @@ export class ClubChatOverlayComponent implements OnChanges, AfterViewInit, OnDes
   typingUsers = signal<Set<string>>(new Set());
   isCreatingLounge = signal(false);
   newLoungeName = signal('');
-  newLoungeCategory = signal('Text Rooms');
+  newLoungeCategory = signal('Text Lounges');
   isPinnedOpen = signal(false);
   contextMenu = signal<MessageMenu | null>(null);
   replyTarget = signal<ChatMessage | null>(null);
@@ -120,7 +120,9 @@ export class ClubChatOverlayComponent implements OnChanges, AfterViewInit, OnDes
     const groups = new Map<string, ClubChannel[]>();
 
     for (const channel of this.channelService.channels()) {
-      const category = channel.category?.trim() || (channel.type === 'announcement' ? 'Announcements' : 'Text Rooms');
+      const category = this.canonicalCategory(
+        channel.category?.trim() || (channel.type === 'announcement' ? 'Announcements' : 'Text Lounges')
+      );
       groups.set(category, [...(groups.get(category) ?? []), channel]);
     }
 
@@ -284,7 +286,8 @@ export class ClubChatOverlayComponent implements OnChanges, AfterViewInit, OnDes
     const name = this.newLoungeName().trim();
     if (!name || !this.canCreateLounge()) return;
 
-    this.channelService.createRoom(this.slug, name, this.newLoungeCategory().trim() || 'Text Rooms').subscribe({
+    const category = this.canonicalCategory(this.newLoungeCategory().trim() || 'Text Lounges');
+    this.channelService.createRoom(this.slug, name, category).subscribe({
       next: response => {
         this.channelService.channels.update(items => [...items, response.channel]);
         this.newLoungeName.set('');
@@ -293,6 +296,15 @@ export class ClubChatOverlayComponent implements OnChanges, AfterViewInit, OnDes
       },
       error: err => console.error('Room create failed', err),
     });
+  }
+
+  private canonicalCategory(input: string): string {
+    const normalized = input.replace(/\s+/g, ' ').trim();
+    const key = normalized.toLowerCase();
+    if (key === 'text rooms' || key === 'text room' || key === 'rooms') return 'Text Lounges';
+    if (key === 'text lounges' || key === 'text lounge' || key === 'lounges' || key === 'lounge') return 'Text Lounges';
+    if (key === 'announcements' || key === 'announcement') return 'Announcements';
+    return normalized;
   }
 
   openMessageMenu(event: MouseEvent, message: ChatMessage): void {

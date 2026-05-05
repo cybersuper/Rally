@@ -12,11 +12,12 @@ export class TimelineService {
 
   posts = signal<Post[]>([]);
 
-  getTimeline(sort?: string, clubIds?: number[]): Observable<PaginatedPosts> {
+  getTimeline(sort?: string, clubIds?: number[], type?: string): Observable<PaginatedPosts> {
     const params: Record<string, string> = {};
 
     if (sort) params['sort'] = sort;
     if (clubIds && clubIds.length > 0) params['club_ids'] = clubIds.join(',');
+    if (type && type !== 'all') params['type'] = type;
 
     return this.http.get<PaginatedPosts>('/api/timeline', { params }).pipe(
       map(response => ({

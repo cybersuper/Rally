@@ -4,10 +4,11 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../auth';
 import { Category, ClubService, DiscoverClub } from '../../services/club';
 import { TimelineService } from '../../services/timeline';
+import { ClubSkeletonComponent } from '../club-skeleton/club-skeleton';
 
 @Component({
   selector: 'app-club-discovery',
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, ClubSkeletonComponent],
   templateUrl: './club-discovery.html',
 })
 export class ClubDiscoveryComponent implements OnInit {

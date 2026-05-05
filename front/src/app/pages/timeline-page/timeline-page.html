@@ -13,8 +13,12 @@
     </div>
 
     <div class="mt-5 flex items-center gap-3">
-      <div class="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-cyan-300 font-black text-black">
-        J
+      <div class="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-2xl bg-white/10 text-xs font-black text-zinc-200">
+        @if (me()?.profile_photo_path) {
+          <img class="h-full w-full object-cover" [src]="me()?.profile_photo_path" [alt]="me()?.name || 'You'" />
+        } @else {
+          {{ (me()?.name || 'You').slice(0, 2).toUpperCase() }}
+        }
       </div>
 
       <button
@@ -35,17 +39,32 @@
     </div>
 
     <div class="mt-4 flex flex-col gap-3">
-      <div class="flex items-center gap-3">
-        <label class="flex flex-1 items-center justify-between gap-2 rounded-2xl border border-white/10 bg-black/20 px-3 py-2 text-xs font-bold text-zinc-400">
-          <span>Sort By</span>
+      <div class="grid gap-3 sm:grid-cols-2">
+        <label class="flex items-center justify-between gap-2 rounded-2xl border border-white/10 bg-black/20 px-3 py-2 text-xs font-bold text-zinc-400">
+          <span>Sort</span>
           <select
-            class="rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-white outline-none"
+            class="min-w-[10.5rem] rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-white outline-none"
             [value]="sortBy()"
             (change)="changeSort($any($event.target).value)"
           >
             <option value="latest">Latest</option>
             <option value="highest_streak">Highest Streak</option>
             <option value="most_helpful">Most Helpful</option>
+          </select>
+        </label>
+
+        <label class="flex items-center justify-between gap-2 rounded-2xl border border-white/10 bg-black/20 px-3 py-2 text-xs font-bold text-zinc-400">
+          <span>Type</span>
+          <select
+            class="min-w-[10.5rem] rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-white outline-none"
+            [value]="postType()"
+            (change)="changePostType($any($event.target).value)"
+          >
+            <option value="all">All</option>
+            <option value="standard">Standard</option>
+            <option value="question">Question</option>
+            <option value="lfg">LFG</option>
+            <option value="log">Log</option>
           </select>
         </label>
       </div>

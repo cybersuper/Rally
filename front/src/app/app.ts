@@ -42,6 +42,7 @@ export class App implements OnInit, OnDestroy {
   unreadNotifications = this.notificationService.unreadCount;
   notificationFlash = this.notificationService.notificationFlash;
   liveGroups = signal<Post[]>([]);
+  isLiveGroupsLoading = signal(false);
   private chatEcho: Echo<'reverb'> | null = null;
   private chatUserId: number | null = null;
   private hasLoadedConversations = false;
@@ -193,6 +194,7 @@ export class App implements OnInit, OnDestroy {
   }
 
   loadLiveGroups(): void {
+    this.isLiveGroupsLoading.set(true);
     this.http.get<PaginatedPosts>('/api/timeline', { params: { sort: 'date' } }).subscribe({
       next: response => {
         this.liveGroups.set(
@@ -207,8 +209,12 @@ export class App implements OnInit, OnDestroy {
               },
             }))
         );
+        this.isLiveGroupsLoading.set(false);
       },
-      error: () => this.liveGroups.set([]),
+      error: () => {
+        this.liveGroups.set([]);
+        this.isLiveGroupsLoading.set(false);
+      },
     });
   }
 

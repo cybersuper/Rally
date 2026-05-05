@@ -59,6 +59,8 @@ export class ChatService {
   conversations = signal<Conversation[]>([]);
   messages = signal<ChatMessage[]>([]);
   activeConversation = signal<Conversation | null>(null);
+  isConversationsLoading = signal(false);
+  isMessagesLoading = signal(false);
   unreadCount = signal(0);
   loungeUnreadCounts = signal<Record<number, number>>({});
   loungeClubIds = signal<Record<number, number>>({});
@@ -149,14 +151,22 @@ export class ChatService {
   }
 
   loadConversations(): void {
+    this.isConversationsLoading.set(true);
     this.getConversations().subscribe({
-      next: response => this.conversations.set(response.conversations),
-      error: err => console.error('Conversations load failed', err),
+      next: response => {
+        this.conversations.set(response.conversations);
+        this.isConversationsLoading.set(false);
+      },
+      error: err => {
+        console.error('Conversations load failed', err);
+        this.isConversationsLoading.set(false);
+      },
     });
   }
 
   openConversation(conversation: Conversation): void {
     this.markAsRead(conversation.id).subscribe();
+    this.isMessagesLoading.set(true);
     this.http.get<{ conversation: Conversation; messages: ChatMessage[] }>(`/api/conversations/${conversation.id}`)
       .subscribe({
         next: response => {
@@ -164,13 +174,18 @@ export class ChatService {
           this.messages.set(response.messages);
           this.subscribe(response.conversation.id);
           this.markAsRead(response.conversation.id).subscribe();
+          this.isMessagesLoading.set(false);
         },
-        error: err => console.error('Conversation load failed', err),
+        error: err => {
+          console.error('Conversation load failed', err);
+          this.isMessagesLoading.set(false);
+        },
       });
   }
 
   openConversationById(id: number): void {
     this.markAsRead(id).subscribe();
+    this.isMessagesLoading.set(true);
     this.http.get<{ conversation: Conversation; messages: ChatMessage[] }>(`/api/conversations/${id}`)
       .subscribe({
         next: response => {
@@ -178,8 +193,12 @@ export class ChatService {
           this.messages.set(response.messages);
           this.subscribe(response.conversation.id);
           this.markAsRead(response.conversation.id).subscribe();
+          this.isMessagesLoading.set(false);
         },
-        error: err => console.error('Conversation load failed', err),
+        error: err => {
+          console.error('Conversation load failed', err);
+          this.isMessagesLoading.set(false);
+        },
       });
   }
 

@@ -350,6 +350,25 @@ body.light-theme .bubble:not(.bg-red-400) {
   box-shadow: 0 0 15px color-mix(in srgb, var(--club-accent) 55%, transparent);
 }
 
+.featured-reply-gold {
+  position: relative;
+  border: 2px solid rgba(255, 215, 0, 0.85) !important;
+  box-shadow:
+    0 0 18px rgba(255, 215, 0, 0.28),
+    0 0 44px rgba(255, 215, 0, 0.14);
+}
+
+.featured-reply-gold::before {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(circle at 20% 20%, rgba(255, 215, 0, 0.28), transparent 55%);
+  filter: blur(6px);
+  opacity: 0.9;
+}
+
 .feeling-sticker {
   display: inline-block;
   width: fit-content;

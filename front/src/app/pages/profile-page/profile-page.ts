@@ -3,6 +3,7 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../auth';
 import { PostCard } from '../../components/post-card/post-card';
+import { PostSkeletonComponent } from '../../components/post-skeleton/post-skeleton';
 import { ProfileService, UserProfile } from '../../services/profile';
 import { TimelineService } from '../../services/timeline';
 import { ChatService } from '../../services/chat';
@@ -15,7 +16,7 @@ type ProfileEditField =
 
 @Component({
   selector: 'app-profile-page',
-  imports: [CommonModule, RouterLink, PostCard],
+  imports: [CommonModule, RouterLink, PostCard, PostSkeletonComponent],
   templateUrl: './profile-page.html',
 })
 export class ProfilePageComponent implements OnInit {

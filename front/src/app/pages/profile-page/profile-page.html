@@ -1,7 +1,18 @@
 <section class="min-w-0 space-y-5 pb-8">
   @if (isLoading()) {
-    <div class="rounded-3xl border border-white/10 bg-[#18181d] p-6 text-zinc-400">
-      Loading profile...
+    <div class="rounded-3xl border border-white/10 bg-[#121216]/90 p-6 shadow-2xl">
+      <div class="animate-pulse">
+        <div class="h-44 rounded-2xl bg-white/[0.04] sm:h-56"></div>
+        <div class="mt-5 flex items-end gap-4">
+          <div class="h-24 w-24 rounded-full bg-white/[0.06] sm:h-28 sm:w-28"></div>
+          <div class="flex-1 pb-2">
+            <div class="h-7 w-56 rounded-xl bg-white/[0.06]"></div>
+            <div class="mt-2 h-4 w-28 rounded-xl bg-white/[0.05]"></div>
+          </div>
+        </div>
+        <div class="mt-5 h-4 w-[min(68ch,100%)] rounded-xl bg-white/[0.05]"></div>
+        <div class="mt-2 h-4 w-[min(52ch,100%)] rounded-xl bg-white/[0.04]"></div>
+      </div>
     </div>
   } @else if (error()) {
     <div class="rounded-3xl border border-red-400/30 bg-red-500/10 p-6 text-red-200">
@@ -104,14 +115,25 @@
     </article>
 
     <section class="space-y-4">
-      <div class="rounded-3xl border border-white/10 bg-[#121216]/90 p-5">
-        <p class="text-xs font-black uppercase tracking-[0.2em] text-zinc-500">Posts</p>
-        <h2 class="mt-1 text-2xl font-black text-white">{{ displayName() }}'s feed</h2>
-      </div>
+      @if (isPostsLoading()) {
+        <div class="rounded-3xl border border-white/10 bg-[#121216]/90 p-5 shadow-2xl">
+          <div class="animate-pulse">
+            <div class="h-3 w-16 rounded bg-white/[0.05]"></div>
+            <div class="mt-3 h-6 w-56 rounded-xl bg-white/[0.06]"></div>
+          </div>
+        </div>
+      } @else {
+        <div class="rounded-3xl border border-white/10 bg-[#121216]/90 p-5">
+          <p class="text-xs font-black uppercase tracking-[0.2em] text-zinc-500">Posts</p>
+          <h2 class="mt-1 text-2xl font-black text-white">{{ displayName() }}'s feed</h2>
+        </div>
+      }
 
       @if (isPostsLoading()) {
-        <div class="rounded-3xl border border-white/10 bg-[#18181d] p-6 text-zinc-400">
-          Loading posts...
+        <div class="space-y-6">
+          <app-post-skeleton />
+          <app-post-skeleton />
+          <app-post-skeleton />
         </div>
       } @else if (!posts().length) {
         <div class="rounded-3xl border border-white/10 bg-[#18181d] p-6 text-zinc-400">

@@ -16,6 +16,7 @@ class TimelineController extends Controller
         $user = $request->user();
 
         $sort = (string) $request->query('sort', 'latest');
+        $type = (string) $request->query('type', '');
 
         $userClubIds = $user->clubs()->pluck('clubs.id');
 
@@ -44,6 +45,10 @@ class TimelineController extends Controller
             ->withExists([
                 'likes as liked_by_me' => fn ($query) => $query->where('user_id', $user->id),
             ]);
+
+        if (in_array($type, ['standard', 'question', 'log', 'lfg'], true)) {
+            $postsQuery->where('type', $type);
+        }
 
         match ($sort) {
             'most_helpful' => $postsQuery->orderByDesc('likes_count')->latest(),

@@ -1,13 +1,13 @@
 import { CommonModule } from '@angular/common';
 import { AfterViewChecked, Component, ElementRef, OnDestroy, OnInit, ViewChild, inject, signal } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../auth';
 import { ChatMessage, ChatService, Conversation } from '../../services/chat';
 import { ClubChatOverlayState } from '../../services/club-chat-overlay';
 
 @Component({
   selector: 'app-chat-page',
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './chat-page.html',
 })
 export class ChatPageComponent implements OnInit, OnDestroy, AfterViewChecked {

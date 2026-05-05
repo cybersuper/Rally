@@ -8,9 +8,9 @@
       {{ error() }}
     </div>
   } @else if (profile(); as user) {
-    <article class="overflow-hidden rounded-3xl border border-white/10 bg-[#121216]/90 shadow-2xl">
+    <article class="rounded-3xl border border-white/10 bg-[#121216]/90 shadow-2xl">
       <div
-        class="h-44 bg-cover bg-center sm:h-56"
+        class="h-44 overflow-hidden rounded-t-3xl bg-cover bg-center sm:h-56"
         [style.backgroundImage]="user.cover_photo_path ? 'url(' + user.cover_photo_path + ')' : 'linear-gradient(135deg, rgba(255,68,68,.6), rgba(34,211,238,.34), rgba(250,204,21,.26))'"
       ></div>
 
@@ -69,16 +69,20 @@
         }
 
         @if (user.clubs.length) {
-          <div class="mt-5 flex gap-2 overflow-x-auto pb-1">
+          <div class="mt-5 flex flex-wrap gap-3 overflow-visible pb-1">
             @for (club of user.clubs; track club.id) {
               <a
-                class="group relative grid h-11 w-11 shrink-0 place-items-center rounded-full border border-white/10 text-xs font-black text-black hover:scale-105"
+                class="group relative grid h-12 w-12 shrink-0 place-items-center rounded-full border border-white/10 bg-white/[0.04] transition-transform duration-200 hover:z-30 hover:scale-[1.2]"
                 [routerLink]="['/clubs', club.slug]"
-                [style.background]="club.accent_color"
-                [title]="club.name"
+                [attr.aria-label]="club.name"
               >
-                {{ initials(club.name) }}
-                <span class="pointer-events-none absolute top-full z-20 mt-2 hidden whitespace-nowrap rounded-lg bg-black/90 px-2 py-1 text-xs font-bold text-white group-hover:block">
+                @if (club.sticker_image_url?.length) {
+                  <img class="h-full w-full rounded-full object-cover" [src]="club.sticker_image_url" [alt]="club.name" />
+                } @else {
+                  <span class="text-xs font-black text-zinc-200">{{ initials(club.name) }}</span>
+                }
+
+                <span class="pointer-events-none absolute top-full z-50 mt-2 hidden whitespace-nowrap rounded-lg bg-black/90 px-2 py-1 text-xs font-bold text-white group-hover:block">
                   {{ club.name }}
                 </span>
               </a>

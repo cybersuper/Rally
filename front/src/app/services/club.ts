@@ -10,6 +10,14 @@ export interface Category {
   icon_url: string | null;
 }
 
+export interface ClubMember {
+  id: number;
+  name: string;
+  username: string;
+  profile_photo_path: string | null;
+  role: string | null;
+}
+
 export interface DiscoverClub {
   id: number;
   name: string;
@@ -122,6 +130,10 @@ export class ClubService {
 
   getClubTimeline(slug: string) {
     return this.http.get(`/api/clubs/${slug}/timeline`);
+  }
+
+  getClubMembers(slug: string) {
+    return this.http.get<{ members: ClubMember[] }>(`/api/clubs/${slug}/members`);
   }
 
   join(clubId: number) {

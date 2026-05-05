@@ -248,6 +248,31 @@ class ClubController extends Controller
         return response()->json($posts);
     }
 
+    public function members(Request $request, Club $club): JsonResponse
+    {
+        abort_unless(
+            $this->membershipRole($request->user(), $club) !== null,
+            403,
+            'You must join this club to view members.'
+        );
+
+        $members = $club->users()
+            ->select('users.id', 'users.name', 'users.username', 'users.profile_photo_path')
+            ->orderBy('users.name')
+            ->get()
+            ->map(fn ($user) => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'username' => $user->username,
+                'profile_photo_path' => $user->profile_photo_path,
+                'role' => $user->pivot?->role,
+            ]);
+
+        return response()->json([
+            'members' => $members,
+        ]);
+    }
+
     public function join(Request $request, Club $club): JsonResponse
     {
         $user = $request->user();

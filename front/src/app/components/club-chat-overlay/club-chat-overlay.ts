@@ -13,6 +13,7 @@ import {
   inject,
   signal,
 } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { AuthService } from '../../auth';
 import { ClubChannel, ClubChannelService } from '../../services/club-channel';
 import { ChatMessage, ChatService } from '../../services/chat';
@@ -26,7 +27,7 @@ interface MessageMenu {
 
 @Component({
   selector: 'app-club-chat-overlay',
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './club-chat-overlay.html',
 })
 export class ClubChatOverlayComponent implements OnChanges, AfterViewInit, OnDestroy {

@@ -87,6 +87,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/messages/{message}', [ClubChannelController::class, 'updateMessage']);
     Route::delete('/messages/{message}', [ClubChannelController::class, 'deleteMessage']);
     Route::get('/clubs/{club:slug}/timeline', [ClubController::class, 'timeline']);
+    Route::get('/clubs/{club:slug}/members', [ClubController::class, 'members']);
     Route::post('/clubs/{club}/join', [ClubController::class, 'join']);
     Route::delete('/clubs/{club}/leave', [ClubController::class, 'leave']);
 

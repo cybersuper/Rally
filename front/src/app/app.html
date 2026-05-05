@@ -121,7 +121,9 @@
       <div class="mt-8 border-t border-white/10 pt-5">
         <p class="mb-3 text-xs font-black uppercase tracking-wider text-zinc-600">Joined</p>
 
-          @if (user()?.clubs?.length) {
+          @if (isInitialLoading()) {
+            <app-joined-skeleton />
+          } @else if (user()?.clubs?.length) {
             <div class="space-y-2 text-sm font-semibold text-zinc-300">
               @for (club of user()?.clubs; track club.id) {
                 <div

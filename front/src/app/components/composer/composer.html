@@ -154,7 +154,7 @@
                   <div class="max-h-80 space-y-3 overflow-y-auto pr-1">
                     @for (field of form().application_fields; track field.id) {
                       <div class="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
-                        <div class="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_150px_auto]">
+                        <div class="grid grid-cols-1 gap-3">
                           <label class="block sm:col-span-1" [class.sm:col-span-3]="isType('lfg')">
                             <span class="mb-1.5 block text-xs font-black uppercase tracking-wide text-zinc-500">Question</span>
                             <textarea
@@ -166,7 +166,8 @@
                             ></textarea>
                           </label>
 
-                            <label class="block">
+                          <div class="flex flex-wrap items-end gap-2">
+                            <label class="block min-w-0 flex-1">
                               <span class="mb-1.5 block text-xs font-black uppercase tracking-wide text-zinc-500">Type</span>
                               <select
                                 class="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-white outline-none focus:border-white/20"
@@ -182,26 +183,25 @@
                               </select>
                             </label>
 
-                            <div class="flex items-end gap-2">
-                              <label class="flex h-11 items-center gap-2 rounded-xl border border-white/10 px-3 text-xs font-black text-zinc-300">
-                                <input
-                                  type="checkbox"
-                                  [name]="'application_required_' + field.id"
-                                  [ngModel]="field.required"
-                                  (ngModelChange)="updateApplicationField(field.id, { required: $event })"
-                                />
-                                Required
-                              </label>
+                            <label class="flex h-11 items-center gap-2 rounded-xl border border-white/10 px-3 text-xs font-black text-zinc-300">
+                              <input
+                                type="checkbox"
+                                [name]="'application_required_' + field.id"
+                                [ngModel]="field.required"
+                                (ngModelChange)="updateApplicationField(field.id, { required: $event })"
+                              />
+                              Required
+                            </label>
 
-                              <button
-                                type="button"
-                                class="h-11 rounded-xl border border-white/10 px-3 text-xs font-black text-zinc-400 hover:bg-white/5 hover:text-white"
-                                (click)="removeApplicationField(field.id)"
-                              >
-                                Remove
-                              </button>
-                            </div>
+                            <button
+                              type="button"
+                              class="h-11 shrink-0 rounded-xl border border-white/10 px-3 text-xs font-black text-zinc-400 hover:bg-white/5 hover:text-white"
+                              (click)="removeApplicationField(field.id)"
+                            >
+                              Remove
+                            </button>
                           </div>
+                        </div>
 
                           @if (needsOptions(field)) {
                             <div class="mt-3 block">

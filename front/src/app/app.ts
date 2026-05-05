@@ -3,6 +3,7 @@ import { Router, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/rou
 import { CommonModule } from '@angular/common';
 import { AuthService } from './auth';
 import { SuggestedClubsComponent } from './components/suggested-clubs/suggested-clubs';
+import { JoinedSkeletonComponent } from './components/joined-skeleton/joined-skeleton';
 import { ClubChatOverlayComponent } from './components/club-chat-overlay/club-chat-overlay';
 import { NotificationService } from './services/notification';
 import { ChatMessage, ChatService } from './services/chat';
@@ -18,7 +19,7 @@ import { safeHexColor } from './utils/color';
 
 @Component({
   selector: 'app-root',
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, SuggestedClubsComponent, ClubChatOverlayComponent],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, SuggestedClubsComponent, JoinedSkeletonComponent, ClubChatOverlayComponent],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
@@ -36,6 +37,7 @@ export class App implements OnInit, OnDestroy {
   user = this.authService.user;
 
   isBooting = signal(true);
+  isInitialLoading = signal(true);
   unreadNotifications = this.notificationService.unreadCount;
   notificationFlash = this.notificationService.notificationFlash;
   liveGroups = signal<Post[]>([]);
@@ -118,6 +120,7 @@ export class App implements OnInit, OnDestroy {
           this.notificationService.initRealtime();
           this.initChatRealtime();
           this.isBooting.set(false);
+          this.isInitialLoading.set(false);
         },
         error: () => {
           localStorage.removeItem('rally_token');
@@ -128,6 +131,7 @@ export class App implements OnInit, OnDestroy {
           this.disconnectChatRealtime();
           this.chatService.clearUnread();
           this.isBooting.set(false);
+          this.isInitialLoading.set(false);
           this.router.navigateByUrl('/login');
         },
       });
@@ -135,6 +139,7 @@ export class App implements OnInit, OnDestroy {
     }
 
     this.isBooting.set(false);
+    this.isInitialLoading.set(false);
     this.router.navigateByUrl('/login');
   }
 
@@ -145,6 +150,7 @@ export class App implements OnInit, OnDestroy {
         this.notificationService.disconnectRealtime();
         this.disconnectChatRealtime();
         this.chatService.clearUnread();
+        this.isInitialLoading.set(false);
         this.router.navigateByUrl('/login');
       },
       error: () => {
@@ -155,6 +161,7 @@ export class App implements OnInit, OnDestroy {
           this.notificationService.disconnectRealtime();
           this.disconnectChatRealtime();
           this.chatService.clearUnread();
+          this.isInitialLoading.set(false);
           this.router.navigateByUrl('/login');
       },
     });

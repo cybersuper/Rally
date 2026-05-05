@@ -4,7 +4,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { PostCard } from '../../components/post-card/post-card';
 import { ComposerComponent } from '../../components/composer/composer';
 import { AuthService } from '../../auth';
-import { ClubService } from '../../services/club';
+import { ClubMember, ClubService } from '../../services/club';
 import { HttpClient } from '@angular/common/http';
 import { PaginatedPosts, Post } from '../../types/post';
 import { TimelineService } from '../../services/timeline';
@@ -63,6 +63,11 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
   identityNickname = signal('');
   identityShowStreak = signal(true);
   isComposerOpen = signal(false);
+
+  isMembersOpen = signal(false);
+  isMembersLoading = signal(false);
+  membersError = signal<string | null>(null);
+  members = signal<ClubMember[]>([]);
 
   ngOnInit(): void {
     this.route.paramMap.subscribe(() => {
@@ -240,6 +245,31 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
   openComposer(): void {
     if (!this.club()?.is_member) return;
     this.isComposerOpen.set(true);
+  }
+
+  openMembers(): void {
+    const club = this.club();
+    if (!club?.is_member) return;
+
+    this.isMembersOpen.set(true);
+    this.isMembersLoading.set(true);
+    this.membersError.set(null);
+
+    this.clubService.getClubMembers(club.slug).subscribe({
+      next: response => {
+        this.members.set(response.members);
+        this.isMembersLoading.set(false);
+      },
+      error: () => {
+        this.members.set([]);
+        this.membersError.set('Could not load members.');
+        this.isMembersLoading.set(false);
+      },
+    });
+  }
+
+  closeMembers(): void {
+    this.isMembersOpen.set(false);
   }
 
   closeComposer(): void {

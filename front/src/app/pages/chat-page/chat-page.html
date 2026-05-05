@@ -130,13 +130,17 @@
             <div class="flex items-end gap-2 w-full" [class.justify-end]="isMine(message)">
             @if (!isMine(message)) {
               @if (!isGrouped(message, index)) {
-                <div class="grid h-8 w-8 shrink-0 place-items-center overflow-hidden rounded-full bg-white/10 text-[0.65rem] font-black text-zinc-200">
+                <a
+                  class="grid h-8 w-8 shrink-0 place-items-center overflow-hidden rounded-full bg-white/10 text-[0.65rem] font-black text-zinc-200"
+                  [routerLink]="message.sender?.username ? ['/profiles', message.sender?.username] : null"
+                  (click)="$event.stopPropagation()"
+                >
                   @if (message.sender?.profile_photo_path) {
                     <img class="h-full w-full object-cover" [src]="message.sender?.profile_photo_path" [alt]="message.sender?.name ?? 'Sender'" />
                   } @else {
                     {{ initials(message.sender?.name ?? '?') }}
                   }
-                </div>
+                </a>
               } @else {
                 <div class="h-8 w-8 shrink-0"></div>
               }
@@ -153,7 +157,13 @@
               [class.text-zinc-100]="!isMine(message)"
             >
               @if (!isMine(message) && !isGrouped(message, index)) {
-                <p class="mb-1 text-[0.7rem] font-black text-zinc-400">{{ message.sender?.name ?? 'Member' }}</p>
+                <a
+                  class="mb-1 block text-[0.7rem] font-black text-zinc-400 hover:underline"
+                  [routerLink]="message.sender?.username ? ['/profiles', message.sender?.username] : null"
+                  (click)="$event.stopPropagation()"
+                >
+                  {{ message.sender?.name ?? 'Member' }}
+                </a>
               }
               @if (message.is_pinned) {
                 <p class="mb-1 text-[0.65rem] font-black uppercase tracking-[0.16em] text-yellow-200">Pinned</p>

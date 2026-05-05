@@ -122,6 +122,7 @@ class ProfileController extends Controller
                 'slug' => $club->slug,
                 'accent_color' => $club->accent_color,
                 'sticker_type' => $club->sticker_type,
+                'sticker_image_url' => $club->sticker_image_url,
                 'cover_image_url' => $club->cover_image_url,
                 'membership_role' => $club->pivot?->role,
                 'nickname' => $club->pivot?->nickname,

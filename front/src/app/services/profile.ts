@@ -9,6 +9,7 @@ export interface ProfileClub {
   slug: string;
   accent_color: string | null;
   sticker_type?: string | null;
+  sticker_image_url?: string | null;
   cover_image_url?: string | null;
   membership_role?: string | null;
   nickname?: string | null;

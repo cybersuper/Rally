@@ -2,38 +2,72 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { ComposerComponent } from '../../components/composer/composer';
 import { PostCard } from '../../components/post-card/post-card';
+import { PostSkeletonComponent } from '../../components/post-skeleton/post-skeleton';
+import { ClubService, DiscoverClub } from '../../services/club';
 import { TimelineService } from '../../services/timeline';
-import { Post } from '../../types/post';
 
 @Component({
   selector: 'app-timeline-page',
-  imports: [CommonModule, ComposerComponent, PostCard],
+  imports: [CommonModule, ComposerComponent, PostCard, PostSkeletonComponent],
   templateUrl: './timeline-page.html',
 })
 export class TimelinePageComponent implements OnInit {
   private readonly timelineService = inject(TimelineService);
+  private readonly clubService = inject(ClubService);
 
   posts = this.timelineService.posts;
   isLoading = signal(true);
   error = signal<string | null>(null);
 
   isComposerOpen = signal(false);
-  sortBy = signal<'date' | 'popularity' | 'replies' | 'type'>('date');
+  sortBy = signal<'latest' | 'highest_streak' | 'most_helpful'>('latest');
+  selectedClubIds = signal<number[]>([]);
+  memberClubs = signal<DiscoverClub[]>([]);
 
   ngOnInit(): void {
+    this.loadMemberClubs();
     this.load();
   }
 
-  changeSort(next: 'date' | 'popularity' | 'replies' | 'type'): void {
+  loadMemberClubs(): void {
+    this.clubService.getClubs().subscribe({
+      next: response => {
+        this.memberClubs.set(response.clubs.filter(c => c.is_member));
+      },
+      error: () => {
+        this.memberClubs.set([]);
+      },
+    });
+  }
+
+  changeSort(next: 'latest' | 'highest_streak' | 'most_helpful'): void {
     this.sortBy.set(next);
     this.load();
+  }
+
+  changeClubFilter(next: number[]): void {
+    this.selectedClubIds.set(next);
+    this.load();
+  }
+
+  clearClubFilter(): void {
+    this.changeClubFilter([]);
+  }
+
+  toggleClubFilter(clubId: number): void {
+    const current = this.selectedClubIds();
+    const next = current.includes(clubId)
+      ? current.filter(id => id !== clubId)
+      : [...current, clubId];
+
+    this.changeClubFilter(next);
   }
 
   load(): void {
     this.isLoading.set(true);
     this.error.set(null);
 
-    this.timelineService.getTimeline(this.sortBy()).subscribe({
+    this.timelineService.getTimeline(this.sortBy(), this.selectedClubIds()).subscribe({
       next: response => {
         this.timelineService.setPosts(response.data);
         this.isLoading.set(false);
@@ -54,20 +88,7 @@ export class TimelinePageComponent implements OnInit {
     this.isComposerOpen.set(false);
   }
 
-  sortedPosts(): Post[] {
-    const posts = [...this.posts()];
-
-    switch (this.sortBy()) {
-      case 'popularity':
-        return posts.sort((a, b) => Number(b.likes_count ?? 0) - Number(a.likes_count ?? 0));
-      case 'replies':
-        return posts.sort((a, b) =>
-          Number(b.total_comments_count ?? b.comments_count ?? 0) - Number(a.total_comments_count ?? a.comments_count ?? 0)
-        );
-      case 'type':
-        return posts.sort((a, b) => a.type.localeCompare(b.type));
-      default:
-        return posts.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-    }
+  sortedPosts() {
+    return this.posts();
   }
 }

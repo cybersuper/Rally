@@ -33,6 +33,31 @@ class DatabaseSeeder extends Seeder
             ['name' => 'Games', 'icon_url' => null]
         );
 
+        $technology = Category::firstOrCreate(
+            ['slug' => 'technology'],
+            ['name' => 'Technology & Engineering', 'icon_url' => null]
+        );
+
+        $music = Category::firstOrCreate(
+            ['slug' => 'music'],
+            ['name' => 'Music & Performance', 'icon_url' => null]
+        );
+
+        $outdoors = Category::firstOrCreate(
+            ['slug' => 'outdoors'],
+            ['name' => 'Outdoor Adventure', 'icon_url' => null]
+        );
+
+        $creative = Category::firstOrCreate(
+            ['slug' => 'creative'],
+            ['name' => 'Creative Arts & Design', 'icon_url' => null]
+        );
+
+        $science = Category::firstOrCreate(
+            ['slug' => 'science'],
+            ['name' => 'Science & Knowledge', 'icon_url' => null]
+        );
+
         $jay = User::withTrashed()->firstOrNew(['email' => 'jay@example.com']);
         if ($jay->trashed()) {
             $jay->restore();
@@ -129,24 +154,171 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        $jay->clubs()->attach([
+        $cyber = Club::updateOrCreate(
+            ['slug' => 'cybersecurity-lab'],
+            [
+                'name' => 'Cybersecurity Lab',
+                'description' => 'CTF practice, secure coding, and ethical hacking.',
+                'category' => 'Cybersecurity',
+                'category_id' => $technology->id,
+                'visibility' => 'public',
+                'accent_color' => '#22d3ee',
+                'sticker_type' => 'sparkle',
+                'cover_image_url' => 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1400&q=60',
+            ]
+        );
+
+        $dataScience = Club::updateOrCreate(
+            ['slug' => 'data-science-squad'],
+            [
+                'name' => 'Data Science Squad',
+                'description' => 'Python, Kaggle sprints, and clean dashboards.',
+                'category' => 'Data Science',
+                'category_id' => $technology->id,
+                'visibility' => 'public',
+                'accent_color' => '#a78bfa',
+                'sticker_type' => 'question',
+                'cover_image_url' => 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1400&q=60',
+            ]
+        );
+
+        $openSource = Club::updateOrCreate(
+            ['slug' => 'open-source-forge'],
+            [
+                'name' => 'Open Source Forge',
+                'description' => 'Shipping PRs, learning Git, and contributing together.',
+                'category' => 'Open Source',
+                'category_id' => $technology->id,
+                'visibility' => 'public',
+                'accent_color' => '#34d399',
+                'sticker_type' => 'sparkle',
+                'cover_image_url' => 'https://images.unsplash.com/photo-1522542550221-31fd19575a2d?auto=format&fit=crop&w=1400&q=60',
+            ]
+        );
+
+        $robotics = Club::updateOrCreate(
+            ['slug' => 'robotics-league'],
+            [
+                'name' => 'Robotics League',
+                'description' => 'Arduino builds, sensors, and friendly challenges.',
+                'category' => 'Robotics',
+                'category_id' => $technology->id,
+                'visibility' => 'public',
+                'accent_color' => '#f97316',
+                'sticker_type' => 'fire',
+                'cover_image_url' => 'https://images.unsplash.com/photo-1581091870627-3d4f5a1c2b4a?auto=format&fit=crop&w=1400&q=60',
+            ]
+        );
+
+        $beatmakers = Club::updateOrCreate(
+            ['slug' => 'beatmaker-studio'],
+            [
+                'name' => 'Beatmaker Studio',
+                'description' => 'FL Studio tips, sampling, and weekly beat flips.',
+                'category' => 'Audio Production',
+                'category_id' => $music->id,
+                'visibility' => 'public',
+                'accent_color' => '#fb7185',
+                'sticker_type' => 'sparkle',
+                'cover_image_url' => 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?auto=format&fit=crop&w=1400&q=60',
+            ]
+        );
+
+        $cinema = Club::updateOrCreate(
+            ['slug' => 'cinema-club'],
+            [
+                'name' => 'The Cinema Club',
+                'description' => 'Indie classics, scene breakdowns, and film nights.',
+                'category' => 'Videography',
+                'category_id' => $creative->id,
+                'visibility' => 'public',
+                'accent_color' => '#60a5fa',
+                'sticker_type' => 'question',
+                'cover_image_url' => 'https://images.unsplash.com/photo-1524985069026-dd778a71c7b4?auto=format&fit=crop&w=1400&q=60',
+            ]
+        );
+
+        $calligraphy = Club::updateOrCreate(
+            ['slug' => 'calligraphy-collective'],
+            [
+                'name' => 'Calligraphy Collective',
+                'description' => 'Arabic script meets modern lettering and murals.',
+                'category' => 'Calligraphy',
+                'category_id' => $creative->id,
+                'visibility' => 'public',
+                'accent_color' => '#facc15',
+                'sticker_type' => 'sparkle',
+                'cover_image_url' => 'https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=1400&q=60',
+            ]
+        );
+
+        $hikes = Club::updateOrCreate(
+            ['slug' => 'hike-camp-crew'],
+            [
+                'name' => 'Hike & Camp Crew',
+                'description' => 'Weekend hikes, gear checklists, and trail photos.',
+                'category' => 'Outdoor Adventure',
+                'category_id' => $outdoors->id,
+                'visibility' => 'public',
+                'accent_color' => '#22c55e',
+                'sticker_type' => 'fire',
+                'cover_image_url' => 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1400&q=60',
+            ]
+        );
+
+        $astronomy = Club::updateOrCreate(
+            ['slug' => 'astronomy-nights'],
+            [
+                'name' => 'Astronomy Nights',
+                'description' => 'Stargazing meetups, space news, and telescope tips.',
+                'category' => 'Astronomy',
+                'category_id' => $science->id,
+                'visibility' => 'public',
+                'accent_color' => '#38bdf8',
+                'sticker_type' => 'sparkle',
+                'cover_image_url' => 'https://images.unsplash.com/photo-1444703686981-a3abbc4d4fe3?auto=format&fit=crop&w=1400&q=60',
+            ]
+        );
+
+        $jay->clubs()->syncWithoutDetaching([
             $dnd->id => ['role' => Club::ROLE_MEMBER],
             $sketch->id => ['role' => Club::ROLE_MEMBER],
             $motion->id => ['role' => Club::ROLE_MEMBER],
             $indie->id => ['role' => Club::ROLE_OWNER],
         ]);
 
-        $theo->clubs()->attach([
+        $theo->clubs()->syncWithoutDetaching([
             $dnd->id => ['role' => Club::ROLE_OWNER],
         ]);
 
-        $mina->clubs()->attach([
+        $mina->clubs()->syncWithoutDetaching([
             $sketch->id => ['role' => Club::ROLE_OWNER],
             $indie->id => ['role' => Club::ROLE_MODERATOR],
         ]);
 
-        $noor->clubs()->attach([
+        $noor->clubs()->syncWithoutDetaching([
             $motion->id => ['role' => Club::ROLE_OWNER],
+        ]);
+
+        $jay->clubs()->syncWithoutDetaching([
+            $dataScience->id => ['role' => Club::ROLE_MEMBER],
+            $openSource->id => ['role' => Club::ROLE_MEMBER],
+            $cinema->id => ['role' => Club::ROLE_MEMBER],
+        ]);
+
+        $theo->clubs()->syncWithoutDetaching([
+            $cyber->id => ['role' => Club::ROLE_MEMBER],
+            $robotics->id => ['role' => Club::ROLE_MEMBER],
+            $hikes->id => ['role' => Club::ROLE_MEMBER],
+        ]);
+
+        $mina->clubs()->syncWithoutDetaching([
+            $calligraphy->id => ['role' => Club::ROLE_OWNER],
+            $beatmakers->id => ['role' => Club::ROLE_MEMBER],
+        ]);
+
+        $noor->clubs()->syncWithoutDetaching([
+            $astronomy->id => ['role' => Club::ROLE_MEMBER],
         ]);
 
         $lfg = Post::create([

@@ -10,20 +10,6 @@
           Today in your clubs
         </h1>
       </div>
-
-      <label class="flex items-center gap-2 rounded-2xl border border-white/10 bg-black/20 px-3 py-2 text-xs font-bold text-zinc-400">
-        <span>Sort By</span>
-        <select
-          class="rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-white outline-none"
-          [value]="sortBy()"
-          (change)="changeSort($any($event.target).value)"
-        >
-          <option value="date">Date</option>
-          <option value="popularity">Popularity</option>
-          <option value="replies">Replies</option>
-          <option value="type">Type</option>
-        </select>
-      </label>
     </div>
 
     <div class="mt-5 flex items-center gap-3">
@@ -47,6 +33,51 @@
         +
       </button>
     </div>
+
+    <div class="mt-4 flex flex-col gap-3">
+      <div class="flex items-center gap-3">
+        <label class="flex flex-1 items-center justify-between gap-2 rounded-2xl border border-white/10 bg-black/20 px-3 py-2 text-xs font-bold text-zinc-400">
+          <span>Sort By</span>
+          <select
+            class="rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-white outline-none"
+            [value]="sortBy()"
+            (change)="changeSort($any($event.target).value)"
+          >
+            <option value="latest">Latest</option>
+            <option value="highest_streak">Highest Streak</option>
+            <option value="most_helpful">Most Helpful</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="rally-scrollbar flex items-center gap-2 overflow-x-auto pb-1">
+        <button
+          type="button"
+          class="shrink-0 rounded-full border px-3 py-2 text-xs font-black transition"
+          [class.border-white/20]="selectedClubIds().length === 0"
+          [class.bg-white/10]="selectedClubIds().length === 0"
+          [class.border-white/10]="selectedClubIds().length !== 0"
+          [class.bg-white/[0.03]]="selectedClubIds().length !== 0"
+          (click)="clearClubFilter()"
+        >
+          All clubs
+        </button>
+
+        @for (club of memberClubs(); track club.id) {
+          <button
+            type="button"
+            class="shrink-0 rounded-full border px-3 py-2 text-xs font-black transition"
+            [class.border-white/20]="selectedClubIds().includes(club.id)"
+            [class.bg-white/10]="selectedClubIds().includes(club.id)"
+            [class.border-white/10]="!selectedClubIds().includes(club.id)"
+            [class.bg-white/[0.03]]="!selectedClubIds().includes(club.id)"
+            (click)="toggleClubFilter(club.id)"
+          >
+            {{ club.name }}
+          </button>
+        }
+      </div>
+    </div>
   </header>
 
   @if (isComposerOpen()) {
@@ -54,8 +85,10 @@
   }
 
   @if (isLoading()) {
-    <div class="rounded-3xl border border-white/10 bg-[#18181d] p-6 text-zinc-400">
-      Loading timeline...
+    <div class="space-y-4">
+      <app-post-skeleton />
+      <app-post-skeleton />
+      <app-post-skeleton />
     </div>
   } @else if (error()) {
     <div class="rounded-3xl border border-red-400/30 bg-red-500/10 p-6 text-red-200">

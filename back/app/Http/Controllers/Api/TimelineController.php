@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Post;
+use App\Models\Streak;
 use App\Support\PostPresenter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -14,9 +15,18 @@ class TimelineController extends Controller
     {
         $user = $request->user();
 
-        $sort = (string) $request->query('sort', 'date');
+        $sort = (string) $request->query('sort', 'latest');
 
-        $clubIds = $user->clubs()->pluck('clubs.id');
+        $userClubIds = $user->clubs()->pluck('clubs.id');
+
+        $filterClubIdsParam = (string) $request->query('club_ids', '');
+        $filterClubIds = collect(explode(',', $filterClubIdsParam))
+            ->map(fn ($id) => (int) trim($id))
+            ->filter(fn ($id) => $id > 0);
+
+        $clubIds = $filterClubIds->isEmpty()
+            ? $userClubIds
+            : $userClubIds->intersect($filterClubIds);
 
         $postsQuery = Post::query()
             ->whereIn('club_id', $clubIds)
@@ -36,9 +46,17 @@ class TimelineController extends Controller
             ]);
 
         match ($sort) {
-            'popularity' => $postsQuery->orderByDesc('likes_count')->latest(),
-            'replies' => $postsQuery->orderByDesc('total_comments_count')->latest(),
-            'type' => $postsQuery->orderBy('type')->latest(),
+            'most_helpful' => $postsQuery->orderByDesc('likes_count')->latest(),
+            'highest_streak' => $postsQuery
+                ->addSelect([
+                    'streak_count' => Streak::query()
+                        ->select('count')
+                        ->whereColumn('streaks.user_id', 'posts.user_id')
+                        ->whereColumn('streaks.club_id', 'posts.club_id')
+                        ->limit(1),
+                ])
+                ->orderByDesc('streak_count')
+                ->latest(),
             default => $postsQuery->latest(),
         };
 

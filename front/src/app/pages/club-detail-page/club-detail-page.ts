@@ -11,7 +11,7 @@ import { TimelineService } from '../../services/timeline';
 import { safeHexColor } from '../../utils/color';
 import { ClubChatOverlayState } from '../../services/club-chat-overlay';
 import { ChatService } from '../../services/chat';
-
+import { ClubSkeletonComponent } from '../../components/club-skeleton/club-skeleton'; // adjust path as needed
 interface ClubDetail {
   id: number;
   name: string;
@@ -37,8 +37,8 @@ interface ClubDetail {
 }
 
 @Component({
-  selector: 'app-club-detail-page',
-  imports: [CommonModule, RouterLink, PostCard, ComposerComponent],
+  selector: 'app-club-detail-page', standalone: true,
+  imports: [CommonModule, RouterLink, PostCard, ComposerComponent, ClubSkeletonComponent],
   templateUrl: './club-detail-page.html',
 })
 export class ClubDetailPageComponent implements OnInit, OnDestroy {

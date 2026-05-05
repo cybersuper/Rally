@@ -34,12 +34,12 @@ class ClubController extends Controller
 
         if ($request->hasFile('cover_image')) {
             $path = $request->file('cover_image')->store('club-covers', 'public');
-            $validated['cover_image_url'] = Storage::disk('public')->url($path);
+            $validated['cover_image_url'] = Storage::url($path);
         }
 
         if ($request->hasFile('sticker_image')) {
             $path = $request->file('sticker_image')->store('club-stickers', 'public');
-            $validated['sticker_image_url'] = Storage::disk('public')->url($path);
+            $validated['sticker_image_url'] = Storage::url($path);
         }
 
         $club = DB::transaction(function () use ($validated, $user) {

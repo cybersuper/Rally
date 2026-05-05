@@ -69,20 +69,22 @@
         }
 
         @if (user.clubs.length) {
-          <div class="mt-5 flex flex-wrap gap-3 overflow-visible pb-1">
+          <div class="mt-5 flex flex-wrap gap-4 overflow-visible pb-1">
             @for (club of user.clubs; track club.id) {
               <a
-                class="group relative grid h-12 w-12 shrink-0 place-items-center rounded-full border border-white/10 bg-white/[0.04] transition-transform duration-200 hover:z-30 hover:scale-[1.2]"
+                class="group relative shrink-0 transition-all duration-200 hover:z-30 hover:scale-125"
                 [routerLink]="['/clubs', club.slug]"
                 [attr.aria-label]="club.name"
               >
                 @if (club.sticker_image_url && club.sticker_image_url.trim().length) {
-                  <img class="h-full w-full rounded-full object-cover" [src]="club.sticker_image_url" [alt]="club.name" />
+                  <img class="h-12 w-12 object-contain" [src]="club.sticker_image_url" [alt]="club.name" />
                 } @else {
-                  <span class="text-xs font-black text-zinc-200">{{ initials(club.name) }}</span>
+                  <div class="grid h-12 w-12 place-items-center rounded-full border border-white/10 bg-white/[0.04]">
+                    <span class="text-[10px] font-black text-zinc-400">{{ initials(club.name) }}</span>
+                  </div>
                 }
 
-                <span class="pointer-events-none absolute top-full z-50 mt-2 hidden whitespace-nowrap rounded-lg bg-black/90 px-2 py-1 text-xs font-bold text-white group-hover:block">
+                <span class="pointer-events-none absolute -bottom-10 left-1/2 z-50 -translate-x-1/2 scale-0 whitespace-nowrap rounded-lg bg-black/90 px-2 py-1 text-[10px] font-bold text-white transition-transform group-hover:scale-100">
                   {{ club.name }}
                 </span>
               </a>

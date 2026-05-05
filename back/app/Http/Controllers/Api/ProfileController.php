@@ -18,7 +18,7 @@ class ProfileController extends Controller
         $profile = User::query()
             ->where('username', $username)
             ->with([
-                'clubs:id,name,slug,accent_color,sticker_type,cover_image_url',
+                'clubs:id,name,slug,accent_color,sticker_type,sticker_image_url,cover_image_url',
                 'flairs.club:id,name,slug',
             ])
             ->firstOrFail();
@@ -62,7 +62,7 @@ class ProfileController extends Controller
 
         return response()->json([
             'profile' => $this->serializeProfile($user->fresh()->load([
-                'clubs:id,name,slug,accent_color,sticker_type,cover_image_url',
+                'clubs:id,name,slug,accent_color,sticker_type,sticker_image_url,cover_image_url',
                 'flairs.club:id,name,slug',
             ]), $user),
         ]);

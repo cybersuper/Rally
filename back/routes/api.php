@@ -54,6 +54,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::post('/clubs', [ClubController::class, 'store']);
+    Route::get('/clubs/suggested', [ClubController::class, 'suggested']);
     Route::get('/profiles/{username}', [ProfileController::class, 'show']);
     Route::patch('/profiles/me', [ProfileController::class, 'update']);
     Route::post('/profiles/me', [ProfileController::class, 'update']);

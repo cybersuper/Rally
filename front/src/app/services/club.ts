@@ -80,6 +80,14 @@ export class ClubService {
     );
   }
 
+  getSuggestedClubs() {
+    return this.http.get<{ clubs: DiscoverClub[] }>('/api/clubs/suggested').pipe(
+      map(response => ({
+        clubs: response.clubs.map(club => this.normalizeClub(club)),
+      }))
+    );
+  }
+
   createClub(payload: CreateClubPayload) {
     return this.http.post<CreateClubResponse>('/api/clubs', payload).pipe(
       map(response => ({

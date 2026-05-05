@@ -83,6 +83,48 @@ class ClubController extends Controller
         ]);
     }
 
+    public function suggested(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $joinedClubIds = $user->clubs()->pluck('clubs.id')->all();
+
+        $categoryIds = $user->clubs()
+            ->whereNotNull('clubs.category_id')
+            ->distinct()
+            ->pluck('clubs.category_id')
+            ->filter()
+            ->values();
+
+        if ($categoryIds->isEmpty()) {
+            return response()->json([
+                'clubs' => [],
+            ]);
+        }
+
+        $clubs = Club::query()
+            ->with('categoryModel')
+            ->withCount('users')
+            ->whereIn('category_id', $categoryIds)
+            ->when(count($joinedClubIds) > 0, fn ($query) => $query->whereNotIn('id', $joinedClubIds))
+            ->orderByDesc('users_count')
+            ->orderBy('name')
+            ->limit(6)
+            ->get();
+
+        $data = $clubs->map(function (Club $club) {
+            return $this->serializeClub(
+                $club,
+                null,
+                $club->users_count
+            );
+        });
+
+        return response()->json([
+            'clubs' => $data,
+        ]);
+    }
+
     public function show(Request $request, Club $club): JsonResponse
     {
         $user = $request->user();

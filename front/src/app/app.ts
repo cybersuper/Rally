@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy, effect, inject, signal } from '@angular/c
 import { Router, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from './auth';
-import { ClubDiscoveryComponent } from './components/club-discovery/club-discovery';
+import { SuggestedClubsComponent } from './components/suggested-clubs/suggested-clubs';
 import { ClubChatOverlayComponent } from './components/club-chat-overlay/club-chat-overlay';
 import { NotificationService } from './services/notification';
 import { ChatMessage, ChatService } from './services/chat';
@@ -18,7 +18,7 @@ import { safeHexColor } from './utils/color';
 
 @Component({
   selector: 'app-root',
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, ClubDiscoveryComponent, ClubChatOverlayComponent],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, SuggestedClubsComponent, ClubChatOverlayComponent],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })

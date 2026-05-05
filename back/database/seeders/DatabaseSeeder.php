@@ -280,6 +280,30 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
+        $seededClubs = [
+            $dnd,
+            $sketch,
+            $motion,
+            $indie,
+            $cyber,
+            $dataScience,
+            $openSource,
+            $robotics,
+            $beatmakers,
+            $cinema,
+            $calligraphy,
+            $hikes,
+            $astronomy,
+        ];
+
+        foreach ($seededClubs as $club) {
+            if (! $club->users()->wherePivot('role', Club::ROLE_OWNER)->exists()) {
+                $jay->clubs()->syncWithoutDetaching([
+                    $club->id => ['role' => Club::ROLE_OWNER],
+                ]);
+            }
+        }
+
         $jay->clubs()->syncWithoutDetaching([
             $dnd->id => ['role' => Club::ROLE_MEMBER],
             $sketch->id => ['role' => Club::ROLE_MEMBER],

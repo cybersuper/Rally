@@ -127,16 +127,96 @@ export class ProfilePageComponent implements OnInit {
     const file = input.files?.[0] ?? null;
     if (!file) return;
 
-    const preview = URL.createObjectURL(file);
+    const config = kind === 'profile'
+      ? { width: 400, height: 400 }
+      : { width: 1500, height: 500 };
 
-    if (kind === 'profile') {
-      this.profileFile = file;
-      this.profilePreview.set(preview);
-      return;
-    }
+    this.centerCropToFile(file, config.width, config.height)
+      .then(croppedFile => {
+        const preview = URL.createObjectURL(croppedFile);
 
-    this.coverFile = file;
-    this.coverPreview.set(preview);
+        if (kind === 'profile') {
+          this.profileFile = croppedFile;
+          this.profilePreview.set(preview);
+          return;
+        }
+
+        this.coverFile = croppedFile;
+        this.coverPreview.set(preview);
+      })
+      .catch(() => {
+        const preview = URL.createObjectURL(file);
+
+        if (kind === 'profile') {
+          this.profileFile = file;
+          this.profilePreview.set(preview);
+          return;
+        }
+
+        this.coverFile = file;
+        this.coverPreview.set(preview);
+      });
+  }
+
+  private centerCropToFile(source: File, targetWidth: number, targetHeight: number): Promise<File> {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = targetWidth;
+        canvas.height = targetHeight;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          reject(new Error('Canvas is not supported.'));
+          return;
+        }
+
+        const srcW = img.naturalWidth || img.width;
+        const srcH = img.naturalHeight || img.height;
+
+        if (!srcW || !srcH) {
+          reject(new Error('Image has invalid dimensions.'));
+          return;
+        }
+
+        const srcAspect = srcW / srcH;
+        const dstAspect = targetWidth / targetHeight;
+
+        let cropW = srcW;
+        let cropH = srcH;
+
+        if (srcAspect > dstAspect) {
+          cropW = Math.round(srcH * dstAspect);
+        } else {
+          cropH = Math.round(srcW / dstAspect);
+        }
+
+        const cropX = Math.max(0, Math.round((srcW - cropW) / 2));
+        const cropY = Math.max(0, Math.round((srcH - cropH) / 2));
+
+        ctx.drawImage(img, cropX, cropY, cropW, cropH, 0, 0, targetWidth, targetHeight);
+
+        canvas.toBlob(
+          blob => {
+            if (!blob) {
+              reject(new Error('Could not create image blob.'));
+              return;
+            }
+
+            const nameBase = source.name.replace(/\.[^.]+$/, '');
+            const mime = blob.type || 'image/jpeg';
+            const ext = mime === 'image/png' ? 'png' : mime === 'image/webp' ? 'webp' : 'jpg';
+            resolve(new File([blob], `${nameBase}-cropped.${ext}`, { type: mime }));
+          },
+          source.type && source.type.startsWith('image/') ? source.type : 'image/jpeg',
+          0.92
+        );
+      };
+
+      img.onerror = () => reject(new Error('Failed to load image.'));
+      img.src = URL.createObjectURL(source);
+    });
   }
 
   saveProfile(): void {

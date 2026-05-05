@@ -45,9 +45,13 @@
           ></span>
 
           @if (post().club) {
-            <span class="truncate text-xs font-medium text-zinc-500">
+            <a
+              class="truncate text-sm font-bold text-zinc-400 hover:underline"
+              [routerLink]="['/clubs', post().club.slug]"
+              (click)="stop($event)"
+            >
               posted in {{ post().club.name }}
-            </span>
+            </a>
           }
         </div>
 

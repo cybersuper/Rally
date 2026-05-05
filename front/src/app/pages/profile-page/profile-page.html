@@ -10,14 +10,19 @@
   } @else if (profile(); as user) {
     <article class="rounded-3xl border border-white/10 bg-[#121216]/90 shadow-2xl">
       <div
-        class="h-44 overflow-hidden rounded-t-3xl bg-cover bg-center sm:h-56"
+        class="relative h-44 overflow-hidden rounded-t-3xl bg-cover bg-center sm:h-56"
         [style.backgroundImage]="user.cover_photo_path ? 'url(' + user.cover_photo_path + ')' : 'linear-gradient(135deg, rgba(255,68,68,.6), rgba(34,211,238,.34), rgba(250,204,21,.26))'"
-      ></div>
+      >
+        <div
+          class="pointer-events-none absolute inset-x-0 bottom-0"
+          style="height: 24px; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); mask-image: linear-gradient(to bottom, transparent, black); -webkit-mask-image: linear-gradient(to bottom, transparent, black);"
+        ></div>
+      </div>
 
       <div class="px-5 pb-5">
-        <div class="-mt-12 flex flex-col gap-4 sm:-mt-14 sm:flex-row sm:items-end sm:justify-between">
+        <div class="relative z-30 -mt-12 flex flex-col gap-4 sm:-mt-14 sm:flex-row sm:items-end sm:justify-between">
           <div class="flex items-end gap-4">
-            <div class="grid h-24 w-24 place-items-center overflow-hidden rounded-full border-4 border-[#121216] bg-red-400 text-2xl font-black text-black shadow-2xl sm:h-28 sm:w-28">
+            <div class="profile-avatar-ring relative z-20 grid h-24 w-24 place-items-center overflow-hidden rounded-full border-4 bg-red-400 text-2xl font-black text-black shadow-2xl sm:h-28 sm:w-28">
               @if (user.profile_photo_path) {
                 <img class="h-full w-full object-cover" [src]="user.profile_photo_path" [alt]="displayName()" />
               } @else {
@@ -26,17 +31,21 @@
             </div>
 
             <div class="pb-2">
-              <h1 class="text-3xl font-black tracking-tight text-white">
-                {{ displayName() }}
+              <h1
+                class="profile-display-name inline-block text-3xl font-black tracking-tight text-white"
+              >
+                <span>
+                  {{ displayName() }}
+                </span>
               </h1>
               <p class="mt-1 text-sm font-semibold text-zinc-500">
-                @{{ user.username }} / {{ user.name }}
+                @{{ user.username }}
               </p>
             </div>
           </div>
 
           <div class="flex flex-wrap items-center gap-2 pb-2">
-            <span class="rounded-full border border-red-400/25 bg-red-400/10 px-3 py-2 text-xs font-black text-red-100">
+            <span class="streak-text rounded-full border border-red-400/25 bg-red-400/10 px-3 py-2 text-xs font-black text-red-100">
               &#128293; {{ user.current_streak }} day streak
             </span>
             <span class="rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-black text-zinc-300">
@@ -69,7 +78,7 @@
         }
 
         @if (user.clubs.length) {
-          <div class="mt-5 flex flex-wrap gap-4 overflow-visible pb-1">
+          <div class="mt-5 flex flex-wrap gap-4 overflow-visible pb-10">
             @for (club of user.clubs; track club.id) {
               <a
                 class="group relative shrink-0 transition-all duration-200 hover:z-30 hover:scale-125"

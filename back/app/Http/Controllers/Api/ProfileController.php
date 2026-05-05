@@ -49,11 +49,11 @@ class ProfileController extends Controller
         ]);
 
         if ($request->hasFile('profile_photo')) {
-            $validated['profile_photo_path'] = $this->uploadImage($request->file('profile_photo'), 'profiles');
+            $validated['profile_photo_path'] = $this->uploadImage($request->file('profile_photo'), 'profiles', 400, 400);
         }
 
         if ($request->hasFile('cover_photo')) {
-            $validated['cover_photo_path'] = $this->uploadImage($request->file('cover_photo'), 'covers');
+            $validated['cover_photo_path'] = $this->uploadImage($request->file('cover_photo'), 'covers', 1500, 500);
         }
 
         unset($validated['profile_photo'], $validated['cover_photo']);
@@ -151,7 +151,7 @@ class ProfileController extends Controller
         );
     }
 
-    private function uploadImage($file, string $folder): string
+    private function uploadImage($file, string $folder, ?int $width = null, ?int $height = null): string
     {
         abort_unless(
             config('services.cloudinary.url') || config('services.cloudinary.cloud_name'),
@@ -169,10 +169,21 @@ class ProfileController extends Controller
                 ],
             ]);
 
-        $result = $cloudinary->uploadApi()->upload($file->getRealPath(), [
+        $options = [
             'folder' => "rally/{$folder}",
             'resource_type' => 'image',
-        ]);
+        ];
+
+        if ($width && $height) {
+            $options['transformation'] = [
+                'width' => $width,
+                'height' => $height,
+                'crop' => 'fill',
+                'gravity' => 'auto',
+            ];
+        }
+
+        $result = $cloudinary->uploadApi()->upload($file->getRealPath(), $options);
 
         return $result['secure_url'];
     }

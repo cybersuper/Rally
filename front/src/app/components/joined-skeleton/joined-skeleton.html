@@ -1,10 +1,10 @@
 <div class="space-y-2">
   @for (item of [1, 2, 3, 4]; track $index) {
     <div class="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-3">
-      <div class="h-8 w-8 shrink-0 animate-pulse rounded-full bg-white/10"></div>
+      <div class="h-8 w-8 shrink-0 animate-pulse rounded-full bg-[var(--skeleton-strong)]"></div>
       <div class="min-w-0 flex-1">
-        <div class="h-3 w-32 animate-pulse rounded bg-white/10"></div>
-        <div class="mt-2 h-3 w-20 animate-pulse rounded bg-white/5"></div>
+        <div class="h-3 w-32 animate-pulse rounded bg-[var(--skeleton-strong)]"></div>
+        <div class="mt-2 h-3 w-20 animate-pulse rounded bg-[var(--skeleton-soft)]"></div>
       </div>
     </div>
   }

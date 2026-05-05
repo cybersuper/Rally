@@ -104,6 +104,14 @@ export class ClubService {
     );
   }
 
+  createClubForm(payload: FormData) {
+    return this.http.post<CreateClubResponse>('/api/clubs', payload).pipe(
+      map(response => ({
+        club: this.normalizeClub(response.club),
+      }))
+    );
+  }
+
   getClub(slug: string) {
     return this.http.get<{ club: DiscoverClub }>(`/api/clubs/${slug}`).pipe(
       map(response => ({

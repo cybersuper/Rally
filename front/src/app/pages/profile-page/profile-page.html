@@ -76,7 +76,7 @@
                 [routerLink]="['/clubs', club.slug]"
                 [attr.aria-label]="club.name"
               >
-                @if (club.sticker_image_url?.length) {
+                @if (club.sticker_image_url && club.sticker_image_url.trim().length) {
                   <img class="h-full w-full rounded-full object-cover" [src]="club.sticker_image_url" [alt]="club.name" />
                 } @else {
                   <span class="text-xs font-black text-zinc-200">{{ initials(club.name) }}</span>

@@ -236,22 +236,26 @@
         <span class="h-3 w-3 rounded-full bg-emerald-400 shadow-lg shadow-emerald-400/40"></span>
       </div>
       <div class="space-y-3">
-        @for (post of liveGroups(); track post.id) {
-          <a class="block rounded-2xl border border-white/10 bg-white/[0.04] p-4 hover:bg-white/[0.07]" [routerLink]="['/clubs', post.club.slug, 'posts', post.id]">
-            <div class="flex items-center justify-between gap-3">
-              <div class="min-w-0">
-                <p class="truncate font-black">{{ post.title }}</p>
-                <p class="truncate text-xs text-zinc-500">{{ post.club.name }}</p>
+        @if (isInitialLoading()) {
+          <app-joined-skeleton />
+        } @else {
+          @for (post of liveGroups(); track post.id) {
+            <a class="block rounded-2xl border border-white/10 bg-white/[0.04] p-4 hover:bg-white/[0.07]" [routerLink]="['/clubs', post.club.slug, 'posts', post.id]">
+              <div class="flex items-center justify-between gap-3">
+                <div class="min-w-0">
+                  <p class="truncate font-black">{{ post.title }}</p>
+                  <p class="truncate text-xs text-zinc-500">{{ post.club.name }}</p>
+                </div>
+                <span class="rounded-full px-2 py-1 text-xs font-black text-black" [style.background]="post.club.accent_color">
+                  {{ post.metadata?.['spots_filled'] ?? 0 }}/{{ post.metadata?.['spots_total'] ?? 0 }}
+                </span>
               </div>
-              <span class="rounded-full px-2 py-1 text-xs font-black text-black" [style.background]="post.club.accent_color">
-                {{ post.metadata?.['spots_filled'] ?? 0 }}/{{ post.metadata?.['spots_total'] ?? 0 }}
-              </span>
+            </a>
+          } @empty {
+            <div class="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-sm font-semibold text-zinc-500">
+              No open groups.
             </div>
-          </a>
-        } @empty {
-          <div class="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-sm font-semibold text-zinc-500">
-            No open groups.
-          </div>
+          }
         }
       </div>
       </section>
@@ -260,8 +264,15 @@
       <h2 class="mb-4 text-sm font-black uppercase tracking-wide text-zinc-400">Suggested Clubs</h2>
       <div>
         <div>
-          @defer {
-            <app-suggested-clubs />
+          @if (isInitialLoading()) {
+            <div class="space-y-3">
+              <app-club-skeleton />
+              <app-club-skeleton />
+            </div>
+          } @else {
+            @defer {
+              <app-suggested-clubs />
+            }
           }
         </div>
       </div>

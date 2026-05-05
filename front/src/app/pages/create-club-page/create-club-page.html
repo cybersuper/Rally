@@ -78,17 +78,33 @@
           </label>
         </div>
 
-        <label class="block">
-          <span class="mb-1.5 block text-xs font-black uppercase tracking-wide text-zinc-500">Cover image URL</span>
-          <input
-            class="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-white/20"
-            type="url"
-            name="cover_image_url"
-            [ngModel]="coverImageUrl()"
-            (ngModelChange)="coverImageUrl.set($event)"
-            placeholder="https://..."
-          />
-        </label>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <label class="block rounded-2xl border border-white/10 bg-black/20 p-4">
+            <span class="mb-2 block text-xs font-black uppercase tracking-wide text-zinc-500">Cover image</span>
+            @if (coverPreview()) {
+              <img class="mb-3 h-24 w-full rounded-2xl object-cover" [src]="coverPreview()!" alt="Cover preview" />
+            }
+            <input
+              class="block w-full text-sm text-zinc-300 file:mr-3 file:rounded-full file:border-0 file:bg-red-400 file:px-3 file:py-2 file:text-xs file:font-black file:text-black"
+              type="file"
+              accept="image/*"
+              (change)="setCoverImage($event)"
+            />
+          </label>
+
+          <label class="block rounded-2xl border border-white/10 bg-black/20 p-4">
+            <span class="mb-2 block text-xs font-black uppercase tracking-wide text-zinc-500">Club sticker</span>
+            @if (stickerPreview()) {
+              <img class="mb-3 h-24 w-24 rounded-2xl object-cover" [src]="stickerPreview()!" alt="Sticker preview" />
+            }
+            <input
+              class="block w-full text-sm text-zinc-300 file:mr-3 file:rounded-full file:border-0 file:bg-red-400 file:px-3 file:py-2 file:text-xs file:font-black file:text-black"
+              type="file"
+              accept="image/*"
+              (change)="setStickerImage($event)"
+            />
+          </label>
+        </div>
 
         <div class="flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-black/20 p-4">
           <div>

@@ -9,6 +9,7 @@ use App\Support\PostPresenter;
 use Cloudinary\Cloudinary;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
@@ -27,7 +28,19 @@ class ClubController extends Controller
             'visibility' => ['nullable', Rule::in(['public', 'private'])],
             'accent_color' => ['required', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'cover_image_url' => ['nullable', 'url', 'max:1000'],
+            'cover_image' => ['nullable', 'image', 'max:8192'],
+            'sticker_image' => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp', 'max:4096'],
         ]);
+
+        if ($request->hasFile('cover_image')) {
+            $path = $request->file('cover_image')->store('club-covers', 'public');
+            $validated['cover_image_url'] = Storage::disk('public')->url($path);
+        }
+
+        if ($request->hasFile('sticker_image')) {
+            $path = $request->file('sticker_image')->store('club-stickers', 'public');
+            $validated['sticker_image_url'] = Storage::disk('public')->url($path);
+        }
 
         $club = DB::transaction(function () use ($validated, $user) {
             $club = Club::create([
@@ -40,6 +53,7 @@ class ClubController extends Controller
                 'accent_color' => $validated['accent_color'],
                 'sticker_type' => 'sparkle',
                 'cover_image_url' => $validated['cover_image_url'] ?? null,
+                'sticker_image_url' => $validated['sticker_image_url'] ?? null,
             ]);
 
             $user->clubs()->attach($club->id, ['role' => Club::ROLE_OWNER]);

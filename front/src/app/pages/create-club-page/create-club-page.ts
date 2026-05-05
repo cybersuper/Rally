@@ -40,7 +40,10 @@ export class CreateClubPageComponent {
   categoryId = signal<number | null>(null);
   visibility = signal<'public' | 'private'>('public');
   accentColor = signal('#22d3ee');
-  coverImageUrl = signal('');
+  coverPreview = signal<string | null>(null);
+  stickerPreview = signal<string | null>(null);
+  private coverFile: File | null = null;
+  private stickerFile: File | null = null;
 
   constructor() {
     this.clubService.getCategories().subscribe({
@@ -72,6 +75,20 @@ export class CreateClubPageComponent {
     this.slug.set(slugify(value));
   }
 
+  setCoverImage(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+    this.coverFile = file;
+    this.coverPreview.set(file ? URL.createObjectURL(file) : null);
+  }
+
+  setStickerImage(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+    this.stickerFile = file;
+    this.stickerPreview.set(file ? URL.createObjectURL(file) : null);
+  }
+
   submit(): void {
     this.error.set(null);
 
@@ -81,7 +98,6 @@ export class CreateClubPageComponent {
     const category = this.category().trim();
     const categoryId = this.categoryId();
     const accentColor = this.accentColor().trim();
-    const coverImageUrl = this.coverImageUrl().trim();
 
     if (!name) {
       this.error.set('Enter a club name.');
@@ -95,17 +111,19 @@ export class CreateClubPageComponent {
 
     this.isSubmitting.set(true);
 
+    const payload = new FormData();
+    payload.append('name', name);
+    payload.append('slug', slug);
+    payload.append('description', description.length ? description : '');
+    payload.append('category', category.length ? category : '');
+    if (categoryId !== null) payload.append('category_id', String(categoryId));
+    payload.append('visibility', this.visibility());
+    payload.append('accent_color', accentColor);
+    if (this.coverFile) payload.append('cover_image', this.coverFile);
+    if (this.stickerFile) payload.append('sticker_image', this.stickerFile);
+
     this.clubService
-      .createClub({
-        name,
-        slug,
-        description: description.length ? description : null,
-        category: category.length ? category : null,
-        category_id: categoryId,
-        visibility: this.visibility(),
-        accent_color: accentColor,
-        cover_image_url: coverImageUrl.length ? coverImageUrl : null,
-      })
+      .createClubForm(payload)
       .subscribe({
         next: (response: { club: { slug: string } }) => {
           this.authService.me().subscribe({

@@ -12,6 +12,9 @@
   --rally-border-strong: rgba(255, 255, 255, 0.16);
   --rally-text: #f7f7fb;
   --rally-muted: #a1a1aa;
+
+  --skeleton-strong: rgba(255, 255, 255, 0.10);
+  --skeleton-soft: rgba(255, 255, 255, 0.06);
 }
 
 html,
@@ -35,6 +38,9 @@ body.light-theme {
   --rally-border-strong: rgba(17, 24, 39, 0.2);
   --rally-text: #212529;
   --rally-muted: #5f6872;
+
+  --skeleton-strong: rgba(17, 24, 39, 0.12);
+  --skeleton-soft: rgba(17, 24, 39, 0.06);
   background:
     radial-gradient(circle at 20% 0%, rgba(103, 232, 249, 0.12), transparent 32rem),
     radial-gradient(circle at 80% 10%, rgba(255, 68, 68, 0.08), transparent 30rem),
@@ -263,7 +269,7 @@ body.light-theme .rally-card {
 }
 
 .fab-container {
-  position: fixed;
+  position: absolute;
   bottom: 2rem;
   right: 2rem;
   z-index: 99;

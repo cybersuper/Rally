@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { AuthService } from './auth';
 import { SuggestedClubsComponent } from './components/suggested-clubs/suggested-clubs';
 import { JoinedSkeletonComponent } from './components/joined-skeleton/joined-skeleton';
+import { ClubSkeletonComponent } from './components/club-skeleton/club-skeleton';
 import { ClubChatOverlayComponent } from './components/club-chat-overlay/club-chat-overlay';
 import { NotificationService } from './services/notification';
 import { ChatMessage, ChatService } from './services/chat';
@@ -19,7 +20,7 @@ import { safeHexColor } from './utils/color';
 
 @Component({
   selector: 'app-root',
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, SuggestedClubsComponent, JoinedSkeletonComponent, ClubChatOverlayComponent],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, SuggestedClubsComponent, JoinedSkeletonComponent, ClubSkeletonComponent, ClubChatOverlayComponent],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
